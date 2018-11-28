@@ -8,6 +8,7 @@
     "compileTypeScript": "$(npm bin)/tsc -p .",
     "build": "npm run-script replace && npm run-script compileTypeScript",
     "package": "npm run-script build && $(npm bin)/tfx extension create --output-path ./deployment/",
+    "test-publish": "$(npm bin)/tfx extension publish --share-with cqse --rev-version --output-path deployment --token $(node scripts/cat.js token)",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

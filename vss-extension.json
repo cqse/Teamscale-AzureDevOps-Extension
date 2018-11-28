@@ -1,0 +1,43 @@
+{
+    "manifestVersion": 1,
+    "id": "teamscale-azure-devops-plugin",
+    "publisher": "CQSEGmbH",
+    "version": "0.0.0.0",
+    "name": "Teamscale DevOps",
+    "description": "A sample Visual Studio Services extension",
+    "public": false,
+    "categories": ["Azure Repos"],
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],
+    "contributions": [
+        {
+            "id": "my-hub",
+            "type": "ms.vss-web.hub",
+            "targets": [
+                "ms.vss-code-web.code-hub-group"
+            ],
+            "properties": {
+                "name": "My Hub",
+                "uri": "/sites/my-hub.html"
+            }
+        }
+    ],
+    "files": [
+        {
+            "path": "sites",
+            "addressable": true
+        },
+        {
+            "path": "dist",
+            "addressable": true
+        },
+        {
+            "path": "node_modules/vss-web-extension-sdk/lib",
+            "addressable": true,
+            "packagePath": "lib"
+        }
+    ]
+}

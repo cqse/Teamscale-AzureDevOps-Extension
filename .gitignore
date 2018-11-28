@@ -1,0 +1,5 @@
+.idea/workspace.xml
+node_modules
+*.vsix
+dist/*
+!dist/.gitkeep

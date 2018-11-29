@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "teamscale-azure-devops-plugin",
     "publisher": "CQSEGmbH",
-    "version": "0.0.3",
+    "version": "0.0.6",
     "name": "Teamscale DevOps",
     "description": "A sample Visual Studio Services extension",
     "public": false,
@@ -14,15 +14,16 @@
     ],
     "contributions": [
         {
-            "id": "my-hub",
-            "type": "ms.vss-web.hub",
+            "id": "teamscale-test-gap-group",
+            "type": "ms.vss-work-web.work-item-form-group",
             "targets": [
-                "ms.vss-code-web.code-hub-group"
+                "ms.vss-work-web.work-item-form"
             ],
             "properties": {
-                "name": "My Hub",
-                "uri": "/sites/my-hub.html"
+                "name": "Teamscale Test Gap",
+                "uri": "sites/my-hub.html"
             }
+
         }
     ],
     "files": [

@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "teamscale-azure-devops-plugin",
     "publisher": "CQSEGmbH",
-    "version": "0.0.6",
+    "version": "0.0.92",
     "name": "Teamscale DevOps",
     "description": "A sample Visual Studio Services extension",
     "public": false,
@@ -21,7 +21,7 @@
             ],
             "properties": {
                 "name": "Teamscale Test Gap",
-                "uri": "sites/my-hub.html"
+                "uri": "sites/wi-test-gap.html"
             }
 
         }
@@ -39,6 +39,10 @@
             "path": "node_modules/vss-web-extension-sdk/lib",
             "addressable": true,
             "packagePath": "lib"
+        },
+        {
+            "path": "scripts/require.js",
+            "addressable": true
         }
     ]
 }

@@ -2,6 +2,8 @@ import {ExtensionDataService} from "VSS/SDK/Services/ExtensionData";
 import {Scope} from "./Scope";
 
 export class Settings {
+    public static readonly TEAMSCALE_PROJECT_URL_KEY = "teamscale-project-url";
+
     private readonly scope: Scope;
     private readonly project: string;
 

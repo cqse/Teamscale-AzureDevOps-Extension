@@ -3,7 +3,6 @@ import {Settings} from "./Settings/Settings";
 import {Scope} from "./Settings/Scope";
 import TeamscaleClient from "./TeamscaleClient";
 
-const TEAMSCALE_URL_KEY = "teamscale_url";
 let teamscaleClient = null;
 let settings = null;
 
@@ -49,33 +48,24 @@ VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices) {
     let azureProjectName = VSS.getWebContext().project.name;
     settings = new Settings(Scope.ProjectCollection, azureProjectName);
 
-    assignOnClickSaveUrl();
-
-    settings.get(TEAMSCALE_URL_KEY).then((teamscaleUrl) => {
-        $('#teamscale_url').val(teamscaleUrl);
-        teamscaleClient = new TeamscaleClient(teamscaleUrl);
+    settings.get(Settings.TEAMSCALE_PROJECT_URL_KEY).then((teamscaleProjectUrl) => {
+        teamscaleClient = new TeamscaleClient(teamscaleProjectUrl);
         return getWorkItemFormService();
     }).then((workItemFormService) => {
         return workItemFormService.getId();
     }).then((id) => {
-        return teamscaleClient.queryIssueTestGap(id, 'azure-devops-plugin-test');
-    }).then((issueTestGap) => {
-        let tgaRatio = JSON.parse(issueTestGap).summary.testGapRatio;
-        $('#tga-badge').text(`${ratioToPercent(tgaRatio)}%`);
+        return teamscaleClient.queryIssueTestGapBadge(id);
+    }).then((tgaBadge) => {
+        const tgaBadgeElement = $('#tga-badge');
+        tgaBadgeElement.html(tgaBadge);
+        resizeHost();
         VSS.notifyLoadSucceeded();
     }, (reason) => {
-        VSS.notifyLoadFailed(reason);
+        VSS.notifyLoadFailed('');
     });
-
 });
 
-function assignOnClickSaveUrl() {
-    $('#save_url').click(function (event) {
-        let teamscaleUrl = $('#teamscale_url').val();
-        settings.save(TEAMSCALE_URL_KEY, teamscaleUrl.toString()); //TODO handle errors
-    });
-}
-
-function ratioToPercent(ratio: number) {
-    return (ratio * 100).toFixed(0);
+function resizeHost() {
+    const bodyElement = $('body,html');
+    VSS.resize(bodyElement.width(), bodyElement.height());
 }

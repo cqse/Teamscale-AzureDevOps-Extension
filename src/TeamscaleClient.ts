@@ -1,23 +1,24 @@
 export default class TeamscaleClient {
-    private readonly projectUrl: string = "";
+    public readonly url: string = "";
+    public readonly project: string = "";
 
-    constructor(projectUrl: string) {
-        this.projectUrl = projectUrl;
+    constructor(url: string) {
+        this.url = url;
     }
 
-    queryIssueTestGapPercentage(issueId: number) {
+    queryIssueTestGapPercentage(project: string, issueId: number) {
         let xhr = this.generateRequest(
             'GET',
-            `/tga-issue-query-percentage/?query=id%3D${issueId}`);
+            `/p/${project}/tga-issue-query-percentage/?query=id%3D${issueId}`);
         let promise = this.generatePromise(xhr);
         xhr.send();
         return promise;
     }
 
-    queryIssueTestGapBadge(issueId: number) {
+    queryIssueTestGapBadge(project: string, issueId: number) {
         let xhr = this.generateRequest(
             'GET',
-            `/tga-badge.svg?issueId=${issueId}`);
+            `/p/${project}/tga-badge.svg?issueId=${issueId}`);
         let promise = this.generatePromise(xhr);
         xhr.send();
         return promise;
@@ -46,7 +47,7 @@ export default class TeamscaleClient {
 
     private generateRequest(httpVerb: string, path: string) {
         let xhr = new XMLHttpRequest();
-        xhr.open(httpVerb, `${this.projectUrl}${path}`);
+        xhr.open(httpVerb, `${this.url}${path}`);
         xhr.withCredentials = true;
         xhr.setRequestHeader('Accept', 'application/json');
         xhr.setRequestHeader('Cache-Control', 'no-cache');

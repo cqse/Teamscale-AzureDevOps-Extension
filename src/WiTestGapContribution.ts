@@ -2,12 +2,16 @@ import {IWorkItemFormService} from "TFS/WorkItemTracking/Services"
 import {Settings} from "./Settings/Settings";
 import {Scope} from "./Settings/Scope";
 import TeamscaleClient from "./TeamscaleClient";
+import {reject} from "q";
+
 
 let teamscaleClient = null;
+let teamscaleProject = "";
 let settings = null;
 
 VSS.init({
     explicitNotifyLoaded: true,
+    usePlatformStyles: true
 });
 
 VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices) {
@@ -48,22 +52,75 @@ VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices) {
     let azureProjectName = VSS.getWebContext().project.name;
     settings = new Settings(Scope.ProjectCollection, azureProjectName);
 
-    settings.get(Settings.TEAMSCALE_PROJECT_URL_KEY).then((teamscaleProjectUrl) => {
-        teamscaleClient = new TeamscaleClient(teamscaleProjectUrl);
+    settings.get(Settings.TEAMSCALE_URL).then((url) => {
+        if (!url) {
+            return Promise.reject({status: -1});
+        }
+        teamscaleClient = new TeamscaleClient(url);
+        return settings.get(Settings.TEAMSCALE_PROJECT)
+    }).then(project => {
+        if (!project) {
+            return Promise.reject({status: -1});
+        }
+        teamscaleProject = project;
         return getWorkItemFormService();
-    }).then((workItemFormService) => {
-        return workItemFormService.getId();
+    }).then(service =>{
+        return service.getId();
     }).then((id) => {
-        return teamscaleClient.queryIssueTestGapBadge(id);
+        return teamscaleClient.queryIssueTestGapBadge(teamscaleProject, id);
     }).then((tgaBadge) => {
         const tgaBadgeElement = $('#tga-badge');
         tgaBadgeElement.html(tgaBadge);
         resizeHost();
         VSS.notifyLoadSucceeded();
     }, (reason) => {
-        VSS.notifyLoadFailed('');
+        switch (reason.status) {
+            case -1:
+                showNotConfiguredMessage();
+                VSS.notifyLoadSucceeded();
+                break;
+            case 403:
+                showNotLoggedInMessage();
+                VSS.notifyLoadSucceeded();
+                break;
+            default:
+                VSS.notifyLoadFailed('');
+        }
     });
 });
+
+function showNotConfiguredMessage() {
+    VSS.require(["VSS/Controls", "VSS/Controls/Notifications"], function (Controls, Notifications) {
+        const notificationContainer = $('body,html');
+        const notification = Controls.create(Notifications.MessageAreaControl, notificationContainer, {
+            closeable: false,
+            showIcon: true,
+            type: 1,
+            showHeader: true,
+            expanded: false,
+            hidden: false
+        });
+        //TODO
+        notification.setMessage($(`<div>TGA is not configure for this project, please <a href="TODO">contact the TGA-Team</a></div>`), 1);
+        resizeHost();
+    });
+}
+
+function showNotLoggedInMessage() {
+    VSS.require(["VSS/Controls", "VSS/Controls/Notifications"], function (Controls, Notifications) {
+        const notificationContainer = $('body,html');
+        const notification = Controls.create(Notifications.MessageAreaControl, notificationContainer, {
+            closeable: false,
+            showIcon: true,
+            type: 1,
+            showHeader: true,
+            expanded: false,
+            hidden: false
+        });
+        notification.setMessage($(`<div>Please log into <a href="${teamscaleClient.url}">TGA</a></div>`), 1);
+        resizeHost();
+    });
+}
 
 function resizeHost() {
     const bodyElement = $('body,html');

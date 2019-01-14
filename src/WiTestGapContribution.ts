@@ -4,9 +4,9 @@ import {Scope} from "./Settings/Scope";
 import TeamscaleClient from "./TeamscaleClient";
 
 
-let teamscaleClient = null;
-let teamscaleProject = "";
-let settings = null;
+let teamscaleClient: TeamscaleClient = null;
+let teamscaleProject: string = "";
+let settings: Settings = null;
 let controlService = null;
 let notificationService = null;
 
@@ -18,12 +18,6 @@ VSS.init({
 VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Notifications"], function (workItemServices, controls, notifications) {
     controlService = controls;
     notificationService = notifications;
-
-    // Get the WorkItemFormService.  This service allows you to get/set fields/links on the 'active' work item (the work item
-    // that currently is displayed in the UI).
-    function getWorkItemFormService(): IWorkItemFormService {
-        return workItemServices.WorkItemFormService.getService();
-    }
 
     VSS.register(VSS.getContribution().id, function () {
         return {
@@ -67,7 +61,7 @@ VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Noti
             return Promise.reject({status: -1});
         }
         teamscaleProject = project;
-        return getWorkItemFormService();
+        return workItemServices.WorkItemFormService.getService();
     }).then(service => {
         return service.getId();
     }).then((id) => {

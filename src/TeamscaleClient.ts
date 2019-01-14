@@ -6,25 +6,25 @@ export default class TeamscaleClient {
         this.url = url;
     }
 
-    queryIssueTestGapPercentage(project: string, issueId: number) {
+    public queryIssueTestGapPercentage(project: string, issueId: number): PromiseLike<number> {
         let xhr = this.generateRequest(
             'GET',
             `/p/${project}/tga-issue-query-percentage/?query=id%3D${issueId}`);
-        let promise = this.generatePromise(xhr);
+        let promise = this.generatePromise<number>(xhr);
         xhr.send();
         return promise;
     }
 
-    queryIssueTestGapBadge(project: string, issueId: number) {
+    public queryIssueTestGapBadge(project: string, issueId: number): PromiseLike<string> {
         let xhr = this.generateRequest(
             'GET',
             `/p/${project}/tga-badge.svg?issueId=${issueId}`);
-        let promise = this.generatePromise(xhr);
+        let promise = this.generatePromise<string>(xhr);
         xhr.send();
         return promise;
     }
 
-    private generatePromise(request: XMLHttpRequest) {
+    private generatePromise<T>(request: XMLHttpRequest): PromiseLike<T> {
         return new Promise((resolve, reject) => {
             request.onload = function () {
                 if (this.status >= 200 && this.status < 300) {

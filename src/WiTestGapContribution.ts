@@ -2,23 +2,27 @@ import {IWorkItemFormService} from "TFS/WorkItemTracking/Services"
 import {Settings} from "./Settings/Settings";
 import {Scope} from "./Settings/Scope";
 import TeamscaleClient from "./TeamscaleClient";
-import {reject} from "q";
 
 
 let teamscaleClient = null;
 let teamscaleProject = "";
 let settings = null;
+let controlService = null;
+let notificationService = null;
 
 VSS.init({
     explicitNotifyLoaded: true,
     usePlatformStyles: true
 });
 
-VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices) {
+VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Notifications"], function (workItemServices, controls, notifications) {
+    controlService = controls;
+    notificationService = notifications;
+
     // Get the WorkItemFormService.  This service allows you to get/set fields/links on the 'active' work item (the work item
     // that currently is displayed in the UI).
     function getWorkItemFormService(): IWorkItemFormService {
-        return _WorkItemServices.WorkItemFormService.getService();
+        return workItemServices.WorkItemFormService.getService();
     }
 
     VSS.register(VSS.getContribution().id, function () {
@@ -64,7 +68,7 @@ VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices) {
         }
         teamscaleProject = project;
         return getWorkItemFormService();
-    }).then(service =>{
+    }).then(service => {
         return service.getId();
     }).then((id) => {
         return teamscaleClient.queryIssueTestGapBadge(teamscaleProject, id);
@@ -90,36 +94,32 @@ VSS.require(["TFS/WorkItemTracking/Services"], function (_WorkItemServices) {
 });
 
 function showNotConfiguredMessage() {
-    VSS.require(["VSS/Controls", "VSS/Controls/Notifications"], function (Controls, Notifications) {
-        const notificationContainer = $('body,html');
-        const notification = Controls.create(Notifications.MessageAreaControl, notificationContainer, {
-            closeable: false,
-            showIcon: true,
-            type: 1,
-            showHeader: true,
-            expanded: false,
-            hidden: false
-        });
-        //TODO
-        notification.setMessage($(`<div>TGA is not configure for this project, please <a href="TODO">contact the TGA-Team</a></div>`), 1);
-        resizeHost();
+    const notificationContainer = $('body,html');
+    const notification = controlService.create(notificationService.MessageAreaControl, notificationContainer, {
+        closeable: false,
+        showIcon: true,
+        type: 1,
+        showHeader: true,
+        expanded: false,
+        hidden: false
     });
+    //TODO
+    notification.setMessage($(`<div>TGA is not configure for this project, please <a href="TODO">contact the TGA-Team</a></div>`), 1);
+    resizeHost();
 }
 
 function showNotLoggedInMessage() {
-    VSS.require(["VSS/Controls", "VSS/Controls/Notifications"], function (Controls, Notifications) {
-        const notificationContainer = $('body,html');
-        const notification = Controls.create(Notifications.MessageAreaControl, notificationContainer, {
-            closeable: false,
-            showIcon: true,
-            type: 1,
-            showHeader: true,
-            expanded: false,
-            hidden: false
-        });
-        notification.setMessage($(`<div>Please log into <a href="${teamscaleClient.url}">TGA</a></div>`), 1);
-        resizeHost();
+    const notificationContainer = $('body,html');
+    const notification = controlService.create(notificationService.MessageAreaControl, notificationContainer, {
+        closeable: false,
+        showIcon: true,
+        type: 1,
+        showHeader: true,
+        expanded: false,
+        hidden: false
     });
+    notification.setMessage($(`<div>Please log into <a href="${teamscaleClient.url}">TGA</a></div>`), 1);
+    resizeHost();
 }
 
 function resizeHost() {

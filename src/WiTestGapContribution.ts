@@ -1,4 +1,3 @@
-import {IWorkItemFormService} from "TFS/WorkItemTracking/Services"
 import {Settings} from "./Settings/Settings";
 import {Scope} from "./Settings/Scope";
 import TeamscaleClient from "./TeamscaleClient";

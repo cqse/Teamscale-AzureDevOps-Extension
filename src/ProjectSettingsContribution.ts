@@ -18,6 +18,8 @@ VSS.ready(() => {
         if (teamscaleUrl.endsWith("/")) {
             teamscaleUrl = teamscaleUrl.substring(0, teamscaleUrl.length - 1);
         }
+
+        //TODO UI feedback (e.g. color botton green/red or sth)
         settings.save(Settings.TEAMSCALE_URL, teamscaleUrl).then(() => console.log("Saving successful"), error => console.dir(error));
         settings.save(Settings.TEAMSCALE_PROJECT, teamscaleProject).then(() => console.log("Saving successful"), error => console.dir(error));
     };

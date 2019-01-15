@@ -97,7 +97,7 @@ function showNotConfiguredMessage() {
         expanded: false,
         hidden: false
     });
-    //TODO
+    //TODO (maybe save contact e-mail in organization settings)
     notification.setMessage($(`<div>TGA is not configure for this project, please <a href="TODO">contact the TGA-Team</a></div>`), 1);
     resizeHost();
 }

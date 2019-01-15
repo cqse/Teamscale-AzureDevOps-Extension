@@ -1,6 +1,7 @@
 import {Settings} from "./Settings/Settings";
 import {Scope} from "./Settings/Scope";
 import TeamscaleClient from "./TeamscaleClient";
+import {ProjectSettings} from "./Settings/ProjectSettings";
 
 
 let teamscaleClient: TeamscaleClient = null;
@@ -47,7 +48,7 @@ VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Noti
     });
 
     let azureProjectName = VSS.getWebContext().project.name;
-    settings = new Settings(Scope.ProjectCollection, azureProjectName);
+    settings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
 
     settings.get(Settings.TEAMSCALE_URL).then((url) => {
         if (!url) {

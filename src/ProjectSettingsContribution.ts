@@ -1,5 +1,6 @@
-import {Settings} from "./Settings/Settings";
 import {Scope} from "./Settings/Scope";
+import {ProjectSettings} from "./Settings/ProjectSettings";
+import {Settings} from "./Settings/Settings";
 
 VSS.init({
     explicitNotifyLoaded: true,
@@ -8,7 +9,7 @@ VSS.init({
 
 VSS.ready(() => {
     let azureProjectName = VSS.getWebContext().project.name;
-    const settings = new Settings(Scope.ProjectCollection, azureProjectName);
+    const settings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
     let teamscaleUrlInput = document.getElementById("teamscale-url") as HTMLInputElement;
     let teamscaleProjectInput = document.getElementById("teamscale-project") as HTMLInputElement;
 

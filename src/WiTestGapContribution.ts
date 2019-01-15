@@ -6,7 +6,8 @@ import {ProjectSettings} from "./Settings/ProjectSettings";
 
 let teamscaleClient: TeamscaleClient = null;
 let teamscaleProject: string = "";
-let settings: Settings = null;
+let projectSettings: Settings = null;
+let organizationSettings: Settings = null;
 let controlService = null;
 let notificationService = null;
 
@@ -48,14 +49,15 @@ VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Noti
     });
 
     let azureProjectName = VSS.getWebContext().project.name;
-    settings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
+    projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
+    organizationSettings = new Settings(Scope.ProjectCollection);
 
-    settings.get(Settings.TEAMSCALE_URL).then((url) => {
+    projectSettings.get(Settings.TEAMSCALE_URL).then((url) => {
         if (!url) {
             return Promise.reject({status: -1});
         }
         teamscaleClient = new TeamscaleClient(url);
-        return settings.get(Settings.TEAMSCALE_PROJECT)
+        return projectSettings.get(Settings.TEAMSCALE_PROJECT)
     }).then(project => {
         if (!project) {
             return Promise.reject({status: -1});
@@ -72,22 +74,24 @@ VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Noti
         resizeHost();
         VSS.notifyLoadSucceeded();
     }, (reason) => {
-        switch (reason.status) {
-            case -1:
-                showNotConfiguredMessage();
-                VSS.notifyLoadSucceeded();
-                break;
-            case 403:
-                showNotLoggedInMessage();
-                VSS.notifyLoadSucceeded();
-                break;
-            default:
-                VSS.notifyLoadFailed('');
-        }
+        organizationSettings.get(Settings.EMAIL_CONTACT).then(email => {
+            switch (reason.status) {
+                case -1:
+                    showNotConfiguredMessage(email);
+                    VSS.notifyLoadSucceeded();
+                    break;
+                case 403:
+                    showNotLoggedInMessage();
+                    VSS.notifyLoadSucceeded();
+                    break;
+                default:
+                    VSS.notifyLoadFailed('');
+            }
+        });
     });
 });
 
-function showNotConfiguredMessage() {
+function showNotConfiguredMessage(email: string) {
     const notificationContainer = $('body,html');
     const notification = controlService.create(notificationService.MessageAreaControl, notificationContainer, {
         closeable: false,
@@ -97,8 +101,12 @@ function showNotConfiguredMessage() {
         expanded: false,
         hidden: false
     });
-    //TODO (maybe save contact e-mail in organization settings)
-    notification.setMessage($(`<div>TGA is not configure for this project, please <a href="TODO">contact the TGA-Team</a></div>`), 1);
+
+    if (email) {
+        notification.setMessage($(`<div>TGA is not configure for this project, please <a href="mailto:${email}">contact the TGA-Team</a></div>`), 1);
+    } else {
+        notification.setMessage($(`<div>TGA is not configure for this project, please contact the TGA-Team</div>`), 1);
+    }
     resizeHost();
 }
 

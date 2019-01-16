@@ -22,7 +22,6 @@ VSS.ready(() => {
             teamscaleUrl = teamscaleUrl.substring(0, teamscaleUrl.length - 1);
         }
 
-        //TODO UI feedback (e.g. color botton green/red or sth)
         settings.save(Settings.TEAMSCALE_URL, teamscaleUrl).then(
             (url) => UiUtils.logToDiv(logDiv, `Saving Teamscale URL "${url}" successful.`),
             () => UiUtils.logToDiv(logDiv, "Error saving Teamscale URL."));

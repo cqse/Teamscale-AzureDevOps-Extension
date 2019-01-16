@@ -16,7 +16,6 @@ VSS.ready(() => {
     document.getElementById("save-button").onclick = function () {
         let mailContact = mailContactInput.value;
 
-        //TODO UI feedback (e.g. color botton green/red or sth)
         settings.save(Settings.EMAIL_CONTACT, mailContact).then(
             (email) => UiUtils.logToDiv(logDiv, `Saving Email address "${email}" successful.`),
             () => UiUtils.logToDiv(logDiv, "Error saving Email address."));

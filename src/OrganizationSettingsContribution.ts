@@ -5,7 +5,6 @@ import UiUtils = require("./UiUtils");
 
 VSS.init({
     explicitNotifyLoaded: true,
-    usePlatformStyles: true
 });
 
 VSS.ready(() => {

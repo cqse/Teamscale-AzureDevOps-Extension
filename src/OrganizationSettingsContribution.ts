@@ -22,7 +22,7 @@ VSS.ready(() => {
 
     settings.get(Settings.EMAIL_CONTACT).then((email) => {
         if (email) {
-            mailContactInput.value = email
+            mailContactInput.value = email;
         }
         VSS.notifyLoadSucceeded();
     }, () => {

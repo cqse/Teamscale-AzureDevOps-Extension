@@ -1,9 +1,7 @@
 export default class TeamscaleClient {
-    public readonly url: string = "";
     public readonly project: string = "";
 
-    constructor(url: string) {
-        this.url = url;
+    constructor(public readonly url: string) {
     }
 
     public queryIssueTestGapPercentage(project: string, issueId: number): PromiseLike<number> {

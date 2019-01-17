@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "teamscale-azure-devops-plugin",
     "publisher": "CQSEGmbH",
-    "version": "0.0.398",
+    "version": "0.0.407",
     "name": "Teamscale DevOps",
     "description": "A sample Visual Studio Services extension",
     "public": false,
@@ -21,7 +21,7 @@
             ],
             "properties": {
                 "name": "Teamscale",
-                "uri": "sites/wi-test-gap.html"
+                "uri": "sites/work-item-form.html"
             }
         },
         {
@@ -31,7 +31,7 @@
                 "ms.vss-web.collection-admin-hub-group"
             ],
             "properties": {
-                "name": "Teamscale Settings",
+                "name": "Teamscale",
                 "order": 30,
                 "uri": "sites/organization-settings.html"
             }
@@ -43,7 +43,7 @@
                   "ms.vss-web.project-admin-hub-group"
               ],
               "properties": {
-                  "name": "Teamscale Settings",
+                  "name": "Teamscale",
                   "order": 30,
                   "uri": "sites/project-settings.html"
               }

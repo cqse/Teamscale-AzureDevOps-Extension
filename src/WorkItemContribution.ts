@@ -13,7 +13,9 @@ let notificationService = null;
 
 VSS.init({
     explicitNotifyLoaded: true,
-    usePlatformStyles: true
+    usePlatformStyles: true,
+    usePlatformScripts: true,
+    applyTheme: true
 });
 
 VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Notifications"], function (workItemServices, controls, notifications) {
@@ -103,9 +105,9 @@ function showNotConfiguredMessage(email: string) {
     });
 
     if (email) {
-        notification.setMessage($(`<div>TGA is not configure for this project, please <a href="mailto:${email}">contact the TGA-Team</a></div>`), 1);
+        notification.setMessage($(`<div>Teamscale is not configure for this project, please <a href="mailto:${email}">contact the Teamscale-Team</a></div>`), 1);
     } else {
-        notification.setMessage($(`<div>TGA is not configure for this project, please contact the TGA-Team</div>`), 1);
+        notification.setMessage($(`<div>Teamscale is not configure for this project, please contact your administrator</div>`), 1);
     }
     resizeHost();
 }
@@ -120,7 +122,7 @@ function showNotLoggedInMessage() {
         expanded: false,
         hidden: false
     });
-    notification.setMessage($(`<div>Please log into <a href="${teamscaleClient.url}">TGA</a></div>`), 1);
+    notification.setMessage($(`<div>Please log into <a href="${teamscaleClient.url}">Teamscale</a></div>`), 1);
     resizeHost();
 }
 

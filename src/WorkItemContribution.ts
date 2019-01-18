@@ -122,7 +122,23 @@ function showNotLoggedInMessage() {
         expanded: false,
         hidden: false
     });
-    notification.setMessage($(`<div>Please log into <a href="${teamscaleClient.url}">Teamscale</a></div>`), 1);
+    notification.setMessage($(`<div>Please log into <a id="login-link">Teamscale</a></div>`), 1);
+    $("#login-link").click(function () {
+        VSS.getService(VSS.ServiceIds.Dialog).then((dialogService: IHostDialogService)  => {
+            const extensionCtx = VSS.getExtensionContext();
+            // Build absolute contribution ID for dialogContent
+            const contributionId = extensionCtx.publisherId + "." + extensionCtx.extensionId + ".teamscale-login-dialog";
+
+            // Show dialog
+            const dialogOptions = {
+                title: "Teamscale Login",
+                width: 600,
+                height: 770
+            };
+
+            dialogService.openDialog(contributionId, dialogOptions);
+        });
+    });
     resizeHost();
 }
 

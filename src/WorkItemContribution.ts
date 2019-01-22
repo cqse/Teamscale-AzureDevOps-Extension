@@ -133,7 +133,8 @@ function showNotLoggedInMessage() {
             const dialogOptions = {
                 title: "Teamscale Login",
                 width: 600,
-                height: 770
+                height: 720,
+                buttons: null
             };
 
             dialogService.openDialog(contributionId, dialogOptions);

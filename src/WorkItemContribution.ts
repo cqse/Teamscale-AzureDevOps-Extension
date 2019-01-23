@@ -10,6 +10,7 @@ let projectSettings: Settings = null;
 let organizationSettings: Settings = null;
 let controlService = null;
 let notificationService = null;
+let workItemService = null;
 
 VSS.init({
     explicitNotifyLoaded: true,
@@ -18,9 +19,54 @@ VSS.init({
     applyTheme: true
 });
 
+function loadTgaBadge() {
+    let azureProjectName = VSS.getWebContext().project.name;
+    projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
+    organizationSettings = new Settings(Scope.ProjectCollection);
+
+    projectSettings.get(Settings.TEAMSCALE_URL).then((url) => {
+        if (!url) {
+            return Promise.reject({status: -1});
+        }
+        teamscaleClient = new TeamscaleClient(url);
+        return projectSettings.get(Settings.TEAMSCALE_PROJECT)
+    }).then(project => {
+        if (!project) {
+            return Promise.reject({status: -1});
+        }
+        teamscaleProject = project;
+        return workItemService.WorkItemFormService.getService();
+    }).then(service => {
+        return service.getId();
+    }).then((id) => {
+        return teamscaleClient.queryIssueTestGapBadge(teamscaleProject, id);
+    }).then((tgaBadge) => {
+        const tgaBadgeElement = $('#tga-badge');
+        tgaBadgeElement.html(tgaBadge);
+        resizeHost();
+        VSS.notifyLoadSucceeded();
+    }, (reason) => {
+        organizationSettings.get(Settings.EMAIL_CONTACT).then(email => {
+            switch (reason.status) {
+                case -1:
+                    showNotConfiguredMessage(email);
+                    VSS.notifyLoadSucceeded();
+                    break;
+                case 403:
+                    showNotLoggedInMessage();
+                    VSS.notifyLoadSucceeded();
+                    break;
+                default:
+                    VSS.notifyLoadFailed('');
+            }
+        });
+    });
+}
+
 VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Notifications"], function (workItemServices, controls, notifications) {
     controlService = controls;
     notificationService = notifications;
+    workItemService = workItemServices;
 
     VSS.register(VSS.getContribution().id, function () {
         return {
@@ -49,52 +95,11 @@ VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Noti
             }
         }
     });
-
-    let azureProjectName = VSS.getWebContext().project.name;
-    projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
-    organizationSettings = new Settings(Scope.ProjectCollection);
-
-    projectSettings.get(Settings.TEAMSCALE_URL).then((url) => {
-        if (!url) {
-            return Promise.reject({status: -1});
-        }
-        teamscaleClient = new TeamscaleClient(url);
-        return projectSettings.get(Settings.TEAMSCALE_PROJECT)
-    }).then(project => {
-        if (!project) {
-            return Promise.reject({status: -1});
-        }
-        teamscaleProject = project;
-        return workItemServices.WorkItemFormService.getService();
-    }).then(service => {
-        return service.getId();
-    }).then((id) => {
-        return teamscaleClient.queryIssueTestGapBadge(teamscaleProject, id);
-    }).then((tgaBadge) => {
-        const tgaBadgeElement = $('#tga-badge');
-        tgaBadgeElement.html(tgaBadge);
-        resizeHost();
-        VSS.notifyLoadSucceeded();
-    }, (reason) => {
-        organizationSettings.get(Settings.EMAIL_CONTACT).then(email => {
-            switch (reason.status) {
-                case -1:
-                    showNotConfiguredMessage(email);
-                    VSS.notifyLoadSucceeded();
-                    break;
-                case 403:
-                    showNotLoggedInMessage();
-                    VSS.notifyLoadSucceeded();
-                    break;
-                default:
-                    VSS.notifyLoadFailed('');
-            }
-        });
-    });
+    loadTgaBadge();
 });
 
 function showNotConfiguredMessage(email: string) {
-    const notificationContainer = $('body,html');
+    const notificationContainer = $('#message-div');
     const notification = controlService.create(notificationService.MessageAreaControl, notificationContainer, {
         closeable: false,
         showIcon: true,
@@ -113,7 +118,7 @@ function showNotConfiguredMessage(email: string) {
 }
 
 function showNotLoggedInMessage() {
-    const notificationContainer = $('body,html');
+    const notificationContainer = $('#message-div');
     const notification = controlService.create(notificationService.MessageAreaControl, notificationContainer, {
         closeable: false,
         showIcon: true,
@@ -134,7 +139,12 @@ function showNotLoggedInMessage() {
                 title: "Teamscale Login",
                 width: 600,
                 height: 720,
-                buttons: null
+                buttons: null,
+                close: function () {
+                    $('#tga-badge').empty();
+                    $('#message-div').empty();
+                    loadTgaBadge();
+                }
             };
 
             dialogService.openDialog(contributionId, dialogOptions);

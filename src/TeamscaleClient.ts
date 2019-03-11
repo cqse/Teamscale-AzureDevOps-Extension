@@ -4,6 +4,7 @@ export default class TeamscaleClient {
     constructor(public readonly url: string) {
     }
 
+    // TODO: unused?
     public queryIssueTestGapPercentage(project: string, issueId: number): PromiseLike<number> {
         let xhr = this.generateRequest(
             'GET',

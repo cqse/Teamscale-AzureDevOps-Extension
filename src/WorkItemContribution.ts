@@ -56,6 +56,7 @@ function loadTgaBadge() {
                     showNotLoggedInMessage();
                     VSS.notifyLoadSucceeded();
                     break;
+                // TODO: maybe cover more cases here, e.g. 500. In any case, the message and the status code should be displayed
                 default:
                     VSS.notifyLoadFailed('');
             }
@@ -109,6 +110,7 @@ function showNotConfiguredMessage(email: string) {
         hidden: false
     });
 
+    // TODO: extract message and set notification message below the if-block (I know, this is of paramount importance)
     if (email) {
         notification.setMessage($(`<div>Teamscale is not configure for this project, please <a href="mailto:${email}">contact the Teamscale-Team</a></div>`), 1);
     } else {
@@ -127,6 +129,7 @@ function showNotLoggedInMessage() {
         expanded: false,
         hidden: false
     });
+
     notification.setMessage($(`<div>Please log into <a id="login-link">Teamscale</a></div>`), 1);
     $("#login-link").click(function () {
         VSS.getService(VSS.ServiceIds.Dialog).then((dialogService: IHostDialogService)  => {

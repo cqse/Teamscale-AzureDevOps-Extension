@@ -3,7 +3,6 @@ import {Scope} from "./Settings/Scope";
 import TeamscaleClient from "./TeamscaleClient";
 import {ProjectSettings} from "./Settings/ProjectSettings";
 
-
 let teamscaleClient: TeamscaleClient = null;
 let teamscaleProject: string = "";
 let projectSettings: Settings = null;
@@ -49,16 +48,27 @@ function loadTgaBadge() {
         organizationSettings.get(Settings.EMAIL_CONTACT).then(email => {
             switch (reason.status) {
                 case -1:
-                    showNotConfiguredMessage(email);
+                    showInfoMessage(`Teamscale is not configured for this project. ${generateContactText(email)}`);
                     VSS.notifyLoadSucceeded();
                     break;
                 case 403:
                     showNotLoggedInMessage();
                     VSS.notifyLoadSucceeded();
                     break;
-                // TODO: maybe cover more cases here, e.g. 500. In any case, the message and the status code should be displayed
+                case 404:
+                    showInfoMessage(`Could not find project "${teamscaleProject}" ` +
+                        `on the Teamscale server <a href="${teamscaleClient.url}">${teamscaleClient.url}</a>. ` +
+                        `${generateContactText(email)}`);
+                    VSS.notifyLoadSucceeded();
+                    break;
                 default:
-                    VSS.notifyLoadFailed('');
+                    let message = `Failed with error code ${reason.status}`;
+                    if (reason.statusText) {
+                        message += `: ${reason.statusText}`;
+                    }
+                    message += `. ${generateContactText(email)}`;
+                    showErrorMessage(message);
+                    VSS.notifyLoadSucceeded();
             }
         });
     });
@@ -99,40 +109,18 @@ VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Noti
     loadTgaBadge();
 });
 
-function showNotConfiguredMessage(email: string) {
-    const notificationContainer = $('#message-div');
-    const notification = controlService.create(notificationService.MessageAreaControl, notificationContainer, {
-        closeable: false,
-        showIcon: true,
-        type: 1,
-        showHeader: true,
-        expanded: false,
-        hidden: false
-    });
-
-    // TODO: extract message and set notification message below the if-block (I know, this is of paramount importance)
+function generateContactText(email: String) {
+    let contact = "your administrator";
     if (email) {
-        notification.setMessage($(`<div>Teamscale is not configure for this project, please <a href="mailto:${email}">contact the Teamscale-Team</a></div>`), 1);
-    } else {
-        notification.setMessage($(`<div>Teamscale is not configure for this project, please contact your administrator</div>`), 1);
+        contact = `<a href="mailto:${email}">the Teamscale-Team</a>`;
     }
-    resizeHost();
+    return `Please contact ${contact}.`;
 }
 
 function showNotLoggedInMessage() {
-    const notificationContainer = $('#message-div');
-    const notification = controlService.create(notificationService.MessageAreaControl, notificationContainer, {
-        closeable: false,
-        showIcon: true,
-        type: 1,
-        showHeader: true,
-        expanded: false,
-        hidden: false
-    });
-
-    notification.setMessage($(`<div>Please log into <a id="login-link">Teamscale</a></div>`), 1);
+    showInfoMessage(`Please log into <a id="login-link">Teamscale</a>`);
     $("#login-link").click(function () {
-        VSS.getService(VSS.ServiceIds.Dialog).then((dialogService: IHostDialogService)  => {
+        VSS.getService(VSS.ServiceIds.Dialog).then((dialogService: IHostDialogService) => {
             const extensionCtx = VSS.getExtensionContext();
             // Build absolute contribution ID for dialogContent
             const contributionId = extensionCtx.publisherId + "." + extensionCtx.extensionId + ".teamscale-login-dialog";
@@ -153,7 +141,26 @@ function showNotLoggedInMessage() {
             dialogService.openDialog(contributionId, dialogOptions);
         });
     });
+}
+
+function showInfoMessage(message: String) {
+    const notification = generateNotification();
+    notification.setMessage($(`<div>${message}</div>`), notificationService.MessageAreaType.Info);
     resizeHost();
+}
+
+function showErrorMessage(message: String) {
+    const notification = generateNotification();
+    notification.setMessage($(`<div>${message}</div>`), notificationService.MessageAreaType.Error);
+    resizeHost();
+}
+
+function generateNotification() {
+    const notificationContainer = $('#message-div');
+    return controlService.create(notificationService.MessageAreaControl, notificationContainer, {
+        closeable: false,
+        showIcon: true,
+    });
 }
 
 function resizeHost() {

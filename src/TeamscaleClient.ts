@@ -1,17 +1,5 @@
 export default class TeamscaleClient {
-    public readonly project: string = "";
-
     constructor(public readonly url: string) {
-    }
-
-    // TODO: unused?
-    public queryIssueTestGapPercentage(project: string, issueId: number): PromiseLike<number> {
-        let xhr = this.generateRequest(
-            'GET',
-            `/p/${project}/tga-issue-query-percentage/?query=id%3D${issueId}`);
-        let promise = this.generatePromise<number>(xhr);
-        xhr.send();
-        return promise;
     }
 
     public queryIssueTestGapBadge(project: string, issueId: number): PromiseLike<string> {

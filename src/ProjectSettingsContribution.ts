@@ -1,8 +1,16 @@
+/**
+ * Contribution for the project settings consisting of the Teamscale URL and project
+ */
 import {Scope} from "./Settings/Scope";
 import {ProjectSettings} from "./Settings/ProjectSettings";
 import {Settings} from "./Settings/Settings";
-import {padStart} from "./UiUtils";
+import {getCurrentTimestamp} from "./UiUtils";
 import UiUtils = require("./UiUtils");
+
+let teamscaleUrlInput: HTMLInputElement = null;
+let teamscaleProjectInput: HTMLInputElement = null;
+let logDiv: HTMLDivElement = null;
+let settings: ProjectSettings = null;
 
 VSS.init({
     explicitNotifyLoaded: true,
@@ -10,31 +18,14 @@ VSS.init({
 
 VSS.ready(() => {
     let azureProjectName = VSS.getWebContext().project.name;
-    const settings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
-    let teamscaleUrlInput = document.getElementById("teamscale-url") as HTMLInputElement;
-    let teamscaleProjectInput = document.getElementById("teamscale-project") as HTMLInputElement;
-    let logDiv = document.getElementById("log") as HTMLDivElement;
+    settings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
+    teamscaleUrlInput = document.getElementById("teamscale-url") as HTMLInputElement;
+    teamscaleProjectInput = document.getElementById("teamscale-project") as HTMLInputElement;
+    logDiv = document.getElementById("log") as HTMLDivElement;
 
-    document.getElementById("save-button").onclick = function () {
-        const teamscaleProject = teamscaleProjectInput.value;
-        let teamscaleUrl = teamscaleUrlInput.value;
-        if (teamscaleUrl.endsWith("/")) {
-            teamscaleUrl = teamscaleUrl.substring(0, teamscaleUrl.length - 1);
-        }
+    assignOnClickSave();
 
-        logDiv.innerHTML = "";
-        const now = new Date();
-        const timestamp = `${padStart(now.getHours().toString(), 2, "0")}` +
-            `:${padStart(now.getMinutes().toString(), 2, "0")}` +
-            `:${padStart(now.getSeconds().toString(), 2, "0")}`;
-        settings.save(Settings.TEAMSCALE_URL, teamscaleUrl).then(
-            (url) => UiUtils.logToDiv(logDiv, `${timestamp}: Saving Teamscale URL "${url}" successful.`),
-            () => UiUtils.logToDiv(logDiv, `${timestamp}: Error saving Teamscale URL.`));
-        settings.save(Settings.TEAMSCALE_PROJECT, teamscaleProject).then(
-            (project) => UiUtils.logToDiv(logDiv, `${timestamp}: Saving Teamscale project "${project}" successful.`),
-            () => UiUtils.logToDiv(logDiv, `${timestamp}: Error saving Teamscale project`));
-    };
-
+    // Load the current settings
     settings.get(Settings.TEAMSCALE_URL).then((url) => {
         if (url) {
             teamscaleUrlInput.value = url;
@@ -49,3 +40,24 @@ VSS.ready(() => {
         VSS.notifyLoadFailed('');
     });
 });
+
+function assignOnClickSave() {
+    document.getElementById("save-button").onclick = function () {
+        const teamscaleProject = teamscaleProjectInput.value;
+        let teamscaleUrl = teamscaleUrlInput.value;
+        if (teamscaleUrl.endsWith("/")) {
+            teamscaleUrl = teamscaleUrl.substring(0, teamscaleUrl.length - 1);
+        }
+
+        // Log success/error events to have some feedback
+        logDiv.innerHTML = "";
+        const timestamp = getCurrentTimestamp();
+        settings.save(Settings.TEAMSCALE_URL, teamscaleUrl).then(
+            (url) => UiUtils.logToDiv(logDiv, `${timestamp}: Saving Teamscale URL "${url}" successful.`),
+            () => UiUtils.logToDiv(logDiv, `${timestamp}: Error saving Teamscale URL.`));
+        settings.save(Settings.TEAMSCALE_PROJECT, teamscaleProject).then(
+            (project) => UiUtils.logToDiv(logDiv, `${timestamp}: Saving Teamscale project "${project}" successful.`),
+            () => UiUtils.logToDiv(logDiv, `${timestamp}: Error saving Teamscale project`));
+    };
+
+}

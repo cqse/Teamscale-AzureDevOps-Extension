@@ -1,3 +1,7 @@
+/**
+ * Contribution for the work item UI. It shows a test gap badge when Teamscale URL and project are properly set up via
+ * the project settings contribution
+ */
 import {Settings} from "./Settings/Settings";
 import {Scope} from "./Settings/Scope";
 import TeamscaleClient from "./TeamscaleClient";
@@ -7,73 +11,24 @@ let teamscaleClient: TeamscaleClient = null;
 let teamscaleProject: string = "";
 let projectSettings: Settings = null;
 let organizationSettings: Settings = null;
+
+// VSS services
 let controlService = null;
 let notificationService = null;
 let workItemService = null;
 
+// Set extension properties in VSS
 VSS.init({
+    /* Require the extension to notify VSS that it's ready loading.
+    We do a lot of async processing (querying settings, Teamscale, ...), so this is required.*/
     explicitNotifyLoaded: true,
-    usePlatformStyles: true,
-    usePlatformScripts: true,
-    applyTheme: true
+    // Allow dark theme
+    applyTheme: true,
+    usePlatformStyles: true, //
+    usePlatformScripts: true // Required for theming/styling
 });
 
-function loadTgaBadge() {
-    let azureProjectName = VSS.getWebContext().project.name;
-    projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
-    organizationSettings = new Settings(Scope.ProjectCollection);
-
-    projectSettings.get(Settings.TEAMSCALE_URL).then((url) => {
-        if (!url) {
-            return Promise.reject({status: -1});
-        }
-        teamscaleClient = new TeamscaleClient(url);
-        return projectSettings.get(Settings.TEAMSCALE_PROJECT)
-    }).then(project => {
-        if (!project) {
-            return Promise.reject({status: -1});
-        }
-        teamscaleProject = project;
-        return workItemService.WorkItemFormService.getService();
-    }).then(service => {
-        return service.getId();
-    }).then((id) => {
-        return teamscaleClient.queryIssueTestGapBadge(teamscaleProject, id);
-    }).then((tgaBadge) => {
-        const tgaBadgeElement = $('#tga-badge');
-        tgaBadgeElement.html(tgaBadge);
-        resizeHost();
-        VSS.notifyLoadSucceeded();
-    }, (reason) => {
-        organizationSettings.get(Settings.EMAIL_CONTACT).then(email => {
-            switch (reason.status) {
-                case -1:
-                    showInfoMessage(`Teamscale is not configured for this project. ${generateContactText(email)}`);
-                    VSS.notifyLoadSucceeded();
-                    break;
-                case 403:
-                    showNotLoggedInMessage();
-                    VSS.notifyLoadSucceeded();
-                    break;
-                case 404:
-                    showInfoMessage(`Could not find project "${teamscaleProject}" ` +
-                        `on the Teamscale server <a href="${teamscaleClient.url}">${teamscaleClient.url}</a>. ` +
-                        `${generateContactText(email)}`);
-                    VSS.notifyLoadSucceeded();
-                    break;
-                default:
-                    let message = `Failed with error code ${reason.status}`;
-                    if (reason.statusText) {
-                        message += `: ${reason.statusText}`;
-                    }
-                    message += `. ${generateContactText(email)}`;
-                    showErrorMessage(message);
-                    VSS.notifyLoadSucceeded();
-            }
-        });
-    });
-}
-
+//Request the required services from VSS. Once retrieved, register a contribution callback (required by VSS) and load the TGA badge
 VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Notifications"], function (workItemServices, controls, notifications) {
     controlService = controls;
     notificationService = notifications;
@@ -109,6 +64,66 @@ VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Noti
     loadTgaBadge();
 });
 
+function loadTgaBadge() {
+    let azureProjectName = VSS.getWebContext().project.name;
+    projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
+    organizationSettings = new Settings(Scope.ProjectCollection);
+
+    projectSettings.get(Settings.TEAMSCALE_URL).then((url) => {
+        if (!url) {
+            return Promise.reject({status: -1});
+        }
+        teamscaleClient = new TeamscaleClient(url);
+        return projectSettings.get(Settings.TEAMSCALE_PROJECT)
+    }).then(project => {
+        if (!project) {
+            return Promise.reject({status: -1});
+        }
+        teamscaleProject = project;
+        return workItemService.WorkItemFormService.getService();
+    }).then(service => {
+        return service.getId();
+    }).then((id) => {
+        return teamscaleClient.queryIssueTestGapBadge(teamscaleProject, id);
+    }).then((tgaBadge) => {
+        const tgaBadgeElement = $('#tga-badge');
+        tgaBadgeElement.html(tgaBadge);
+        resizeHost();
+        VSS.notifyLoadSucceeded();
+    }, (reason) => {
+        organizationSettings.get(Settings.EMAIL_CONTACT).then(email => {
+            switch (reason.status) {
+                case -1:
+                    showInfoBanner(`Teamscale is not configured for this project. ${generateContactText(email)}`);
+                    VSS.notifyLoadSucceeded();
+                    break;
+                case 403:
+                    showNotLoggedInMessage();
+                    VSS.notifyLoadSucceeded();
+                    break;
+                case 404:
+                    showInfoBanner(`Could not find project "${teamscaleProject}" ` +
+                        `on the Teamscale server <a href="${teamscaleClient.url}">${teamscaleClient.url}</a>. ` +
+                        `${generateContactText(email)}`);
+                    VSS.notifyLoadSucceeded();
+                    break;
+                default:
+                    let message = `Failed with error code ${reason.status}`;
+                    if (reason.statusText) {
+                        message += `: ${reason.statusText}`;
+                    }
+                    message += `. ${generateContactText(email)}`;
+                    showErrorBanner(message);
+                    VSS.notifyLoadSucceeded();
+            }
+        });
+    });
+}
+
+/**
+ * Generates a text that can be apended to info/error messages. If the email is set, a mailto link to the Teamscale team
+ * is generated, otherwise a note to contact the administrator
+ */
 function generateContactText(email: String) {
     let contact = "your administrator";
     if (email) {
@@ -117,8 +132,11 @@ function generateContactText(email: String) {
     return `Please contact ${contact}.`;
 }
 
+/**
+ * Shows an info message with a link to open the login dialog for Teamscale
+ */
 function showNotLoggedInMessage() {
-    showInfoMessage(`Please log into <a id="login-link">Teamscale</a>`);
+    showInfoBanner(`Please log into <a id="login-link">Teamscale</a>`);
     $("#login-link").click(function () {
         VSS.getService(VSS.ServiceIds.Dialog).then((dialogService: IHostDialogService) => {
             const extensionCtx = VSS.getExtensionContext();
@@ -143,18 +161,29 @@ function showNotLoggedInMessage() {
     });
 }
 
-function showInfoMessage(message: String) {
+/**
+ * Shows an info banner (vss notification).
+ * @param message The message to display. It may contain HTML.
+ */
+function showInfoBanner(message: String) {
     const notification = generateNotification();
     notification.setMessage($(`<div>${message}</div>`), notificationService.MessageAreaType.Info);
     resizeHost();
 }
 
-function showErrorMessage(message: String) {
+/**
+ * Shows an error banner (vss notification).
+ * @param message The message to display. It may contain HTML.
+ */
+function showErrorBanner(message: String) {
     const notification = generateNotification();
     notification.setMessage($(`<div>${message}</div>`), notificationService.MessageAreaType.Error);
     resizeHost();
 }
 
+/**
+ * Generates a notification control (banner) with an icon and which is not closeable
+ */
 function generateNotification() {
     const notificationContainer = $('#message-div');
     return controlService.create(notificationService.MessageAreaControl, notificationContainer, {
@@ -163,6 +192,9 @@ function generateNotification() {
     });
 }
 
+/**
+ * Resize the body of the host iframe to match the height of the body of the extension
+ */
 function resizeHost() {
     const bodyElement = $('body,html');
     VSS.resize(bodyElement.width(), bodyElement.height());

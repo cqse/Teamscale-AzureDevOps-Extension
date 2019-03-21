@@ -1,31 +1,23 @@
 import {Settings} from "./Settings/Settings";
 import {Scope} from "./Settings/Scope";
 import UiUtils = require("./UiUtils");
-import {padStart} from "./UiUtils";
+import {getCurrentTimestamp} from "./UiUtils";
 
+let settings: Settings = new Settings(Scope.ProjectCollection);
+let mailContactInput: HTMLInputElement = null;
+let logDiv: HTMLDivElement = null;
 
 VSS.init({
     explicitNotifyLoaded: true,
 });
 
 VSS.ready(() => {
-    const settings = new Settings(Scope.ProjectCollection);
-    let mailContactInput = document.getElementById("email-contact") as HTMLInputElement;
-    let logDiv = document.getElementById("log") as HTMLInputElement;
+    mailContactInput = document.getElementById("email-contact") as HTMLInputElement;
+    logDiv = document.getElementById("log") as HTMLInputElement;
 
-    document.getElementById("save-button").onclick = function () {
-        let mailContact = mailContactInput.value;
+    assignOnClickSave();
 
-        logDiv.innerHTML = "";
-        const now = new Date();
-        const timestamp = `${padStart(now.getHours().toString(), 2, "0")}` +
-            `:${padStart(now.getMinutes().toString(), 2, "0")}` +
-            `:${padStart(now.getSeconds().toString(), 2, "0")}`;
-        settings.save(Settings.EMAIL_CONTACT, mailContact).then(
-            (email) => UiUtils.logToDiv(logDiv, `${timestamp}: Saving Email address "${email}" successful.`),
-            () => UiUtils.logToDiv(logDiv, `${timestamp}: Error saving Email address.`));
-    };
-
+    // Load current settings
     settings.get(Settings.EMAIL_CONTACT).then((email) => {
         if (email) {
             mailContactInput.value = email;
@@ -35,3 +27,17 @@ VSS.ready(() => {
         VSS.notifyLoadFailed('');
     });
 });
+
+function assignOnClickSave() {
+    document.getElementById("save-button").onclick = function () {
+        let mailContact = mailContactInput.value;
+
+        // Log success/error events to have some feedback
+        logDiv.innerHTML = "";
+        let timestamp = getCurrentTimestamp();
+        settings.save(Settings.EMAIL_CONTACT, mailContact).then(
+            (email) => UiUtils.logToDiv(logDiv, `${timestamp}: Saving Email address "${email}" successful.`),
+            () => UiUtils.logToDiv(logDiv, `${timestamp}: Error saving Email address.`));
+    };
+
+}

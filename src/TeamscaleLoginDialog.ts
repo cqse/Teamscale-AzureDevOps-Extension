@@ -1,3 +1,6 @@
+/**
+ * VSS extension that represents the login dialog which is shown if the user click "login to Teamscale" in the work item contribution UI.
+ */
 import {ProjectSettings} from "./Settings/ProjectSettings";
 import {Scope} from "./Settings/Scope";
 import {Settings} from "./Settings/Settings";

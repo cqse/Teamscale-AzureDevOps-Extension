@@ -1,6 +1,8 @@
 /**
  * Encapsulates calls to Teamscale
  */
+import {reject} from "q";
+
 export default class TeamscaleClient {
     constructor(public readonly url: string) {
     }
@@ -19,8 +21,6 @@ export default class TeamscaleClient {
             // Wrap the svg in a link element pointing to the issue perspective on Teamscale
             let issueUrl = `${this.url}/issues.html#/${project}/${issueId}`;
             return `<a href="${issueUrl}" target="_top">${testGapBadge}</a>`
-        }, error => {
-            return error;
         });
         xhr.send();
         return promise;

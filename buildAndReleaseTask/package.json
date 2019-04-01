@@ -1,0 +1,19 @@
+{
+  "name": "teamscale-azure-devops-tasks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "azure-pipelines-task-lib": "^2.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^11.12.2",
+    "@types/q": "^1.5.2",
+    "tsc": "^1.20150623.0"
+  }
+}

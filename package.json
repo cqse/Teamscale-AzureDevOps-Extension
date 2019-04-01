@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "replace": "replace \"\\s+nodeType: number;\" \"\" \"node_modules/vss-web-extension-sdk/typings/vss.d.ts\" -r",
-    "compileTypeScript": "$(npm bin)/tsc -p .",
+    "compileTypeScript": "$(npm bin)/tsc && cd buildAndReleaseTask && $(npm bin)/tsc",
     "build": "npm run-script replace && npm run-script compileTypeScript",
     "package": "npm run-script build && $(npm bin)/tfx extension create --output-path ./deployment/",
     "test-publish": "npm run-script build && $(npm bin)/tfx extension publish --share-with cqse --rev-version --output-path deployment --token $(node scripts/cat.js token)",

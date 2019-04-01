@@ -1,4 +1,7 @@
 {
+    "exclude": [
+        "buildAndReleaseTask",
+    ],
     "compilerOptions": {
         "module": "amd",
         "moduleResolution": "node",

@@ -8,3 +8,6 @@ dist/*
 !dist/.gitkeep
 
 token
+
+buildAndReleaseTask/index.js
+

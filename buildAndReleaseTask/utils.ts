@@ -17,17 +17,12 @@ export function firstWildcardIndex(str: string) {
 }
 
 export function resolveFiles(filesPattern: string) : string[] {
-    if (filesPattern.indexOf('*') == -1 && filesPattern.indexOf('?') == -1) {
-        task.checkPath(filesPattern, "filesPattern");
-        return [filesPattern];
-    }
-
     task.debug('Matching glob pattern: ' + filesPattern);
 
     const idx = firstWildcardIndex(filesPattern);
     task.debug('Index of first wildcard: ' + idx);
     if (idx == null) {
-        // not a pattern, thus simply return the one file
+        task.checkPath(filesPattern, "filesPattern");
         return [filesPattern];
     }
 

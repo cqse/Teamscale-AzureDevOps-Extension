@@ -15,6 +15,12 @@ To compile the code:
 npm run build
 ```
 
+To run the unit tests:
+
+```bash
+npm test
+```
+
 To package as a .vsix:
 
 ```bash

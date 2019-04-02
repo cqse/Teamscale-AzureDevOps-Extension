@@ -12,3 +12,5 @@ token
 **.js
 !scripts/**.js
 
+**/.taskkey
+

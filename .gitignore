@@ -9,5 +9,6 @@ dist/*
 
 token
 
-buildAndReleaseTask/index.js
+**.js
+!scripts/**.js
 

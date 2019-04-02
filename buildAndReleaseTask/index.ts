@@ -3,6 +3,7 @@ import task = require('azure-pipelines-task-lib/task');
 import os = require('os');
 import toolRunner = require('azure-pipelines-task-lib/toolrunner');
 import urlLib = require('url');
+import utils = require('./utils');
 
 // c.f. https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml#build-variables
 const revision = task.getVariable('Build.SourceVersion');
@@ -19,18 +20,6 @@ async function run() {
     }
 }
 
-function firstWildcardIndex(str: string) {
-    const starIndex = str.indexOf('*');
-    const questionMarkIndex = str.indexOf('?');
-    if (starIndex === -1) {
-        return questionMarkIndex
-    }
-    if (questionMarkIndex === -1) {
-        return starIndex;
-    }
-    return Math.min(starIndex, questionMarkIndex);
-}
-
 function createUploadUrl(teamscaleUrl: string, project: string, format: string, partition: string, message: string) : string {
     if (!teamscaleUrl.endsWith("/")) {
         teamscaleUrl += "/";
@@ -42,28 +31,6 @@ function createUploadUrl(teamscaleUrl: string, project: string, format: string, 
     url.searchParams.append('partition', partition);
     url.searchParams.append('message', message);
     return url.toString();
-}
-
-function resolveFiles(filesPattern: string) : string[] {
-    if (filesPattern.indexOf('*') == -1 && filesPattern.indexOf('?') == -1) {
-        task.checkPath(filesPattern, "filesPattern");
-        return [filesPattern];
-    }
-
-    task.debug('Matching glob pattern: ' + filesPattern);
-
-    const idx = firstWildcardIndex(filesPattern);
-    task.debug('Index of first wildcard: ' + idx);
-    const findPathRoot = path.dirname(filesPattern.slice(0, idx));
-    task.debug('find root dir: ' + findPathRoot);
-
-    const allFiles = task.find(findPathRoot);
-    const uploadFilesList = task.match(allFiles, filesPattern, undefined, { matchBase: true });
-
-    if (!uploadFilesList || uploadFilesList.length == 0) {
-        throw new Error(`Did not find any files matching '${filesPattern}'`);
-    }
-    return uploadFilesList;
 }
 
 async function convertCoverageFiles(coverageFiles: string[]) : Promise<string> {
@@ -94,10 +61,6 @@ async function convertCoverageFiles(coverageFiles: string[]) : Promise<string> {
     return outputXmlFile;
 }
 
-function isCoverageFile(file: string) : boolean {
-    return path.extname(file).toLowerCase() === ".coverage";
-}
-
 async function runUnsafe() {
     task.setResourcePath(path.join(__dirname, 'task.json'));
 
@@ -112,13 +75,13 @@ async function runUnsafe() {
     const message = `${partition} Upload (Build ${buildId})`;
     const uploadUrl = createUploadUrl(teamscaleUrl, project, format, partition, message);
 
-    let filesToUpload = resolveFiles(filesPattern);
+    let filesToUpload = utils.resolveFiles(filesPattern);
     task.debug(`Uploading ${filesToUpload}`);
-    const coverageFiles = filesToUpload.filter(isCoverageFile);
+    const coverageFiles = filesToUpload.filter(utils.isCoverageFile);
     task.debug(`Coverage files: ${coverageFiles}`);
     if (coverageFiles.length > 0) {
         const convertedCoverageFile = await convertCoverageFiles(coverageFiles);
-        filesToUpload = filesToUpload.filter(file => !isCoverageFile(file)).concat(convertedCoverageFile);
+        filesToUpload = filesToUpload.filter(file => !utils.isCoverageFile(file)).concat(convertedCoverageFile);
         task.debug(`Now uploading ${filesToUpload}`);
     }
 

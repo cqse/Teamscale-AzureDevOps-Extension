@@ -4,6 +4,9 @@ import task = require('azure-pipelines-task-lib/task');
 export function firstWildcardIndex(str: string) {
     const starIndex = str.indexOf('*');
     const questionMarkIndex = str.indexOf('?');
+    if (starIndex === -1 && questionMarkIndex === -1) {
+        return null;
+    }
     if (starIndex === -1) {
         return questionMarkIndex
     }
@@ -23,6 +26,11 @@ export function resolveFiles(filesPattern: string) : string[] {
 
     const idx = firstWildcardIndex(filesPattern);
     task.debug('Index of first wildcard: ' + idx);
+    if (idx == null) {
+        // not a pattern, thus simply return the one file
+        return [filesPattern];
+    }
+
     const findPathRoot = path.dirname(filesPattern.slice(0, idx));
     task.debug('find root dir: ' + findPathRoot);
 

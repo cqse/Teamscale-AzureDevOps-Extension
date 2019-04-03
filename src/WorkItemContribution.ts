@@ -102,6 +102,7 @@ function loadTgaBadge() {
                     VSS.notifyLoadSucceeded();
                     break;
                 case 404:
+                    // TODO: Let the link open in a new tab or window, otherwise it will be in a super small iframe
                     showInfoBanner(`Could not find project "${teamscaleProject}" ` +
                         `on the Teamscale server <a href="${teamscaleClient.url}">${teamscaleClient.url}</a>. ` +
                         `${generateContactText(email)}`);
@@ -121,7 +122,7 @@ function loadTgaBadge() {
 }
 
 /**
- * Generates a text that can be apended to info/error messages. If the email is set, a mailto link to the Teamscale team
+ * Generates a text that can be appended to info/error messages. If the email is set, a mailto link to the Teamscale team
  * is generated, otherwise a note to contact the administrator
  */
 function generateContactText(email: String) {

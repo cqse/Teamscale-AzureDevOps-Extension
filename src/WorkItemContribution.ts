@@ -71,7 +71,7 @@ function loadTgaBadge() {
 
     projectSettings.get(Settings.TEAMSCALE_URL).then((url) => {
         if (!url) {
-            return Promise.reject({status: -1});
+            return Promise.reject({status: -2});
         }
         teamscaleClient = new TeamscaleClient(url);
         return projectSettings.get(Settings.TEAMSCALE_PROJECT)
@@ -93,8 +93,13 @@ function loadTgaBadge() {
     }, (reason) => {
         organizationSettings.get(Settings.EMAIL_CONTACT).then(email => {
             switch (reason.status) {
-                case -1:
+                case -2:
                     showInfoBanner(`Teamscale is not configured for this project. ${generateContactText(email)}`);
+                    VSS.notifyLoadSucceeded();
+                    break;
+                case -1:
+                    showInfoBanner(`Please make sure <a href="${teamscaleClient.url}" target="_top">Teamscale</a> is reachable from your computer. ` +
+                        `If the problem persists: ${generateContactText(email)}`);
                     VSS.notifyLoadSucceeded();
                     break;
                 case 403:
@@ -102,9 +107,8 @@ function loadTgaBadge() {
                     VSS.notifyLoadSucceeded();
                     break;
                 case 404:
-                    // TODO: Let the link open in a new tab or window, otherwise it will be in a super small iframe
                     showInfoBanner(`Could not find project "${teamscaleProject}" ` +
-                        `on the Teamscale server <a href="${teamscaleClient.url}">${teamscaleClient.url}</a>. ` +
+                        `on the Teamscale server <a href="${teamscaleClient.url}" target="_top">${teamscaleClient.url}</a>. ` +
                         `${generateContactText(email)}`);
                     VSS.notifyLoadSucceeded();
                     break;

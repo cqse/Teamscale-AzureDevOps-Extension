@@ -36,7 +36,7 @@ function assignOnClickSave() {
         logDiv.innerHTML = "";
         let timestamp = getCurrentTimestamp();
         settings.save(Settings.EMAIL_CONTACT, mailContact).then(
-            (email) => UiUtils.logToDiv(logDiv, `${timestamp} Saving Email address "${email}" successful.`),
+            (email) => UiUtils.logToDiv(logDiv, `${timestamp} Saving Email address "${email ? email : ""}" successful.`),
             () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving Email address.`));
     };
 

@@ -1,9 +1,6 @@
 /**
  * Encapsulates calls to Teamscale
  */
-// TODO: unused
-import {reject} from "q";
-
 export default class TeamscaleClient {
     constructor(public readonly url: string) {
     }
@@ -15,11 +12,6 @@ export default class TeamscaleClient {
      * @returns {PromiseLike} which resolves to a SVG represented as string
      */
     public queryIssueTestGapBadge(project: string, issueId: number): PromiseLike<string> {
-        // TODO: If the teamscale server address is wrong this request will not return a status code
-        // In the case of mozilla it will first send an OPTIONS request. Afaik because of a CORS problem.
-        // Chromium does make a GET but it will only be marked as "failed"
-        // This will always results in this cryptic message: Failed with error code 0. Please contact your administrator.
-        // Not sure how to resolve this, maybe check if the server is reachable if you save the settings?
         let xhr = this.generateRequest(
             'GET',
             `/p/${project}/tga-badge.svg?issueId=${issueId}`);
@@ -50,7 +42,9 @@ export default class TeamscaleClient {
             };
             request.onerror = function () {
                 reject({
-                    status: this.status,
+                    // Probably a network problem or a wrong url setting, return a usable status code (-1)
+                    // At some point this might have to be replaced with a proper error class...
+                    status: -1,
                     statusText: request.statusText
                 });
             };

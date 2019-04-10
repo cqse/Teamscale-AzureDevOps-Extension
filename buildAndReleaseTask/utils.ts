@@ -1,6 +1,8 @@
 import * as path from 'path';
 import * as task from 'azure-pipelines-task-lib/task';
-import { URL } from 'url';
+
+// different versions of Node have different names for this class
+const Url = require('url').URL || require('url').Url || URL;
 
 export function firstWildcardIndex(str: string) {
     const starIndex = str.indexOf('*');
@@ -48,7 +50,7 @@ export function createUploadUrl(teamscaleUrl: string, project: string, format: s
         teamscaleUrl += "/";
     }
 
-    const url = new URL(`${teamscaleUrl}p/${project}/external-report`);
+    const url = new Url(`${teamscaleUrl}p/${project}/external-report`);
     url.searchParams.append('format', format);
     url.searchParams.append('revision', revision);
     url.searchParams.append('partition', partition);

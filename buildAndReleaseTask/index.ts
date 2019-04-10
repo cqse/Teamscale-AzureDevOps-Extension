@@ -85,9 +85,6 @@ async function runUnsafe() {
     } else {
         task.setResult(task.TaskResult.Failed, `Upload finished with exit code ${exitCode}`);
     }
-
-    const uploadCount = filesToUpload.length;
-    checkNumberOfUploadedFiles(output, uploadCount);
 }
 
 function createCurlRunner(username: string, accessKey: string, filesToUpload: string[], uploadUrl: string) {
@@ -109,19 +106,8 @@ function createCurlRunner(username: string, accessKey: string, filesToUpload: st
     return curlRunner;
 }
 
-function checkNumberOfUploadedFiles(output: string, expectedUploadCount: number) {
-    let outputMatch: RegExpMatchArray = output.match(/[\n\r]100\s/g);
-    let completed: number = outputMatch ? outputMatch.length : 0;
-    task.debug(`Successfully uploaded ${completed} files`);
-    if (completed !== expectedUploadCount) {
-        task.debug('Tested output [' + output + ']');
-        task.warning(`Only ${completed} of ${expectedUploadCount} files were uploaded`);
-    }
-}
-
 process.on('unhandledRejection', (error : Error) => {
     task.error(`Task failed with unhandled promise rejection: ${error.message}. ${error.stack}`);
 });
 
-task.warning("test1");
 run();

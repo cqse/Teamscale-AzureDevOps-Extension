@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "teamscale-azure-devops-plugin",
     "publisher": "CQSEGmbH",
-    "version": "0.0.543",
+    "version": "0.0.553",
     "name": "Teamscale DevOps",
     "description": "Teamscale Integration with Azure DevOps",
     "public": false,
@@ -13,7 +13,7 @@
         }
     ],
     "icons": {
-        "default": "images/teamscale.svg"
+        "default": "images/teamscale.png"
     },
     "contributions": [
         {

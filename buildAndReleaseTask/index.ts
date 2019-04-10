@@ -119,4 +119,8 @@ function checkNumberOfUploadedFiles(output: string, expectedUploadCount: number)
     }
 }
 
+process.on('unhandledRejection', (error : Error) => {
+    task.error(`Task failed with unhandled promise rejection: ${error.message}`);
+});
+
 run();

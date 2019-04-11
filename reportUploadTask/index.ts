@@ -105,6 +105,9 @@ function createCurlRunner(username: string, accessKey: string, filesToUpload: st
         curlRunner.arg(`-Freport=@${file}`);
     }
     curlRunner.arg('--stderr');
+    // makes curl fail if the returned HTTP code is not 2xx, e.g. if the user does not have the right
+    // permissions in Teamscale
+    curlRunner.arg('--fail');
     curlRunner.arg('-');
     curlRunner.arg(uploadUrl);
     return curlRunner;

@@ -3,7 +3,7 @@ Plugin for Azure DevOps that provides
 - Extension for the WorkItems pages to show a TestGap badge
 - Pipeline Task to upload coverage, findings, ... reports to Teamscale
 
-# Build and Test
+# Building
 
 We recommend editing with VS Code.
 
@@ -13,17 +13,22 @@ To compile the code:
 npm run build
 ```
 
+To package as a .vsix:
+
+```bash
+npm run package
+```
+
+# Testing
+
 To run the unit tests:
 
 ```bash
 npm test
 ```
 
-To package as a .vsix:
-
-```bash
-npm run package
-```
+You can test the pipeline task against <https://cqse.visualstudio.com/CSharpWithTests> which is also hosted on
+[our demo instance](https://demo.teamscale.com).
 
 # Publishing
 

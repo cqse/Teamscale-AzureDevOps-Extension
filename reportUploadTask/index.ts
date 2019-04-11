@@ -116,6 +116,7 @@ function createCurlRunner(username: string, accessKey: string, filesToUpload: st
 
 process.on('unhandledRejection', (error : Error) => {
     task.error(`Task failed. Please check the log for further details.\n${error.stack}`);
+    task.setResult(task.TaskResult.Failed, `Upload to Teamscale failed with error: ${error.message}`);
 });
 
 run();

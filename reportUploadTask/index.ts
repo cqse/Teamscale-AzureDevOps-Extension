@@ -115,7 +115,7 @@ function createCurlRunner(username: string, accessKey: string, filesToUpload: st
 }
 
 process.on('unhandledRejection', (error : Error) => {
-    task.error(`Task failed with unhandled promise rejection: ${error.message}. ${error.stack}`);
+    task.error(`Task failed. Please check the log for further details.\n${error.stack}`);
 });
 
 run();

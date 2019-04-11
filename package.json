@@ -5,12 +5,12 @@
   "main": "index.js",
   "scripts": {
     "replace": "echo fixes https://github.com/Microsoft/vss-web-extension-sdk/issues/112; replace \"\\s+nodeType: number;\" \"\" \"node_modules/vss-web-extension-sdk/typings/vss.d.ts\" -r",
-    "compileTypeScript": "$(npm bin)/tsc && cd buildAndReleaseTask && npm run compile",
-    "restore": "npm ci && cd buildAndReleaseTask && npm run restore",
+    "compileTypeScript": "$(npm bin)/tsc && cd reportUploadTask && npm run compile",
+    "restore": "npm ci && cd reportUploadTask && npm run restore",
     "build": "npm run restore && npm run replace && npm run compileTypeScript",
     "package": "npm run build && $(npm bin)/tfx extension create --output-path ./deployment/",
     "test-publish": "npm run build && $(npm bin)/tfx extension publish --share-with cqse --rev-version --output-path deployment --token $(node scripts/cat.js token)",
-    "test": "cd buildAndReleaseTask && npm run test"
+    "test": "cd reportUploadTask && npm run test"
   },
   "keywords": [],
   "author": "",

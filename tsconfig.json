@@ -1,6 +1,6 @@
 {
     "exclude": [
-        "buildAndReleaseTask",
+        "reportUploadTask",
     ],
     "compilerOptions": {
         "module": "amd",

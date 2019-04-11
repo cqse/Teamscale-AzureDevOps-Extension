@@ -79,7 +79,7 @@
             "name": "codeCoverageExePath",
             "type": "string",
             "label": "Path to CodeCoverage.exe",
-            "defaultValue": "codecoverage.exe",
+            "defaultValue": "CodeCoverage/CodeCoverage.exe",
             "required": false,
             "helpMarkDown": "If you'd like to upload Visual Studio .coverage files to Teamscale, you must provide the path to CodeCoverage.exe. This file is used to convert the binary .coverage files to .xml files suitable for uploading to Teamscale. This plugin ships with a version of CodeCoverage.exe. If you prefer to use a different version, you'll have to configure the correct path to it here."
         }

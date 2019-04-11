@@ -3,6 +3,7 @@ import * as task from 'azure-pipelines-task-lib/task';
 import * as os from 'os';
 import * as toolRunner from 'azure-pipelines-task-lib/toolrunner';
 import * as utils from './utils';
+import { stringify } from 'querystring';
 
 // c.f. https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml#build-variables
 const revision = task.getVariable('Build.SourceVersion');
@@ -22,7 +23,11 @@ async function run() {
 async function convertCoverageFiles(coverageFiles: string[]) : Promise<string> {
     const outputXmlFile = path.join(path.dirname(coverageFiles[0]), 'coverage.xml');
 
-    const codeCoverageExePath: string = task.getInput('codeCoverageExePath', true);
+    let codeCoverageExePath: string = task.getInput('codeCoverageExePath');
+    if (!codeCoverageExePath || codeCoverageExePath == "") {
+        codeCoverageExePath = path.join(__dirname, 'CodeCoverage/CodeCoverage.exe');
+    }
+
     const codeCoverageRunner: toolRunner.ToolRunner = task.tool(codeCoverageExePath);
     codeCoverageRunner.arg('/analyze');
     codeCoverageRunner.arg('/output');

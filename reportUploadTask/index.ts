@@ -29,9 +29,8 @@ async function convertCoverageFiles(coverageFiles: string[]) : Promise<string> {
     }
 
     const codeCoverageRunner: toolRunner.ToolRunner = task.tool(codeCoverageExePath);
-    codeCoverageRunner.arg('/analyze');
-    codeCoverageRunner.arg('/output');
-    codeCoverageRunner.arg(outputXmlFile);
+    codeCoverageRunner.arg('analyze');
+    codeCoverageRunner.arg(`/output:${outputXmlFile}`);
     for (const file of coverageFiles) {
         codeCoverageRunner.arg(file);
     }

@@ -1,24 +1,20 @@
 {
   "name": "AzureDevOps-Plugin",
   "version": "1.0.0",
-  "description": "TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project.",
+  "description": "Teamscale integration into Azure DevOps",
   "main": "index.js",
   "scripts": {
     "replace": "echo fixes https://github.com/Microsoft/vss-web-extension-sdk/issues/112; replace \"\\s+nodeType: number;\" \"\" \"node_modules/vss-web-extension-sdk/typings/vss.d.ts\" -r",
-    "compileTypeScript": "$(npm bin)/tsc && cd buildAndReleaseTask && $(npm bin)/tsc",
-    "restore": "npm ci && cd buildAndReleaseTask && npm ci",
-    "build": "npm run-script restore && npm run-script replace && npm run-script compileTypeScript",
-    "package": "npm run-script build && $(npm bin)/tfx extension create --output-path ./deployment/",
-    "test-publish": "npm run-script build && $(npm bin)/tfx extension publish --share-with cqse --rev-version --output-path deployment --token $(node scripts/cat.js token)",
-    "test": "npm run-script build; cd buildAndReleaseTask; $(npm bin)/mocha tests/*.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git@ssh.dev.azure.com:v3/apps-munichre/QualityTools/AzureDevOps-Plugin"
+    "compileTypeScript": "$(npm bin)/tsc && cd buildAndReleaseTask && npm run compile",
+    "restore": "npm ci && cd buildAndReleaseTask && npm run restore",
+    "build": "npm run restore && npm run replace && npm run compileTypeScript",
+    "package": "npm run build && $(npm bin)/tfx extension create --output-path ./deployment/",
+    "test-publish": "npm run build && $(npm bin)/tfx extension publish --share-with cqse --rev-version --output-path deployment --token $(node scripts/cat.js token)",
+    "test": "cd buildAndReleaseTask && npm run test"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "tfx-cli": "^0.6.3",
     "typescript": "^3.1.6",

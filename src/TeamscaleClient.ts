@@ -6,19 +6,38 @@ export default class TeamscaleClient {
     }
 
     /**
-     * Get the test gap badge for an issue from Teamscale.
+     * Gets the test gap badge for an issue from Teamscale.
+     *
      * @param project The project in which to search for the issue
      * @param issueId The id of the issue for which to return the test gap badge
      * @returns {PromiseLike} which resolves to a SVG represented as string
      */
     public queryIssueTestGapBadge(project: string, issueId: number): PromiseLike<string> {
+        return this.retrieveTestGapBadgeForIssue('tga-badge.svg?issueId=', project, issueId);
+    }
+
+    /**
+     * Gets the badge for the findings churn of an issue from Teamscale.
+     *
+     * @param project The project in which to search for the issue
+     * @param issueId The id of the issue for which to return the test gap badge
+     * @returns {PromiseLike} which resolves to a SVG represented as string
+     */
+    public queryFindingsChurnBadge(project: string, issueId: number): PromiseLike<string> {
+        return this.retrieveTestGapBadgeForIssue('issue-finding-badge.svg/', project, issueId);
+    }
+
+
+    /**
+     * Retrieves an issue specific badge from the Teamscale server.
+     */
+    private retrieveTestGapBadgeForIssue(requestPrefix: string, project: string, issueId: number): PromiseLike<string> {
         let xhr = this.generateRequest(
-            'GET',
-            `/p/${project}/tga-badge.svg?issueId=${issueId}`);
-        let promise = this.generatePromise<string>(xhr).then(testGapBadge => {
+            'GET', `/p/${project}/` + requestPrefix + issueId);
+        let promise = this.generatePromise<string>(xhr).then(badge => {
             // Wrap the svg in a link element pointing to the issue perspective on Teamscale
             let issueUrl = `${this.url}/issues.html#/${project}/${issueId}`;
-            return `<a href="${issueUrl}" target="_top">${testGapBadge}</a>`
+            return `<a href="${issueUrl}" target="_top">${badge}</a>`
         });
         xhr.send();
         return promise;

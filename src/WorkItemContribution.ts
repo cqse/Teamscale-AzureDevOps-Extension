@@ -9,8 +9,11 @@ import {ProjectSettings} from "./Settings/ProjectSettings";
 
 let teamscaleClient: TeamscaleClient = null;
 let teamscaleProject: string = "";
+let emailContact: string = "";
+let issueId: number = 0;
 let projectSettings: Settings = null;
 let organizationSettings: Settings = null;
+let displayedErrorMessage: boolean = false;
 
 // VSS services
 let controlService = null;
@@ -61,78 +64,120 @@ VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Noti
             }
         }
     });
-    loadTgaBadge();
+    loadAndCheckConfiguration().then(() => loadBadges());
 });
 
-function loadTgaBadge() {
+/**
+ * Loads the Teamscale email contact from the organization settings and assures that an Teamscale server url and project
+ * name is set in the Azure DevOps project settings.
+ */
+async function loadAndCheckConfiguration() {
     let azureProjectName = VSS.getWebContext().project.name;
     projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
     organizationSettings = new Settings(Scope.ProjectCollection);
 
-    projectSettings.get(Settings.TEAMSCALE_URL).then((url) => {
-        if (!url) {
-            return Promise.reject({status: -2});
-        }
-        teamscaleClient = new TeamscaleClient(url);
-        return projectSettings.get(Settings.TEAMSCALE_PROJECT)
-    }).then(project => {
-        if (!project) {
-            return Promise.reject({status: -1});
-        }
-        teamscaleProject = project;
-        return workItemService.WorkItemFormService.getService();
-    }).then(service => {
-        return service.getId();
-    }).then((id) => {
-        return teamscaleClient.queryIssueTestGapBadge(teamscaleProject, id);
-    }).then((tgaBadge) => {
-        const tgaBadgeElement = $('#tga-badge');
-        tgaBadgeElement.html(tgaBadge);
-        resizeHost();
-        VSS.notifyLoadSucceeded();
-    }, (reason) => {
-        organizationSettings.get(Settings.EMAIL_CONTACT).then(email => {
-            switch (reason.status) {
-                case -2:
-                    showInfoBanner(`Teamscale is not configured for this project. ${generateContactText(email)}`);
-                    VSS.notifyLoadSucceeded();
-                    break;
-                case -1:
-                    showInfoBanner(`Please make sure <a href="${teamscaleClient.url}" target="_top">Teamscale</a> is reachable from your computer. ` +
-                        `If the problem persists: ${generateContactText(email)}`);
-                    VSS.notifyLoadSucceeded();
-                    break;
-                case 403:
-                    showNotLoggedInMessage();
-                    VSS.notifyLoadSucceeded();
-                    break;
-                case 404:
-                    showInfoBanner(`Could not find project "${teamscaleProject}" ` +
-                        `on the Teamscale server <a href="${teamscaleClient.url}" target="_top">${teamscaleClient.url}</a>. ` +
-                        `${generateContactText(email)}`);
-                    VSS.notifyLoadSucceeded();
-                    break;
-                default:
-                    let message = `Failed with error code ${reason.status}`;
-                    if (reason.statusText) {
-                        message += `: ${reason.statusText}`;
-                    }
-                    message += `. ${generateContactText(email)}`;
-                    showErrorBanner(message);
-                    VSS.notifyLoadSucceeded();
+    emailContact = await organizationSettings.get(Settings.EMAIL_CONTACT);
+    return Promise.all([initializeTeamscaleClient(), resolveProjectName(), resolveIssueId()]);
+}
+
+/**
+ * Fetches issue specific badges as SVG from the Teamscale server and places them in the work item form.
+ */
+async function loadBadges() {
+    let tgaBadge: string = '';
+    let findingsChurnBadge: string = '';
+
+    try {
+        tgaBadge = await teamscaleClient.queryIssueTestGapBadge(teamscaleProject, issueId);
+    } catch (error) {
+        handleErrorsInRetrievingBadges(error);
+    }
+
+    try {
+        findingsChurnBadge = await teamscaleClient.queryFindingsChurnBadge(teamscaleProject, issueId);
+    } catch (error) {
+        handleErrorsInRetrievingBadges(error);
+    }
+
+    tgaBadge = replaceClipPathId(tgaBadge, 'tgaBadge');
+    findingsChurnBadge = replaceClipPathId(findingsChurnBadge, 'findingsChurnBadge');
+    const badgesElement = $('#badges');
+    badgesElement.html(tgaBadge.concat(findingsChurnBadge));
+
+    resizeHost();
+    VSS.notifyLoadSucceeded();
+}
+
+async function initializeTeamscaleClient() {
+    let url = await projectSettings.get(Settings.TEAMSCALE_URL);
+
+    if (!url) {
+        endLoadingWithInfoMessage(`Teamscale is not configured for this project. ${generateContactText()}`);
+        return Promise.reject();
+    }
+
+    teamscaleClient = new TeamscaleClient(url);
+}
+
+async function resolveProjectName() {
+    teamscaleProject = await projectSettings.get(Settings.TEAMSCALE_PROJECT);
+
+    if (!teamscaleProject) {
+        endLoadingWithInfoMessage(`Please make sure <a href="${teamscaleClient.url}" target="_top">Teamscale</a> is reachable from your computer. ` +
+                `If the problem persists: ${generateContactText()}`);
+        return Promise.reject();
+    }
+}
+
+async function resolveIssueId() {
+    let service = await workItemService.WorkItemFormService.getService();
+    issueId = await service.getId();
+}
+
+function endLoadingWithInfoMessage(message: string) {
+    showInfoBanner(message);
+    VSS.notifyLoadSucceeded();
+}
+
+/**
+ * If receiving the badges from the Teamscale server failed, available information is displayed as info or error banner.
+ */
+function handleErrorsInRetrievingBadges(reason: any) {
+    if (displayedErrorMessage) {
+        return;
+    }
+
+    displayedErrorMessage = true;
+    switch (reason.status) {
+        case 403:
+            showNotLoggedInMessage();
+            VSS.notifyLoadSucceeded();
+            break;
+        case 404:
+            showInfoBanner(`Could not find project "${teamscaleProject}" ` +
+                `on the Teamscale server <a href="${teamscaleClient.url}" target="_top">${teamscaleClient.url}</a>. ` +
+                `${generateContactText()}`);
+            VSS.notifyLoadSucceeded();
+            break;
+        default:
+            let message = `Failed with error code ${reason.status}`;
+            if (reason.statusText) {
+                message += `: ${reason.statusText}`;
             }
-        });
-    });
+            message += `. ${generateContactText()}`;
+            showErrorBanner(message);
+            VSS.notifyLoadSucceeded();
+    }
 }
 
 /**
  * Generates a text that can be appended to info/error messages. If the email is set, a mailto link to the Teamscale team
  * is generated, otherwise a note to contact the administrator
  */
-function generateContactText(email: String) {
+function generateContactText() {
     let contact = "your administrator";
-    if (email) {
-        contact = `<a href="mailto:${email}">the Teamscale-Team</a>`;
+    if (emailContact) {
+        contact = `<a href="mailto:${emailContact}">the Teamscale-Team</a>`;
     }
     return `Please contact ${contact}.`;
 }
@@ -157,7 +202,7 @@ function showNotLoggedInMessage() {
                 close: function () {
                     $('#tga-badge').empty();
                     $('#message-div').empty();
-                    loadTgaBadge();
+                    loadBadges();
                 }
             };
 
@@ -203,4 +248,14 @@ function generateNotification() {
 function resizeHost() {
     const bodyElement = $('body,html');
     VSS.resize(bodyElement.width(), bodyElement.height());
+}
+
+/**
+ * Teamscale delivers all Badges with the same clipPath. When having multiple badges-svgs with the same clipPath on one
+ * html page, Chrome uses the first defined clipPath which leads to incorrect cropped (second) svg.
+ *
+ */
+function replaceClipPathId(plainSvg: string, clipPathId: string): string {
+    plainSvg = plainSvg.replace(new RegExp("(<clipPath[^>]*id=\\\")a\\\"","gm"), '$1' + clipPathId + '"');
+    return plainSvg.replace(new RegExp("(<g[^>]*clip-path=\")url\\(#a\\)\\\"","gm"),   '$1' + 'url(#' + clipPathId + ')"');
 }

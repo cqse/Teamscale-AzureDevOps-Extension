@@ -7,6 +7,9 @@ import {Scope} from "./Settings/Scope";
 import TeamscaleClient from "./TeamscaleClient";
 import {ProjectSettings} from "./Settings/ProjectSettings";
 
+const titleTestGapBadge: string = 'Tests';
+const titleFindingsChurnBadge: string = 'Findings Churn';
+
 let teamscaleClient: TeamscaleClient = null;
 let teamscaleProject: string = "";
 let emailContact: string = "";
@@ -89,12 +92,14 @@ async function loadBadges() {
 
     try {
         tgaBadge = await teamscaleClient.queryIssueTestGapBadge(teamscaleProject, issueId);
+        tgaBadge = '<div id="tga-badge">'+titleTestGapBadge+'<br>' + tgaBadge + '</div>';
     } catch (error) {
         handleErrorsInRetrievingBadges(error);
     }
 
     try {
         findingsChurnBadge = await teamscaleClient.queryFindingsChurnBadge(teamscaleProject, issueId);
+        findingsChurnBadge = titleFindingsChurnBadge +'<br>' + findingsChurnBadge;
     } catch (error) {
         handleErrorsInRetrievingBadges(error);
     }

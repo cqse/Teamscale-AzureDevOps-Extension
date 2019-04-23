@@ -123,8 +123,8 @@ async function resolveProjectName() {
     teamscaleProject = await projectSettings.get(Settings.TEAMSCALE_PROJECT);
 
     if (!teamscaleProject) {
-        endLoadingWithInfoMessage(`Please make sure <a href="${teamscaleClient.url}" target="_top">Teamscale</a> is reachable from your computer. ` +
-                `If the problem persists: ${generateContactText()}`);
+        endLoadingWithInfoMessage('Please make sure that a Teamscale project name is properly configured in the ' +
+          'Azure DevOps Project settings.');
         return Promise.reject();
     }
 }

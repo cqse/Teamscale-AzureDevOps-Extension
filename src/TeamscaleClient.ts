@@ -13,7 +13,7 @@ export default class TeamscaleClient {
      * @returns {PromiseLike} which resolves to a SVG represented as string
      */
     public queryIssueTestGapBadge(project: string, issueId: number): PromiseLike<string> {
-        return this.retrieveTestGapBadgeForIssue('tga-badge.svg?issueId=', project, issueId);
+        return this.retrieveBadgeForIssue('tga-badge.svg?issueId=', project, issueId);
     }
 
     /**
@@ -24,14 +24,14 @@ export default class TeamscaleClient {
      * @returns {PromiseLike} which resolves to a SVG represented as string
      */
     public queryFindingsChurnBadge(project: string, issueId: number): PromiseLike<string> {
-        return this.retrieveTestGapBadgeForIssue('issue-finding-badge.svg/', project, issueId);
+        return this.retrieveBadgeForIssue('issue-finding-badge.svg/', project, issueId);
     }
 
 
     /**
      * Retrieves an issue specific badge from the Teamscale server.
      */
-    private retrieveTestGapBadgeForIssue(requestPrefix: string, project: string, issueId: number): PromiseLike<string> {
+    private retrieveBadgeForIssue(requestPrefix: string, project: string, issueId: number): PromiseLike<string> {
         let xhr = this.generateRequest(
             'GET', `/p/${project}/` + requestPrefix + issueId);
         let promise = this.generatePromise<string>(xhr).then(badge => {

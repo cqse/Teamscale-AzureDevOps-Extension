@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="../lib/VSS.SDK.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../styles/teamscale-widget.css">
+</head>
+<body>
+<div class="widget">
+    <h2 class="title"></h2>
+    <div id="teamscale-info"></div>
+    <div id="badges"></div>
+</div>
+
+<script type="text/javascript">
+    VSS.init(
+        {
+            explicitNotifyLoaded: true,
+            setupModuleLoader: true,
+            usePlatformScripts: true,
+            usePlatformStyles: true
+        });
+    VSS.ready(function () {
+        require(["dist/TeamscaleWidget"], function (main) { });
+    });
+</script>
+</body>
+</html>

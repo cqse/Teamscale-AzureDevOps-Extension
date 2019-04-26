@@ -1,0 +1,70 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <script src="../lib/VSS.SDK.min.js"></script>
+    <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/jquery-ui.min.js"></script>
+    <script src="../lib/chosen.jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="../styles/settings.css">
+    <link rel="stylesheet" type="text/css" href="../styles/jquery-ui.min.css">
+    <link rel="stylesheet" type="text/css" href="../styles/chosen.min.css">
+</head>
+<body>
+<div class="container">
+    <div class="teamscale-config-group">
+        <label class="config-label">Project:</label>
+        <div style="float: right; width: 80%;">
+            <select id="teamscale-project-select"></select>
+        </div>
+
+        <p>This widget uses data on the Teamscale default branch
+            from a defined starting point until the last commit on the default branch.</p>
+
+        <br>
+
+        Start date:
+        <div style="clear: both; margin-top: 5px;">
+            <div id="tabs" style="height: 130px;">
+                <ul>
+                    <li><a href="#start-fixed-date">Fixed date</a></li>
+                    <li><a href="#start-timespan">Timespan</a></li>
+                    <li><a href="#start-ts-baseline">TS Baseline</a></li>
+                </ul>
+                <div id="start-fixed-date">
+                    <p>Date: <input type="text" id="datepicker"></p>
+                </div>
+                <div id="start-timespan">
+                    <label class="config-label" for="baseline-days-input">Number of past days to respect:</label>
+                    <input id="baseline-days-input" type="number">
+                </div>
+                <div id="start-ts-baseline">
+                    <p id="teamscale-baseline-info"></p>
+                    <select id="ts-baseline-select"></select>
+
+                    <p>Note that changing the baseline on the Teamscale server
+                        will also influence the date used in this Widget.</p>
+                </div>
+            </div>
+        </div>
+
+        <br>
+        <div style="margin-top: 5px;">
+            <label><input id="show-test-gap" type="checkbox"> Show Test-Gap-Badge</label>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    VSS.init({
+        explicitNotifyLoaded: true,
+        setupModuleLoader: true,
+        usePlatformScripts: true,
+        usePlatformStyles: true
+    });
+
+    VSS.ready(function () {
+        require(["dist/WidgetConfiguration"], function (configuration) { });
+    });
+</script>
+</body>
+</html>

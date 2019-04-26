@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "teamscale-azure-devops-plugin",
     "publisher": "CQSEGmbH",
-    "version": "0.0.586",
+    "version": "0.0.679",
     "name": "Teamscale DevOps",
     "description": "A sample Visual Studio Services extension",
     "public": false,
@@ -48,6 +48,38 @@
                   "uri": "sites/project-settings.html"
               }
           },
+        {
+            "id": "TeamscaleWidget",
+            "type": "ms.vss-dashboards-web.widget",
+            "targets": [
+                "ms.vss-dashboards-web.widget-catalog",
+                ".Teamscale-Configuration"
+            ],
+            "properties": {
+                "name": "Teamscale",
+                "description": "Widget to include Test Coverage and Findings Churn information visualized in badges from a Teamscale Server.",
+                "previewImageUrl": "sites/img/teamscale-plugin.png",
+                "uri": "sites/teamscale-widget.html",
+                "isNameConfigurable": true,
+                "supportedSizes": [
+                    {
+                        "rowSpan": 1,
+                        "columnSpan": 3
+                    }
+                ],
+                "supportedScopes": [ "project_team" ]
+            }
+        },
+        {
+            "id": "Teamscale-Configuration",
+            "type": "ms.vss-dashboards-web.widget-configuration",
+            "targets": [ "ms.vss-dashboards-web.widget-configuration" ],
+            "properties": {
+                "name": "Teamscale Widget Configuration",
+                "description": "Configures Teamscale widget",
+                "uri": "sites/widget-configuration.html"
+            }
+        },
           {
               "id": "teamscale-login-dialog",
               "type": "ms.vss-web.control",
@@ -71,9 +103,34 @@
             "addressable": true
         },
         {
-            "path": "node_modules/vss-web-extension-sdk/lib",
+            "path": "node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js",
             "addressable": true,
-            "packagePath": "lib"
+            "packagePath": "lib/VSS.SDK.min.js"
+        },
+        {
+            "path": "node_modules/chosen-js/chosen.jquery.min.js",
+            "addressable": true,
+            "packagePath": "lib/chosen.jquery.min.js"
+        },
+        {
+            "path": "node_modules/chosen-js/chosen.min.css",
+            "addressable": true,
+            "packagePath": "styles/chosen.min.css"
+        },
+        {
+            "path": "node_modules/jquery/dist/jquery.min.js",
+            "addressable": true,
+            "packagePath": "lib/jquery.min.js"
+        },
+        {
+            "path": "node_modules/jquery-ui-dist/jquery-ui.min.js",
+            "addressable": true,
+            "packagePath": "lib/jquery-ui.min.js"
+        },
+        {
+            "path": "node_modules/jquery-ui-dist/jquery-ui.min.css",
+            "addressable": true,
+            "packagePath": "styles/jquery-ui.min.css"
         },
         {
             "path": "scripts/require.js",

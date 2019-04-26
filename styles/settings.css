@@ -9,3 +9,24 @@
 #log {
     margin-top: 20px;
 }
+
+.input-wrapper {
+    margin-right: 5px;
+    clear: right;
+    float: right;
+}
+
+.config-label {
+    margin-right: 20px;
+}
+
+.container {
+    display: inline-block;
+    height: 100%;
+    width: 100%;
+}
+
+.teamscale-config-group {
+    margin-bottom: 15px;
+    width: 100%;
+}

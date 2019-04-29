@@ -53,11 +53,11 @@ function assignOnClickSave() {
         logDiv.innerHTML = "";
         const timestamp = getCurrentTimestamp();
         settings.save(Settings.TEAMSCALE_URL, teamscaleUrl).then(
-            (url) => UiUtils.logToDiv(logDiv, `${timestamp}: Saving Teamscale URL "${url}" successful.`),
-            () => UiUtils.logToDiv(logDiv, `${timestamp}: Error saving Teamscale URL.`));
+            (url) => UiUtils.logToDiv(logDiv, `${timestamp} Saving Teamscale URL "${url ? url : ""}" successful.`),
+            () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving Teamscale URL.`));
         settings.save(Settings.TEAMSCALE_PROJECT, teamscaleProject).then(
-            (project) => UiUtils.logToDiv(logDiv, `${timestamp}: Saving Teamscale project "${project}" successful.`),
-            () => UiUtils.logToDiv(logDiv, `${timestamp}: Error saving Teamscale project`));
+            (project) => UiUtils.logToDiv(logDiv, `${timestamp} Saving Teamscale project "${project ? project: ""}" successful.`),
+            () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving Teamscale project`));
     };
 
 }

@@ -1,8 +1,6 @@
 /**
  * Encapsulates calls to Teamscale
  */
-import {reject} from "q";
-
 export default class TeamscaleClient {
     constructor(public readonly url: string) {
     }
@@ -44,7 +42,9 @@ export default class TeamscaleClient {
             };
             request.onerror = function () {
                 reject({
-                    status: this.status,
+                    // Probably a network problem or a wrong url setting, return a usable status code (-1)
+                    // At some point this might have to be replaced with a proper error class...
+                    status: -1,
                     statusText: request.statusText
                 });
             };

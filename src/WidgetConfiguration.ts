@@ -4,26 +4,15 @@
  *  - TS project to use
  *  - number of days to respect in the badges
  */
+
+/// <reference path="IWidgetSettings.d.ts" />
+/// <reference path="ITeamscaleBaseline.d.ts" />
+
 import {Scope} from "./Settings/Scope";
 import {ProjectSettings} from "./Settings/ProjectSettings";
 import {Settings} from "./Settings/Settings";
 import TeamscaleClient from "./TeamscaleClient";
-
-// TODO extract
-interface ISettings {
-    teamscaleProject: string;
-    activeTimeChooser: string;
-    startFixedDate: number;
-    baselineDays: number;
-    tsBaseline: string;
-    showTestGapBadge: boolean;
-}
-
-interface IBaseline {
-    name: string;
-    description: string;
-    timestamp: number
-}
+import NotificationUtils from "./NotificationUtils";
 
 export class Configuration {
     private projectSettings: Settings = null;
@@ -32,6 +21,7 @@ export class Configuration {
     private widgetSettings: ISettings = null;
 
     private teamscaleClient: TeamscaleClient = null;
+    private notificationUtils: NotificationUtils = null;
     private emailContact: string = "";
 
     private teamscaleProjectSelect = document.getElementById('teamscale-project-select') as HTMLSelectElement;
@@ -40,12 +30,14 @@ export class Configuration {
     private datepicker = $('#datepicker');
     private testGapCheckbox = $('#show-test-gap');
 
-    private logDiv: HTMLDivElement = null;
-
     private WidgetHelpers: any;
+    private notificationService: any;
+    private controlService: any;
 
-    constructor(widgetHelpers) {
+    constructor(widgetHelpers, controls, notifications) {
         this.WidgetHelpers = widgetHelpers;
+        this.notificationService = notifications;
+        this.controlService = controls;
     }
 
     public load(widgetSettings, widgetConfigurationContext) {
@@ -63,7 +55,7 @@ export class Configuration {
         $('#ts-baseline-select').chosen({width: "95%"});
 
         this.loadAndCheckConfiguration().then(() => this.fillDropdownWithProjects())
-            .then(() => this.fillDropdownWithTeamscaleBaselines());
+            .then(() => this.fillDropdownWithTeamscaleBaselines()).catch(() => $('.teamscale-config-group').hide());
 
         VSS.resize();
         return this.WidgetHelpers.WidgetStatusHelper.Success();
@@ -88,7 +80,9 @@ export class Configuration {
         try {
             projects = await this.teamscaleClient.retrieveTeamscaleProjects();
         } catch (error) {
-            // TODO
+            // todo rename method?
+            this.notificationUtils.handleErrorsInRetrievingBadges(error);
+            return Promise.reject(error);
         }
 
         for (let project of projects) {
@@ -111,7 +105,9 @@ export class Configuration {
         try {
             baselines = await this.teamscaleClient.retrieveBaselinesForProject(teamscaleProject);
         } catch (error) {
-            // TODO
+            // todo rename method?
+            this.notificationUtils.handleErrorsInRetrievingBadges(error);
+            return Promise.reject(error);
         }
 
         while (this.teamscaleBaselineSelect.firstChild) {
@@ -153,7 +149,7 @@ export class Configuration {
         this.organizationSettings = new Settings(Scope.ProjectCollection);
 
         this.emailContact = await this.organizationSettings.get(Settings.EMAIL_CONTACT);
-        return Promise.all([this.initializeTeamscaleClient()]);
+        return Promise.all([this.initializeTeamscaleClient(), this.initializeNotificationUtils()]);
     }
 
     // TODO [JR] extract to Utils
@@ -161,12 +157,19 @@ export class Configuration {
         let url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
 
         if (!url) {
-            //TODO
-            //endLoadingWithInfoMessage(`Teamscale is not configured for this project.`);
+            this.notificationUtils.showErrorBanner(`Teamscale is not configured for this Azure Dev Ops project.`);
             return Promise.reject();
         }
 
         this.teamscaleClient = new TeamscaleClient(url);
+    }
+
+
+    private async initializeNotificationUtils() {
+        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
+
+        this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
+            null, '', url, this.emailContact, false);
     }
 
 
@@ -202,22 +205,11 @@ export class Configuration {
 
         return this.widgetSettings;
     }
-
-
-    // TODO extract
-    /**
-     * Resize the body of the host iframe to match the height of the body of the extension
-     */
-    private resizeHost() {
-        const bodyElement = $('body,html');
-        VSS.resize(bodyElement.width(), bodyElement.height());
-    }
-
 }
 
-VSS.require(["TFS/Dashboards/WidgetHelpers"], (WidgetHelpers) => {
+VSS.require(["TFS/Dashboards/WidgetHelpers", "VSS/Controls", "VSS/Controls/Notifications"], (WidgetHelpers, controls, notifications) => {
     VSS.register("Teamscale-Configuration", () => {
-        const configuration = new Configuration(WidgetHelpers);
+        const configuration = new Configuration(WidgetHelpers, controls, notifications);
         return configuration;
     });
 

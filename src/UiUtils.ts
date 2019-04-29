@@ -30,3 +30,21 @@ export function getCurrentTimestamp() {
         `:${padStart(now.getMinutes().toString(), 2, "0")}` +
         `:${padStart(now.getSeconds().toString(), 2, "0")}`;
 }
+
+/**
+ * Resize the body of the host iframe to match the height of the body of the extension
+ */
+export function resizeHost() {
+    const bodyElement = $('body,html');
+    VSS.resize(bodyElement.width(), bodyElement.height());
+}
+
+/**
+ * Teamscale delivers all Badges with the same clipPath. When having multiple badges-svgs with the same clipPath on one
+ * html page, Chrome uses the first defined clipPath which leads to incorrect cropped (second) svg.
+ *
+ */
+export function replaceClipPathId(plainSvg: string, clipPathId: string): string {
+    plainSvg = plainSvg.replace(new RegExp("(<clipPath[^>]*id=\\\")a\\\"","gm"), '$1' + clipPathId + '"');
+    return plainSvg.replace(new RegExp("(<g[^>]*clip-path=\")url\\(#a\\)\\\"","gm"),   '$1' + 'url(#' + clipPathId + ')"');
+}

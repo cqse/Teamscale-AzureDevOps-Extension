@@ -3,24 +3,18 @@
  * churn badge. Uses the main branch and uses data from a defined number of days in the past until HEAD.
  */
 
+/// <reference path="IWidgetSettings.d.ts" />
+
 import {Settings} from "./Settings/Settings";
 import {Scope} from "./Settings/Scope";
 import TeamscaleClient from "./TeamscaleClient";
 import {ProjectSettings} from "./Settings/ProjectSettings";
-
-// TODO extract
-interface ISettings {
-    teamscaleProject: string;
-    activeTimeChooser: string;
-    startFixedDate: number;
-    baselineDays: number;
-    tsBaseline: string;
-    showTestGapBadge: boolean;
-}
-
+import NotificationUtils from "./NotificationUtils";
+import UiUtils = require("./UiUtils");
 
 export class TeamscaleWidget {
     private teamscaleClient: TeamscaleClient = null;
+    private notificationUtils: NotificationUtils = null;
     private emailContact: string = "";
     private standardTimespanInDays: number = 30;
     private projectSettings: Settings = null;
@@ -28,7 +22,15 @@ export class TeamscaleWidget {
 
     private currentSettings: ISettings;
 
-    constructor(public WidgetHelpers) { }
+    private WidgetHelpers: any;
+    private notificationService: any;
+    private controlService: any;
+
+    constructor(widgetHelpers, controls, notifications) {
+        this.WidgetHelpers = widgetHelpers;
+        this.notificationService = notifications;
+        this.controlService = controls;
+    }
 
     public load(widgetSettings) {
         $('.title').text(widgetSettings.name);
@@ -36,7 +38,8 @@ export class TeamscaleWidget {
 
         return this.loadAndCheckConfiguration()
                 .then(() => this.loadBadges())
-                .then(() => this.WidgetHelpers.WidgetStatusHelper.Success());
+                .then(() => this.WidgetHelpers.WidgetStatusHelper.Success(),
+                    () => () => this.WidgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
     }
 
     public reload(widgetSettings) {
@@ -54,7 +57,7 @@ export class TeamscaleWidget {
         this.organizationSettings = new Settings(Scope.ProjectCollection);
 
         this.emailContact = await this.organizationSettings.get(Settings.EMAIL_CONTACT);
-        return Promise.all([this.initializeTeamscaleClient()]);
+        return Promise.all([this.initializeTeamscaleClient(), this.initializeNotificationUtils()]);
     }
 
     /**
@@ -78,7 +81,7 @@ export class TeamscaleWidget {
                     startTimestamp);
                 tgaBadge = '<br><div id="tga-badge">' + tgaBadge + '</div>';
             } catch (error) {
-                // TODO
+                this.notificationUtils.handleErrorsInRetrievingBadges(error);
             }
         }
 
@@ -87,10 +90,11 @@ export class TeamscaleWidget {
                 startTimestamp);
             findingsChurnBadge = '<br><div id="findings-badge">' + findingsChurnBadge + '</div>';
         } catch (error) {
-            // TODO
+            this.notificationUtils.handleErrorsInRetrievingBadges(error);
+            return Promise.reject();
         }
 
-        tgaBadge = this.replaceClipPathId(tgaBadge, 'tgaBadge');
+        tgaBadge = UiUtils.replaceClipPathId(tgaBadge, 'tgaBadge');
         const badgesElement = $('#badges');
         badgesElement.html(tgaBadge.concat(findingsChurnBadge));
 
@@ -101,8 +105,7 @@ export class TeamscaleWidget {
             infoElement.html('Please configure TS project and analysis timespan.');
         }
 
-        this.resizeHost();
-        VSS.notifyLoadSucceeded();
+        UiUtils.resizeHost();
     }
 
     async initializeTeamscaleClient() {
@@ -116,6 +119,17 @@ export class TeamscaleWidget {
         this.teamscaleClient = new TeamscaleClient(url);
     }
 
+    async initializeNotificationUtils() {
+        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
+        const project = this.currentSettings.teamscaleProject;
+
+        const callbackOnLoginClose = () => this.loadBadges()
+            .then(() => this.WidgetHelpers.WidgetStatusHelper.Success(),
+            () => () => this.WidgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
+
+        this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService, callbackOnLoginClose,
+            project, url, this.emailContact, true);
+    }
 
     private parseSettings(widgetSettings) {
         this.currentSettings = JSON.parse(widgetSettings.customSettings.data) as ISettings;
@@ -154,29 +168,13 @@ export class TeamscaleWidget {
             }
         }
     }
-
-    // TODO extract
-    private replaceClipPathId(plainSvg: string, clipPathId: string): string {
-        plainSvg = plainSvg.replace(new RegExp("(<clipPath[^>]*id=\\\")a\\\"","gm"), '$1' + clipPathId + '"');
-        return plainSvg.replace(new RegExp("(<g[^>]*clip-path=\")url\\(#a\\)\\\"","gm"),   '$1' + 'url(#' + clipPathId + ')"');
-    }
-
-
-    // TODO extract
-    /**
-     * Resize the body of the host iframe to match the height of the body of the extension
-     */
-    private resizeHost() {
-        const bodyElement = $('body,html');
-        VSS.resize(bodyElement.width(), bodyElement.height());
-    }
 }
 
-VSS.require(["TFS/Dashboards/WidgetHelpers"], (WidgetHelpers) => {
+VSS.require(["TFS/Dashboards/WidgetHelpers", "VSS/Controls", "VSS/Controls/Notifications"], (WidgetHelpers, controls, notifications) => {
     WidgetHelpers.IncludeWidgetStyles();
 
     VSS.register("TeamscaleWidget", () => {
-        const configuration = new TeamscaleWidget(WidgetHelpers);
+        const configuration = new TeamscaleWidget(WidgetHelpers, controls, notifications);
         return configuration;
     });
 

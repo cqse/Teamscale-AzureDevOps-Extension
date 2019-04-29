@@ -1,11 +1,10 @@
 /**
  * Encapsulates calls to Teamscale
  */
-interface IBaseline {
-    name: string;
-    description: string;
-    timestamp: number
-}
+
+/// <reference path="ITeamscaleBaseline.d.ts" />
+
+import {async} from "q";
 
 export default class TeamscaleClient {
     constructor(public readonly url: string) {

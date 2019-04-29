@@ -1,7 +1,7 @@
 import {Settings} from "./Settings/Settings";
 import {Scope} from "./Settings/Scope";
-import UiUtils = require("./UiUtils");
-import {getCurrentTimestamp} from "./UiUtils";
+import UiUtils = require("./Utils/UiUtils");
+import {getCurrentTimestamp} from "./Utils/UiUtils";
 
 let settings: Settings = new Settings(Scope.ProjectCollection);
 let mailContactInput: HTMLInputElement = null;

@@ -2,12 +2,12 @@
  * Contribution for the work item UI. It shows a test gap badge when Teamscale URL and project are properly set up via
  * the project settings contribution
  */
-import {Settings} from "./Settings/Settings";
-import {Scope} from "./Settings/Scope";
-import TeamscaleClient from "./TeamscaleClient";
-import NotificationUtils from "./NotificationUtils";
-import {ProjectSettings} from "./Settings/ProjectSettings";
-import UiUtils = require("./UiUtils");
+import {Settings} from "../Settings/Settings";
+import {Scope} from "../Settings/Scope";
+import TeamscaleClient from "../TeamscaleClient";
+import NotificationUtils from "../Utils/NotificationUtils";
+import {ProjectSettings} from "../Settings/ProjectSettings";
+import UiUtils = require("../Utils/UiUtils");
 
 const titleTestGapBadge: string = 'Tests';
 const titleFindingsChurnBadge: string = 'Findings Churn';
@@ -111,14 +111,14 @@ async function loadBadges() {
         tgaBadge = await teamscaleClient.queryIssueTestGapBadge(teamscaleProject, issueId);
         tgaBadge = '<div id="tga-badge">'+titleTestGapBadge+'<br>' + tgaBadge + '</div>';
     } catch (error) {
-        notificationUtils.handleErrorsInRetrievingBadges(error);
+        notificationUtils.handleErrorInTeamscaleCommunication(error);
     }
 
     try {
         findingsChurnBadge = await teamscaleClient.queryFindingsChurnBadge(teamscaleProject, issueId);
         findingsChurnBadge = titleFindingsChurnBadge +'<br>' + findingsChurnBadge;
     } catch (error) {
-        notificationUtils.handleErrorsInRetrievingBadges(error);
+        notificationUtils.handleErrorInTeamscaleCommunication(error);
     }
 
     tgaBadge = UiUtils.replaceClipPathId(tgaBadge, 'tgaBadge');

@@ -44,7 +44,7 @@ export default class NotificationUtils {
     /**
      * If receiving the badges from the Teamscale server failed, available information is displayed as info or error banner.
      */
-    public handleErrorsInRetrievingBadges(reason: any) {
+    public handleErrorInTeamscaleCommunication(reason: any) {
         if (this.displayedErrorMessage) {
             return;
         }

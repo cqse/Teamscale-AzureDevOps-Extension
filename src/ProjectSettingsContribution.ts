@@ -4,8 +4,8 @@
 import {Scope} from "./Settings/Scope";
 import {ProjectSettings} from "./Settings/ProjectSettings";
 import {Settings} from "./Settings/Settings";
-import {getCurrentTimestamp} from "./UiUtils";
-import UiUtils = require("./UiUtils");
+import {getCurrentTimestamp} from "./Utils/UiUtils";
+import UiUtils = require("./Utils/UiUtils");
 
 let teamscaleUrlInput: HTMLInputElement = null;
 let teamscaleProjectInput: HTMLInputElement = null;

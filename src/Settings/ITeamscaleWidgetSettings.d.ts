@@ -1,5 +1,4 @@
-
-interface ISettings {
+interface ITeamscaleWidgetSettings {
     teamscaleProject: string;
     activeTimeChooser: string;
     startFixedDate: number;

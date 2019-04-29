@@ -5,20 +5,20 @@
  *  - number of days to respect in the badges
  */
 
-/// <reference path="IWidgetSettings.d.ts" />
-/// <reference path="ITeamscaleBaseline.d.ts" />
+/// <reference path="../Settings/ITeamscaleWidgetSettings.d.ts" />
+/// <reference path="../ITeamscaleBaseline.d.ts" />
 
-import {Scope} from "./Settings/Scope";
-import {ProjectSettings} from "./Settings/ProjectSettings";
-import {Settings} from "./Settings/Settings";
-import TeamscaleClient from "./TeamscaleClient";
-import NotificationUtils from "./NotificationUtils";
+import {Scope} from "../Settings/Scope";
+import {ProjectSettings} from "../Settings/ProjectSettings";
+import {Settings} from "../Settings/Settings";
+import TeamscaleClient from "../TeamscaleClient";
+import NotificationUtils from "../Utils/NotificationUtils";
 
 export class Configuration {
     private projectSettings: Settings = null;
     private organizationSettings: Settings = null;
 
-    private widgetSettings: ISettings = null;
+    private widgetSettings: ITeamscaleWidgetSettings = null;
 
     private teamscaleClient: TeamscaleClient = null;
     private notificationUtils: NotificationUtils = null;
@@ -41,7 +41,7 @@ export class Configuration {
     }
 
     public load(widgetSettings, widgetConfigurationContext) {
-        this.widgetSettings = JSON.parse(widgetSettings.customSettings.data) as ISettings;
+        this.widgetSettings = JSON.parse(widgetSettings.customSettings.data) as ITeamscaleWidgetSettings;
         this.initializeOnchangeListeners(widgetConfigurationContext);
         this.datepicker.datepicker();
 
@@ -80,8 +80,7 @@ export class Configuration {
         try {
             projects = await this.teamscaleClient.retrieveTeamscaleProjects();
         } catch (error) {
-            // todo rename method?
-            this.notificationUtils.handleErrorsInRetrievingBadges(error);
+            this.notificationUtils.handleErrorInTeamscaleCommunication(error);
             return Promise.reject(error);
         }
 
@@ -101,12 +100,11 @@ export class Configuration {
         // since the chosen change event of the project selector is fired before the settings object update
         const teamscaleProject: string = this.teamscaleProjectSelect.value;
 
-        let baselines: Array<IBaseline>;
+        let baselines: Array<ITeamscaleBaseline>;
         try {
             baselines = await this.teamscaleClient.retrieveBaselinesForProject(teamscaleProject);
         } catch (error) {
-            // todo rename method?
-            this.notificationUtils.handleErrorsInRetrievingBadges(error);
+            this.notificationUtils.handleErrorInTeamscaleCommunication(error);
             return Promise.reject(error);
         }
 
@@ -138,7 +136,6 @@ export class Configuration {
         $('#ts-baseline-select').trigger("chosen:updated");
     }
 
-    // TODO [JR] extract to Utils
     /**
      * Loads the Teamscale email contact from the organization settings and assures that an Teamscale server url and project
      * name is set in the Azure DevOps project settings.
@@ -152,7 +149,6 @@ export class Configuration {
         return Promise.all([this.initializeTeamscaleClient(), this.initializeNotificationUtils()]);
     }
 
-    // TODO [JR] extract to Utils
     private async initializeTeamscaleClient() {
         let url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
 
@@ -172,17 +168,16 @@ export class Configuration {
             null, '', url, this.emailContact, false);
     }
 
-
     public onSave() {
         return this.WidgetHelpers.WidgetConfigurationSave.Valid(this.getWrappedCustomSettings());
     }
 
     private getWrappedCustomSettings(): { data: string } {
-        const customSettings: ISettings = this.getAndUpdateCustomSettings();
+        const customSettings: ITeamscaleWidgetSettings = this.getAndUpdateCustomSettings();
         return {data: JSON.stringify(customSettings)};
     }
 
-    private getAndUpdateCustomSettings(): ISettings {
+    private getAndUpdateCustomSettings(): ITeamscaleWidgetSettings {
         const teamscaleProject: string = this.teamscaleProjectSelect.value;
         const baselineDays: number = Number(this.baselineDaysInput.value);
         let startFixedDate: number;
@@ -201,7 +196,7 @@ export class Configuration {
                 baselineDays: baselineDays,
                 tsBaseline: tsBaseline,
                 showTestGapBadge: showTestGapBadge
-            } as ISettings;
+            } as ITeamscaleWidgetSettings;
 
         return this.widgetSettings;
     }

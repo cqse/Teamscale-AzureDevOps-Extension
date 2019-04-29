@@ -3,14 +3,14 @@
  * churn badge. Uses the main branch and uses data from a defined number of days in the past until HEAD.
  */
 
-/// <reference path="IWidgetSettings.d.ts" />
+/// <reference path="../Settings/ITeamscaleWidgetSettings.d.ts" />
 
-import {Settings} from "./Settings/Settings";
-import {Scope} from "./Settings/Scope";
-import TeamscaleClient from "./TeamscaleClient";
-import {ProjectSettings} from "./Settings/ProjectSettings";
-import NotificationUtils from "./NotificationUtils";
-import UiUtils = require("./UiUtils");
+import {Settings} from "../Settings/Settings";
+import {Scope} from "../Settings/Scope";
+import TeamscaleClient from "../TeamscaleClient";
+import {ProjectSettings} from "../Settings/ProjectSettings";
+import NotificationUtils from "../Utils/NotificationUtils";
+import UiUtils = require("../Utils/UiUtils");
 
 export class TeamscaleWidget {
     private teamscaleClient: TeamscaleClient = null;
@@ -20,7 +20,7 @@ export class TeamscaleWidget {
     private projectSettings: Settings = null;
     private organizationSettings: Settings = null;
 
-    private currentSettings: ISettings;
+    private currentSettings: ITeamscaleWidgetSettings;
 
     private WidgetHelpers: any;
     private notificationService: any;
@@ -81,7 +81,7 @@ export class TeamscaleWidget {
                     startTimestamp);
                 tgaBadge = '<br><div id="tga-badge">' + tgaBadge + '</div>';
             } catch (error) {
-                this.notificationUtils.handleErrorsInRetrievingBadges(error);
+                this.notificationUtils.handleErrorInTeamscaleCommunication(error);
             }
         }
 
@@ -90,7 +90,7 @@ export class TeamscaleWidget {
                 startTimestamp);
             findingsChurnBadge = '<br><div id="findings-badge">' + findingsChurnBadge + '</div>';
         } catch (error) {
-            this.notificationUtils.handleErrorsInRetrievingBadges(error);
+            this.notificationUtils.handleErrorInTeamscaleCommunication(error);
             return Promise.reject();
         }
 
@@ -132,7 +132,7 @@ export class TeamscaleWidget {
     }
 
     private parseSettings(widgetSettings) {
-        this.currentSettings = JSON.parse(widgetSettings.customSettings.data) as ISettings;
+        this.currentSettings = JSON.parse(widgetSettings.customSettings.data) as ITeamscaleWidgetSettings;
 
         if (!this.currentSettings) {
             // TODO

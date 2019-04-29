@@ -4,8 +4,6 @@
 
 /// <reference path="ITeamscaleBaseline.d.ts" />
 
-import {async} from "q";
-
 export default class TeamscaleClient {
     constructor(public readonly url: string) {
     }
@@ -88,10 +86,10 @@ export default class TeamscaleClient {
         return promise;
     }
 
-    public retrieveBaselinesForProject(teamscaleProject: string): PromiseLike<Array<IBaseline>> {
+    public retrieveBaselinesForProject(teamscaleProject: string): PromiseLike<Array<ITeamscaleBaseline>> {
         let xhr = this.generateRequest('GET', '/p/' + teamscaleProject + '/baselines/?detail=true');
         let promise = this.generatePromise<string>(xhr).then(result => {
-            return JSON.parse(result) as Array<IBaseline>;
+            return JSON.parse(result) as Array<ITeamscaleBaseline>;
         });
         xhr.send();
         return promise;

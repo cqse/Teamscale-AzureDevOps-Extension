@@ -252,7 +252,7 @@ export class TeamscaleWidget {
             }
             case this.timechooserTsBaseline: {
                 return this.teamscaleClient.retrieveBaselinesForProject(this.currentSettings.teamscaleProject)
-                    .then((baselines) => this.getTimestampForConfiguredBaseline(baselines));
+                    .then(baselines => this.getTimestampForConfiguredBaseline(baselines));
             }
             case this.timechooserTimespan: {
                 const date = new Date();

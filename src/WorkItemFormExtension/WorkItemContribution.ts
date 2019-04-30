@@ -160,11 +160,17 @@ async function resolveProjectName() {
     }
 }
 
+/**
+ * Get the issue id of the opened Work Item.
+ */
 async function resolveIssueId() {
     let service = await workItemService.WorkItemFormService.getService();
     issueId = await service.getId();
 }
 
+/**
+ * Displays the given message as info text.
+ */
 function endLoadingWithInfoMessage(message: string) {
     notificationUtils.showInfoBanner(message);
     VSS.notifyLoadSucceeded();

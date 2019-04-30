@@ -30,21 +30,24 @@ export class Configuration {
     private datepicker = $('#datepicker');
     private testGapCheckbox = $('#show-test-gap');
 
-    private WidgetHelpers: any;
+    private widgetHelpers: any;
     private readonly notificationService: any;
     private readonly controlService: any;
 
-    constructor(widgetHelpers, controls, notifications) {
-        this.WidgetHelpers = widgetHelpers;
-        this.notificationService = notifications;
-        this.controlService = controls;
+    constructor(widgetHelpers, controlService, notificationService) {
+        this.widgetHelpers = widgetHelpers;
+        this.notificationService = notificationService;
+        this.controlService = controlService;
     }
 
+    /**
+     * Prepares the configuration dialog; called by ADOS.
+     */
     public load(widgetSettings, widgetConfigurationContext) {
         this.widgetSettings = JSON.parse(widgetSettings.customSettings.data) as ITeamscaleWidgetSettings;
         const notifyWidgetChange = () =>
-            widgetConfigurationContext.notify(this.WidgetHelpers.WidgetEvent.ConfigurationChange,
-                this.WidgetHelpers.WidgetEvent.Args(this.getWrappedCustomSettings()));
+            widgetConfigurationContext.notify(this.widgetHelpers.WidgetEvent.ConfigurationChange,
+                this.widgetHelpers.WidgetEvent.Args(this.getWrappedCustomSettings()));
 
         this.initializeOnchangeListeners(notifyWidgetChange);
         this.datepicker.datepicker();
@@ -61,11 +64,14 @@ export class Configuration {
             .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange)).catch(() => $('.teamscale-config-group').hide());
 
         VSS.resize();
-        return this.WidgetHelpers.WidgetStatusHelper.Success();
+        return this.widgetHelpers.WidgetStatusHelper.Success();
     }
 
+    /**
+     * On save action called by ADOS.
+     */
     public onSave() {
-        return this.WidgetHelpers.WidgetConfigurationSave.Valid(this.getWrappedCustomSettings());
+        return this.widgetHelpers.WidgetConfigurationSave.Valid(this.getWrappedCustomSettings());
     }
 
     /**
@@ -237,11 +243,12 @@ export class Configuration {
     }
 }
 
-VSS.require(["TFS/Dashboards/WidgetHelpers", "VSS/Controls", "VSS/Controls/Notifications"], (WidgetHelpers, controls, notifications) => {
-    VSS.register("Teamscale-Configuration", () => {
-        const configuration = new Configuration(WidgetHelpers, controls, notifications);
-        return configuration;
-    });
+VSS.require(["TFS/Dashboards/WidgetHelpers", "VSS/Controls", "VSS/Controls/Notifications"],
+    (widgetHelpers, controlService, notificationService) => {
+        VSS.register("Teamscale-Configuration", () => {
+            const configuration = new Configuration(widgetHelpers, controlService, notificationService);
+            return configuration;
+        });
 
-    VSS.notifyLoadSucceeded();
+        VSS.notifyLoadSucceeded();
 });

@@ -26,39 +26,45 @@ export class TeamscaleWidget {
 
     private currentSettings: ITeamscaleWidgetSettings;
 
-    private WidgetHelpers: any;
+    private widgetHelpers: any;
     private notificationService: any;
     private controlService: any;
 
-    constructor(widgetHelpers, controls, notifications) {
-        this.WidgetHelpers = widgetHelpers;
-        this.notificationService = notifications;
-        this.controlService = controls;
+    constructor(widgetHelpers, controlService, notificationService) {
+        this.widgetHelpers = widgetHelpers;
+        this.controlService = controlService;
+        this.notificationService = notificationService;
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
             null, '', '', '', false);
 
     }
 
+    /**
+     * Loads the widget after opening the dashboard; called by ADOS.
+     */
     public load(widgetSettings) {
         $('.inner-title').text(widgetSettings.name);
         this.parseSettings(widgetSettings);
 
         if (!this.currentSettings) {
             this.notificationUtils.showInfoBanner('Please configure plugin first.');
-            return this.WidgetHelpers.WidgetStatusHelper.Success();
+            return this.widgetHelpers.WidgetStatusHelper.Success();
         }
 
-        if (this.validateBaselineSettings() != '') {
+        if (this.validateBaselineSettings() !== '') {
             this.notificationUtils.showInfoBanner(this.validateBaselineSettings());
-            return this.WidgetHelpers.WidgetStatusHelper.Success();
+            return this.widgetHelpers.WidgetStatusHelper.Success();
         }
 
         return this.loadAndCheckConfiguration()
                 .then(() => this.loadAndRenderBadges())
-                .then(() => this.WidgetHelpers.WidgetStatusHelper.Success(),
-                    () => () => this.WidgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
+                .then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
+                    () => () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
     }
 
+    /**
+     * Reloads the widget e.g. when configuration is changed; called by ADOS.
+     */
     public reload(widgetSettings) {
         this.tabulaRasa();
         return this.load(widgetSettings);
@@ -222,8 +228,8 @@ export class TeamscaleWidget {
 
         const callbackOnLoginClose = () => {
             this.tabulaRasa();
-            this.loadAndRenderBadges().then(() => this.WidgetHelpers.WidgetStatusHelper.Success(),
-                    () => () => this.WidgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
+            this.loadAndRenderBadges().then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
+                    () => () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
         } ;
 
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService, callbackOnLoginClose,
@@ -249,13 +255,7 @@ export class TeamscaleWidget {
             }
             case this.timechooserTsBaseline: {
                 return this.teamscaleClient.retrieveBaselinesForProject(this.currentSettings.teamscaleProject)
-                    .then(baselines => {
-                        for (const baseline of baselines) {
-                            if (this.currentSettings.tsBaseline === baseline.name) {
-                                return baseline.timestamp;
-                            }
-                        }
-                    });
+                    .then(baselines => this.getTimestampForConfiguredBaseline(baselines));
             }
             case this.timechooserTimespan: {
                 let date = new Date();
@@ -264,15 +264,29 @@ export class TeamscaleWidget {
             }
         }
     }
+
+    /**
+     * If the given array of Teamscale baselines contains a baseline with the name of baseline to use in the widget,
+     * the timestamp of the baseline is returned. Otherwise undefined.
+     */
+    private getTimestampForConfiguredBaseline(baselines: Array<ITeamscaleBaseline>): undefined | number {
+        for (const baseline of baselines) {
+            if (this.currentSettings.tsBaseline === baseline.name) {
+                return baseline.timestamp;
+            }
+        }
+        return undefined;
+    }
 }
 
-VSS.require(["TFS/Dashboards/WidgetHelpers", "VSS/Controls", "VSS/Controls/Notifications"], (WidgetHelpers, controls, notifications) => {
-    WidgetHelpers.IncludeWidgetStyles();
+VSS.require(["TFS/Dashboards/WidgetHelpers", "VSS/Controls", "VSS/Controls/Notifications"],
+    (widgetHelpers, controlService, notificationService) => {
+        widgetHelpers.IncludeWidgetStyles();
 
-    VSS.register("TeamscaleWidget", () => {
-        const configuration = new TeamscaleWidget(WidgetHelpers, controls, notifications);
-        return configuration;
-    });
+        VSS.register("TeamscaleWidget", () => {
+            const configuration = new TeamscaleWidget(widgetHelpers, controlService, notificationService);
+            return configuration;
+        });
 
-    VSS.notifyLoadSucceeded();
+        VSS.notifyLoadSucceeded();
 });

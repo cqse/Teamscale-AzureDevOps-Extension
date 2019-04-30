@@ -2,11 +2,11 @@
  * Contribution for the work item UI. It shows a test gap badge when Teamscale URL and project are properly set up via
  * the project settings contribution
  */
-import {Settings} from "../Settings/Settings";
+import {ProjectSettings} from "../Settings/ProjectSettings";
 import {Scope} from "../Settings/Scope";
+import {Settings} from "../Settings/Settings";
 import TeamscaleClient from "../TeamscaleClient";
 import NotificationUtils from "../Utils/NotificationUtils";
-import {ProjectSettings} from "../Settings/ProjectSettings";
 import UiUtils = require("../Utils/UiUtils");
 
 const titleTestGapBadge: string = 'Tests';
@@ -46,15 +46,13 @@ VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Noti
     VSS.register(VSS.getContribution().id, function () {
         return {
             // Called when the active work item is modified
-            onFieldChanged: function (args) {
-            },
+            onFieldChanged() {},
 
             // Called when a new work item is being loaded in the UI
-            onLoaded: function (args) {
-            },
+            onLoaded() {},
 
             // Called when the active work item is being unloaded in the UI
-            onUnloaded: function (args) {
+            onUnloaded() {
             },
 
             // Called after the work item has been saved

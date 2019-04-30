@@ -3,32 +3,30 @@
  * churn badge. Uses the main branch and uses data from a defined number of days in the past until HEAD.
  */
 
-/// <reference path="../Settings/ITeamscaleWidgetSettings.d.ts" />
-
-import {Settings} from "../Settings/Settings";
-import {Scope} from "../Settings/Scope";
-import TeamscaleClient from "../TeamscaleClient";
-import {ProjectSettings} from "../Settings/ProjectSettings";
-import NotificationUtils from "../Utils/NotificationUtils";
-import UiUtils = require("../Utils/UiUtils");
+import { ITeamscaleWidgetSettings } from '../Settings/ITeamscaleWidgetSettings.d';
+import { ProjectSettings } from '../Settings/ProjectSettings';
+import { Scope } from '../Settings/Scope';
+import { Settings } from '../Settings/Settings';
+import TeamscaleClient from '../TeamscaleClient';
+import NotificationUtils from '../Utils/NotificationUtils';
+import UiUtils = require('../Utils/UiUtils');
 
 export class TeamscaleWidget {
     private teamscaleClient: TeamscaleClient = null;
     private notificationUtils: NotificationUtils = null;
-    private emailContact: string = "";
+    private emailContact: string = '';
     private projectSettings: Settings = null;
     private organizationSettings: Settings = null;
 
-    private timechooserFixedDate: string = 'start-fixed-date';
-    private timechooserTsBaseline: string = 'start-ts-baseline';
-    private timechooserTimespan: string = "start-timespan";
-
+    private readonly timechooserFixedDate: string = 'start-fixed-date';
+    private readonly timechooserTsBaseline: string = 'start-ts-baseline';
+    private readonly timechooserTimespan: string = 'start-timespan';
 
     private currentSettings: ITeamscaleWidgetSettings;
 
-    private widgetHelpers: any;
-    private notificationService: any;
-    private controlService: any;
+    private readonly widgetHelpers: any;
+    private readonly notificationService: any;
+    private readonly controlService: any;
 
     constructor(widgetHelpers, controlService, notificationService) {
         this.widgetHelpers = widgetHelpers;
@@ -36,7 +34,6 @@ export class TeamscaleWidget {
         this.notificationService = notificationService;
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
             null, '', '', '', false);
-
     }
 
     /**
@@ -57,23 +54,23 @@ export class TeamscaleWidget {
         }
 
         return this.loadAndCheckConfiguration()
-                .then(() => this.loadAndRenderBadges())
-                .then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
-                    () => () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
+            .then(() => this.loadAndRenderBadges())
+            .then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
+                () => () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
     }
 
     /**
      * Reloads the widget e.g. when configuration is changed; called by ADOS.
      */
     public reload(widgetSettings) {
-        this.tabulaRasa();
+        TeamscaleWidget.tabulaRasa();
         return this.load(widgetSettings);
     }
 
     /**
      * Empties the automatically filled (Errors, Teamscale project information, SVGs) div containers.
      */
-    private tabulaRasa() {
+    private static tabulaRasa() {
         const containersToEmpty: Array<string> = ['message-div', 'teamscale-info', 'badges'];
         for (const containerId of containersToEmpty) {
             const messageContainer = document.getElementById(containerId) as HTMLDivElement;
@@ -83,18 +80,17 @@ export class TeamscaleWidget {
         }
     }
 
-
     /**
      * Checks whether the baseline settings have a valid combination of time-chooser and value.
      * Does not check if the configured baseline (still) exists on the Teamscale server.
      */
     private validateBaselineSettings(): string {
-        if (this.getVersionOfInternetExplorer() !== undefined && this.getVersionOfInternetExplorer() < 12) {
+        if (TeamscaleWidget.getVersionOfInternetExplorer() !== undefined && TeamscaleWidget.getVersionOfInternetExplorer() < 12) {
             // skip validation for IE11 and below
             return '';
         }
 
-        switch(this.currentSettings.activeTimeChooser) {
+        switch (this.currentSettings.activeTimeChooser) {
             case this.timechooserFixedDate: {
                 if (!Number.isInteger(this.currentSettings.startFixedDate)) {
                     return 'Error in baseline configuration using a fixed date: date not set.';
@@ -120,7 +116,7 @@ export class TeamscaleWidget {
     /**
      * Returns version number of internet explorer or edge (eq. to > 12). For other browsers return undefined.
      */
-    private getVersionOfInternetExplorer(): undefined | number {
+    private static getVersionOfInternetExplorer(): undefined | number {
         let match = /\b(MSIE |Trident.*?rv:|Edge\/)(\d+)/.exec(navigator.userAgent);
         if (match) {
             return parseInt(match[2]);
@@ -133,7 +129,7 @@ export class TeamscaleWidget {
      * Loads the Teamscale email contact from the organization settings and assures that an Teamscale server url and project
      * name is set in the Azure DevOps project settings.
      */
-    async loadAndCheckConfiguration() {
+    private async loadAndCheckConfiguration() {
         let azureProjectName = VSS.getWebContext().project.name;
         this.projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
         this.organizationSettings = new Settings(Scope.ProjectCollection);
@@ -146,7 +142,7 @@ export class TeamscaleWidget {
      * Fetches test gap and findings churn badges for the configured timespan as SVG from the Teamscale server and
      * places them in the widget.
      */
-    async loadAndRenderBadges() {
+    private async loadAndRenderBadges() {
         let tgaBadge: string = '';
         let findingsChurnBadge: string = '';
 
@@ -185,7 +181,6 @@ export class TeamscaleWidget {
         tgaBadge = this.insertBadges(tgaBadge, findingsChurnBadge);
     }
 
-
     /**
      * Puts badges (SVGs returned from Teamscale server) in the respective containers.
      */
@@ -208,7 +203,7 @@ export class TeamscaleWidget {
     /**
      * Initializes the Teamscale Client with the url configured in the project settings.
      */
-    async initializeTeamscaleClient() {
+    private async initializeTeamscaleClient() {
         let url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
 
         if (!url) {
@@ -222,15 +217,15 @@ export class TeamscaleWidget {
     /**
      * Initializes the notification and login management handling errors in Teamscale communication.
      */
-    async initializeNotificationUtils() {
+    private async initializeNotificationUtils() {
         const url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
         const project = this.currentSettings.teamscaleProject;
 
         const callbackOnLoginClose = () => {
-            this.tabulaRasa();
+            TeamscaleWidget.tabulaRasa();
             this.loadAndRenderBadges().then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
-                    () => () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
-        } ;
+                () => () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
+        };
 
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService, callbackOnLoginClose,
             project, url, this.emailContact, true);
@@ -249,7 +244,7 @@ export class TeamscaleWidget {
      * to a timespan.
      */
     private calculateStartTimestamp(): PromiseLike<number> {
-        switch(this.currentSettings.activeTimeChooser) {
+        switch (this.currentSettings.activeTimeChooser) {
             case this.timechooserFixedDate: {
                 return Promise.resolve(this.currentSettings.startFixedDate);
             }
@@ -269,7 +264,7 @@ export class TeamscaleWidget {
      * If the given array of Teamscale baselines contains a baseline with the name of baseline to use in the widget,
      * the timestamp of the baseline is returned. Otherwise undefined.
      */
-    private getTimestampForConfiguredBaseline(baselines: Array<ITeamscaleBaseline>): undefined | number {
+    private getTimestampForConfiguredBaseline(baselines: ITeamscaleBaseline[]): undefined | number {
         for (const baseline of baselines) {
             if (this.currentSettings.tsBaseline === baseline.name) {
                 return baseline.timestamp;
@@ -279,14 +274,14 @@ export class TeamscaleWidget {
     }
 }
 
-VSS.require(["TFS/Dashboards/WidgetHelpers", "VSS/Controls", "VSS/Controls/Notifications"],
+VSS.require(['TFS/Dashboards/WidgetHelpers', 'VSS/Controls', 'VSS/Controls/Notifications'],
     (widgetHelpers, controlService, notificationService) => {
         widgetHelpers.IncludeWidgetStyles();
 
-        VSS.register("TeamscaleWidget", () => {
+        VSS.register('TeamscaleWidget', () => {
             const configuration = new TeamscaleWidget(widgetHelpers, controlService, notificationService);
             return configuration;
         });
 
         VSS.notifyLoadSucceeded();
-});
+    });

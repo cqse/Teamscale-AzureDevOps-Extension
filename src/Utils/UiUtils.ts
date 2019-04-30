@@ -9,12 +9,12 @@ export function logToDiv(div: HTMLDivElement, message: string) {
 
 /**
  * Adds as many padding characters to a string so that it has length toSize afterwards
- * @param string String to be padded
+ * @param text String to be padded
  * @param toSize Desired size
  * @param padding Padding character
  */
-export function padStart(string: String, toSize: number, padding: String): String {
-    let paddedString = string;
+export function padStart(text: String, toSize: number, padding: String): String {
+    let paddedString = text;
     while (paddedString.length < toSize) {
         paddedString = `${padding}${paddedString}`;
     }

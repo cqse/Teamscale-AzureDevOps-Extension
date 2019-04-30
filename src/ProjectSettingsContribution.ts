@@ -1,8 +1,8 @@
 /**
  * Contribution for the project settings consisting of the Teamscale URL and project
  */
-import {Scope} from "./Settings/Scope";
 import {ProjectSettings} from "./Settings/ProjectSettings";
+import {Scope} from "./Settings/Scope";
 import {Settings} from "./Settings/Settings";
 import {getCurrentTimestamp} from "./Utils/UiUtils";
 import UiUtils = require("./Utils/UiUtils");
@@ -33,7 +33,7 @@ VSS.ready(() => {
         return settings.get(Settings.TEAMSCALE_PROJECT);
     }).then((project) => {
         if (project) {
-            teamscaleProjectInput.value = project
+            teamscaleProjectInput.value = project;
         }
         VSS.notifyLoadSucceeded();
     }, () => {

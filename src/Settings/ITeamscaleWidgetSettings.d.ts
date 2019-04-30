@@ -2,7 +2,7 @@
  * Object to store settings of the Teamscale Dashboard Widget.
  */
 
-interface ITeamscaleWidgetSettings {
+export interface ITeamscaleWidgetSettings {
     teamscaleProject: string;
     activeTimeChooser: string;
     startFixedDate: number;

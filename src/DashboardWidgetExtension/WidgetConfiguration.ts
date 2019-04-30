@@ -8,11 +8,13 @@
 /// <reference path="../Settings/ITeamscaleWidgetSettings.d.ts" />
 /// <reference path="../ITeamscaleBaseline.d.ts" />
 
-import {Scope} from "../Settings/Scope";
-import {ProjectSettings} from "../Settings/ProjectSettings";
-import {Settings} from "../Settings/Settings";
-import TeamscaleClient from "../TeamscaleClient";
-import NotificationUtils from "../Utils/NotificationUtils";
+import { ITeamscaleWidgetSettings } from '../Settings/ITeamscaleWidgetSettings.d';
+import { ITeamscaleBaseline } from '../ITeamscaleBaseline.d';
+import { ProjectSettings } from '../Settings/ProjectSettings';
+import { Scope } from '../Settings/Scope';
+import { Settings } from '../Settings/Settings';
+import TeamscaleClient from '../TeamscaleClient';
+import NotificationUtils from '../Utils/NotificationUtils';
 
 export class Configuration {
     private projectSettings: Settings = null;
@@ -57,8 +59,8 @@ export class Configuration {
             this.datepicker.datepicker('setDate', new Date(this.widgetSettings.startFixedDate));
             this.testGapCheckbox.prop('checked', this.widgetSettings.showTestGapBadge);
         }
-        $('#teamscale-project-select').chosen({width: "100%"}).change(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange));
-        $('#ts-baseline-select').chosen({width: "95%"});
+        $('#teamscale-project-select').chosen({width: '100%'}).change(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange));
+        $('#ts-baseline-select').chosen({width: '95%'});
 
         this.loadAndCheckConfiguration().then(() => this.fillDropdownWithProjects())
             .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange)).catch(() => $('.teamscale-config-group').hide());
@@ -87,8 +89,8 @@ export class Configuration {
             activeTabIndex = $('#tabs a[href="#' + this.widgetSettings.activeTimeChooser + '"]').parent().index();
         }
         $('#tabs').tabs({
+            activate: notifyWidgetChange,
             active: activeTabIndex,
-            activate: notifyWidgetChange
         });
     }
 
@@ -105,7 +107,7 @@ export class Configuration {
         }
 
         for (let project of projects) {
-            let element = document.createElement("option");
+            let element = document.createElement('option');
             element.textContent = project;
             element.value = project;
             if (this.widgetSettings) {
@@ -114,7 +116,7 @@ export class Configuration {
             this.teamscaleProjectSelect.appendChild(element);
         }
 
-        $('#teamscale-project-select').trigger("chosen:updated");
+        $('#teamscale-project-select').trigger('chosen:updated');
     }
 
     /**
@@ -140,7 +142,7 @@ export class Configuration {
         this.disableBaselineDropdownForProjectsWithoutBaselines(baselines, teamscaleProject);
 
         for (let baseline of baselines) {
-            let element = document.createElement("option");
+            let element = document.createElement('option');
             let date = new Date(baseline.timestamp);
             element.textContent = baseline.name + ' (' + date.toLocaleDateString() + ')';
             element.value = baseline.name;
@@ -152,7 +154,7 @@ export class Configuration {
 
         // update widget settings to get rid of a baseline which belongs to the formally chosen project
         this.getAndUpdateCustomSettings();
-        $('#ts-baseline-select').trigger("chosen:updated");
+        $('#ts-baseline-select').trigger('chosen:updated');
         notifyWidgetChange();
     }
 
@@ -161,7 +163,7 @@ export class Configuration {
      */
     private disableBaselineDropdownForProjectsWithoutBaselines(baselines: Array<ITeamscaleBaseline>, teamscaleProject: string) {
         if (baselines.length === 0) {
-            let element = document.createElement("option");
+            let element = document.createElement('option');
             element.textContent = 'No baseline configured for project »' + teamscaleProject + '«';
             this.teamscaleBaselineSelect.appendChild(element);
             $('#ts-baseline-select').prop('disabled', true);
@@ -223,7 +225,7 @@ export class Configuration {
         const baselineDays: number = Number(this.baselineDaysInput.value);
         let startFixedDate: number;
         if (this.datepicker.datepicker('getDate')) {
-             startFixedDate = this.datepicker.datepicker('getDate').getTime();
+            startFixedDate = this.datepicker.datepicker('getDate').getTime();
         }
         const tsBaseline: string = this.teamscaleBaselineSelect.value;
         const showTestGapBadge: boolean = document.getElementById('show-test-gap').checked;
@@ -231,24 +233,24 @@ export class Configuration {
         const activeTimeChooser: string = $('.ui-tabs-active').attr('aria-controls');
 
         this.widgetSettings = {
-                teamscaleProject: teamscaleProject,
-                activeTimeChooser: activeTimeChooser,
-                startFixedDate: startFixedDate,
-                baselineDays: baselineDays,
-                tsBaseline: tsBaseline,
-                showTestGapBadge: showTestGapBadge
-            } as ITeamscaleWidgetSettings;
+            teamscaleProject,
+            activeTimeChooser,
+            startFixedDate,
+            baselineDays,
+            tsBaseline,
+            showTestGapBadge,
+        } as ITeamscaleWidgetSettings;
 
         return this.widgetSettings;
     }
 }
 
-VSS.require(["TFS/Dashboards/WidgetHelpers", "VSS/Controls", "VSS/Controls/Notifications"],
+VSS.require(['TFS/Dashboards/WidgetHelpers', 'VSS/Controls', 'VSS/Controls/Notifications'],
     (widgetHelpers, controlService, notificationService) => {
-        VSS.register("Teamscale-Configuration", () => {
+        VSS.register('Teamscale-Configuration', () => {
             const configuration = new Configuration(widgetHelpers, controlService, notificationService);
             return configuration;
         });
 
         VSS.notifyLoadSucceeded();
-});
+    });

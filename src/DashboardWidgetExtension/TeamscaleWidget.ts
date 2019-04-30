@@ -16,9 +16,13 @@ export class TeamscaleWidget {
     private teamscaleClient: TeamscaleClient = null;
     private notificationUtils: NotificationUtils = null;
     private emailContact: string = "";
-    private standardTimespanInDays: number = 30;
     private projectSettings: Settings = null;
     private organizationSettings: Settings = null;
+
+    private timechooserFixedDate: string = 'start-fixed-date';
+    private timechooserTsBaseline: string = 'start-ts-baseline';
+    private timechooserTimespan: string = "start-timespan";
+
 
     private currentSettings: ITeamscaleWidgetSettings;
 
@@ -30,22 +34,94 @@ export class TeamscaleWidget {
         this.WidgetHelpers = widgetHelpers;
         this.notificationService = notifications;
         this.controlService = controls;
+        this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
+            null, '', '', '', false);
+
     }
 
     public load(widgetSettings) {
-        $('.title').text(widgetSettings.name);
+        $('.inner-title').text(widgetSettings.name);
         this.parseSettings(widgetSettings);
 
+        if (!this.currentSettings) {
+            this.notificationUtils.showInfoBanner('Please configure plugin first.');
+            return this.WidgetHelpers.WidgetStatusHelper.Success();
+        }
+
+        if (this.validateBaselineSettings() != '') {
+            this.notificationUtils.showInfoBanner(this.validateBaselineSettings());
+            return this.WidgetHelpers.WidgetStatusHelper.Success();
+        }
+
         return this.loadAndCheckConfiguration()
-                .then(() => this.loadBadges())
+                .then(() => this.loadAndRenderBadges())
                 .then(() => this.WidgetHelpers.WidgetStatusHelper.Success(),
                     () => () => this.WidgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
     }
 
     public reload(widgetSettings) {
+        this.tabulaRasa();
         return this.load(widgetSettings);
     }
 
+    /**
+     * Empties the automatically filled (Errors, Teamscale project information, SVGs) div containers.
+     */
+    private tabulaRasa() {
+        const containersToEmpty: Array<string> = ['message-div', 'teamscale-info', 'badges'];
+        for (const containerId of containersToEmpty) {
+            const messageContainer = document.getElementById(containerId) as HTMLDivElement;
+            while (messageContainer.firstChild) {
+                messageContainer.removeChild(messageContainer.firstChild);
+            }
+        }
+    }
+
+
+    /**
+     * Checks whether the baseline settings have a valid combination of time-chooser and value.
+     * Does not check if the configured baseline (still) exists on the Teamscale server.
+     */
+    private validateBaselineSettings(): string {
+        if (this.getVersionOfInternetExplorer() !== undefined && this.getVersionOfInternetExplorer() < 12) {
+            // skip validation for IE11 and below
+            return '';
+        }
+
+        switch(this.currentSettings.activeTimeChooser) {
+            case this.timechooserFixedDate: {
+                if (!Number.isInteger(this.currentSettings.startFixedDate)) {
+                    return 'Error in baseline configuration using a fixed date: date not set.';
+                }
+                break;
+            }
+            case this.timechooserTsBaseline: {
+                if (this.currentSettings.tsBaseline.length < 1 || this.currentSettings.tsBaseline.startsWith('No baseline configured')) {
+                    return 'Error in baseline configuration using a TS baseline: baseline name not set.';
+                }
+                break;
+            }
+            case this.timechooserTimespan: {
+                if (!Number.isInteger(this.currentSettings.baselineDays) || this.currentSettings.baselineDays < 1) {
+                    return 'Error in baseline configuration using a timespan: set timespan days not positive.';
+                }
+                break;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Returns version number of internet explorer or edge (eq. to > 12). For other browsers return undefined.
+     */
+    private getVersionOfInternetExplorer(): undefined | number {
+        let match = /\b(MSIE |Trident.*?rv:|Edge\/)(\d+)/.exec(navigator.userAgent);
+        if (match) {
+            return parseInt(match[2]);
+        } else {
+            return undefined;
+        }
+    }
 
     /**
      * Loads the Teamscale email contact from the organization settings and assures that an Teamscale server url and project
@@ -61,9 +137,10 @@ export class TeamscaleWidget {
     }
 
     /**
-     * Fetches issue specific badges as SVG from the Teamscale server and places them in the work item form.
+     * Fetches test gap and findings churn badges for the configured timespan as SVG from the Teamscale server and
+     * places them in the widget.
      */
-    async loadBadges() {
+    async loadAndRenderBadges() {
         let tgaBadge: string = '';
         let findingsChurnBadge: string = '';
 
@@ -71,15 +148,20 @@ export class TeamscaleWidget {
         try {
             startTimestamp = await this.calculateStartTimestamp();
         } catch (error) {
-            let date = new Date();
-            startTimestamp = date.setDate(date.getDate() - this.standardTimespanInDays);
+            if (error.status === 403 || error.status === 404) {
+                this.notificationUtils.handleErrorInTeamscaleCommunication(error);
+            } else if (this.currentSettings.activeTimeChooser === 'start-ts-baseline') {
+                this.notificationUtils.showErrorBanner('Teamscale baseline definition for <i>'
+                    + this.currentSettings.tsBaseline + '</i> not found on server.');
+            }
+            return Promise.resolve();
         }
 
         if (this.currentSettings.showTestGapBadge === true) {
             try {
                 tgaBadge = await this.teamscaleClient.retrieveTestGapDeltaBadge(this.currentSettings.teamscaleProject,
                     startTimestamp);
-                tgaBadge = '<br><div id="tga-badge">' + tgaBadge + '</div>';
+                tgaBadge = '<div id="tga-badge">' + tgaBadge + '</div>';
             } catch (error) {
                 this.notificationUtils.handleErrorInTeamscaleCommunication(error);
             }
@@ -88,63 +170,84 @@ export class TeamscaleWidget {
         try {
             findingsChurnBadge = await this.teamscaleClient.retrieveFindingsDeltaBadge(this.currentSettings.teamscaleProject,
                 startTimestamp);
-            findingsChurnBadge = '<br><div id="findings-badge">' + findingsChurnBadge + '</div>';
+            findingsChurnBadge = '<div id="findings-badge">Findings churn<br>' + findingsChurnBadge + '<br></div>';
         } catch (error) {
             this.notificationUtils.handleErrorInTeamscaleCommunication(error);
-            return Promise.reject();
+            return Promise.resolve();
         }
 
+        tgaBadge = this.insertBadges(tgaBadge, findingsChurnBadge);
+    }
+
+
+    /**
+     * Puts badges (SVGs returned from Teamscale server) in the respective containers.
+     */
+    private insertBadges(tgaBadge: string, findingsChurnBadge: string) {
         tgaBadge = UiUtils.replaceClipPathId(tgaBadge, 'tgaBadge');
         const badgesElement = $('#badges');
         badgesElement.html(tgaBadge.concat(findingsChurnBadge));
 
         const infoElement = $('#teamscale-info');
         if (this.currentSettings) {
-            infoElement.html('Badges for project <i>' + this.currentSettings.teamscaleProject + '</i>');
+            infoElement.html('Project <i>' + this.currentSettings.teamscaleProject + '</i>');
         } else {
             infoElement.html('Please configure TS project and analysis timespan.');
         }
 
         UiUtils.resizeHost();
+        return tgaBadge;
     }
 
+    /**
+     * Initializes the Teamscale Client with the url configured in the project settings.
+     */
     async initializeTeamscaleClient() {
         let url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
 
         if (!url) {
-            //todo endLoadingWithInfoMessage(`Teamscale is not configured for this project. ${generateContactText()}`);
+            this.notificationUtils.showErrorBanner(`Teamscale is not configured for this project. ${this.notificationUtils.generateContactText()}`);
             return Promise.reject();
         }
 
         this.teamscaleClient = new TeamscaleClient(url);
     }
 
+    /**
+     * Initializes the notification and login management handling errors in Teamscale communication.
+     */
     async initializeNotificationUtils() {
         const url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
         const project = this.currentSettings.teamscaleProject;
 
-        const callbackOnLoginClose = () => this.loadBadges()
-            .then(() => this.WidgetHelpers.WidgetStatusHelper.Success(),
-            () => () => this.WidgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
+        const callbackOnLoginClose = () => {
+            this.tabulaRasa();
+            this.loadAndRenderBadges().then(() => this.WidgetHelpers.WidgetStatusHelper.Success(),
+                    () => () => this.WidgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
+        } ;
 
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService, callbackOnLoginClose,
             project, url, this.emailContact, true);
     }
 
+    /**
+     * Parses JSON-stringified widget settings to a field member.
+     */
     private parseSettings(widgetSettings) {
         this.currentSettings = JSON.parse(widgetSettings.customSettings.data) as ITeamscaleWidgetSettings;
-
-        if (!this.currentSettings) {
-            // TODO
-        }
     }
 
+    /**
+     * Calculate the start timestamp for the badges based on the configured time chooser method and value.
+     * Returns an rejecting promise if the widget is configured to use a Teamscale baseline that could not be resolved
+     * to a timespan.
+     */
     private calculateStartTimestamp(): PromiseLike<number> {
         switch(this.currentSettings.activeTimeChooser) {
-            case 'start-fixed-date': {
+            case this.timechooserFixedDate: {
                 return Promise.resolve(this.currentSettings.startFixedDate);
             }
-            case 'start-ts-baseline': {
+            case this.timechooserTsBaseline: {
                 return this.teamscaleClient.retrieveBaselinesForProject(this.currentSettings.teamscaleProject)
                     .then(baselines => {
                         for (const baseline of baselines) {
@@ -154,16 +257,9 @@ export class TeamscaleWidget {
                         }
                     });
             }
-            case "start-timespan": {
-                // intended fallthrough
-            }
-            default: {
-                let timeSpanDays = this.standardTimespanInDays;
-                if (Number.isInteger(this.currentSettings.baselineDays)) {
-                    timeSpanDays = this.currentSettings.baselineDays;
-                }
+            case this.timechooserTimespan: {
                 let date = new Date();
-                date.setDate(date.getDate() - timeSpanDays);
+                date.setDate(date.getDate() - this.currentSettings.baselineDays);
                 return Promise.resolve(date.getTime());
             }
         }

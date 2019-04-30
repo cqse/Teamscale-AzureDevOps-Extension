@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "teamscale-azure-devops-plugin",
     "publisher": "CQSEGmbH",
-    "version": "0.0.695",
+    "version": "0.0.746",
     "name": "Teamscale DevOps",
     "description": "A sample Visual Studio Services extension",
     "public": false,
@@ -64,7 +64,23 @@
                 "supportedSizes": [
                     {
                         "rowSpan": 1,
+                        "columnSpan": 1
+                    },
+                    {
+                        "rowSpan": 1,
+                        "columnSpan": 2
+                    },
+                    {
+                        "rowSpan": 1,
                         "columnSpan": 3
+                    },
+                    {
+                        "rowSpan": 2,
+                        "columnSpan": 1
+                    },
+                    {
+                        "rowSpan": 2,
+                        "columnSpan": 2
                     }
                 ],
                 "supportedScopes": [ "project_team" ]
@@ -131,6 +147,16 @@
             "path": "node_modules/jquery-ui-dist/jquery-ui.min.css",
             "addressable": true,
             "packagePath": "styles/jquery-ui.min.css"
+        },
+        {
+            "path": "node_modules/jquery-ui-dist/images/ui-icons_444444_256x240.png",
+            "addressable": true,
+            "packagePath": "styles/images/ui-icons_444444_256x240.png"
+        },
+        {
+            "path": "node_modules/chosen-js/chosen-sprite.png",
+            "addressable": true,
+            "packagePath": "styles/chosen-sprite.png"
         },
         {
             "path": "scripts/require.js",

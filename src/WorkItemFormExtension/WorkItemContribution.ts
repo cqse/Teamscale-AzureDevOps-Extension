@@ -87,6 +87,9 @@ async function loadAndCheckConfiguration() {
         initializeNotificationUtils()]);
 }
 
+/**
+ * Initializes the notification and login management handling errors in Teamscale communication.
+ */
 async function initializeNotificationUtils() {
     const url = await projectSettings.get(Settings.TEAMSCALE_URL);
     const project = await projectSettings.get(Settings.TEAMSCALE_PROJECT);
@@ -130,6 +133,9 @@ async function loadBadges() {
     VSS.notifyLoadSucceeded();
 }
 
+/**
+ * Initializes the Teamscale Client with the url configured in the project settings.
+ */
 async function initializeTeamscaleClient() {
     let url = await projectSettings.get(Settings.TEAMSCALE_URL);
 
@@ -141,6 +147,9 @@ async function initializeTeamscaleClient() {
     teamscaleClient = new TeamscaleClient(url);
 }
 
+/**
+ * Read the teamscale project name from the ADOS project settings.
+ */
 async function resolveProjectName() {
     teamscaleProject = await projectSettings.get(Settings.TEAMSCALE_PROJECT);
 

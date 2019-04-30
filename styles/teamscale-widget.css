@@ -1,3 +1,12 @@
 .teamscale-widget {
     padding: 14px;
 }
+
+#tga-badge {
+    display: block;
+}
+
+#findings-badge {
+    margin-top: 0.5em;
+    display: block;
+}

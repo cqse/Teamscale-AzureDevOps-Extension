@@ -1,3 +1,7 @@
+/**
+ * Utils class to handle display of notification or information in the Teamscale ADOS extension.
+ */
+
 import UiUtils = require("./UiUtils");
 
 export default class NotificationUtils {
@@ -22,6 +26,9 @@ export default class NotificationUtils {
         this.useDialogInsteadOfNewWindow = useDialog;
     }
 
+    /**
+     * Opens the Teamscale login dialog. Assigns the predefined callback function to the dialog close event.
+     */
     public showLoginDialog() {
         return VSS.getService(VSS.ServiceIds.Dialog).then((dialogService: IHostDialogService) => {
             const extensionCtx = VSS.getExtensionContext();

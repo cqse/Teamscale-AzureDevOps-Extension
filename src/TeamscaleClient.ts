@@ -86,6 +86,9 @@ export default class TeamscaleClient {
         return promise;
     }
 
+    /**
+     * Retrieves the list of baselines configured for a project from the Teamscale server.
+     */
     public retrieveBaselinesForProject(teamscaleProject: string): PromiseLike<Array<ITeamscaleBaseline>> {
         let xhr = this.generateRequest('GET', '/p/' + teamscaleProject + '/baselines/?detail=true');
         let promise = this.generatePromise<string>(xhr).then(result => {

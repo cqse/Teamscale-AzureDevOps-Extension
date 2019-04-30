@@ -2,20 +2,20 @@
  * Contribution for the work item UI. It shows a test gap badge when Teamscale URL and project are properly set up via
  * the project settings contribution
  */
-import {ProjectSettings} from "../Settings/ProjectSettings";
-import {Scope} from "../Settings/Scope";
-import {Settings} from "../Settings/Settings";
-import TeamscaleClient from "../TeamscaleClient";
-import NotificationUtils from "../Utils/NotificationUtils";
-import UiUtils = require("../Utils/UiUtils");
+import {ProjectSettings} from '../Settings/ProjectSettings';
+import {Scope} from '../Settings/Scope';
+import {Settings} from '../Settings/Settings';
+import TeamscaleClient from '../TeamscaleClient';
+import NotificationUtils from '../Utils/NotificationUtils';
+import UiUtils = require('../Utils/UiUtils');
 
 const titleTestGapBadge: string = 'Tests';
 const titleFindingsChurnBadge: string = 'Findings Churn';
 
 let notificationUtils: NotificationUtils = null;
 let teamscaleClient: TeamscaleClient = null;
-let teamscaleProject: string = "";
-let emailContact: string = "";
+let teamscaleProject: string = '';
+let emailContact: string = '';
 let issueId: number = 0;
 let projectSettings: Settings = null;
 let organizationSettings: Settings = null;
@@ -37,7 +37,7 @@ VSS.init({
 });
 
 //Request the required services from VSS. Once retrieved, register a contribution callback (required by VSS) and load the TGA badge
-VSS.require(["TFS/WorkItemTracking/Services", "VSS/Controls", "VSS/Controls/Notifications"],
+VSS.require(['TFS/WorkItemTracking/Services', 'VSS/Controls', 'VSS/Controls/Notifications'],
     function (workItemServices, controls, notifications) {
     controlService = controls;
     notificationService = notifications;

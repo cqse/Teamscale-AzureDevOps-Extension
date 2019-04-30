@@ -2,7 +2,7 @@
  * Logs a message the start of a div as a paragraph
  */
 export function logToDiv(div: HTMLDivElement, message: string) {
-    const newLogElement = document.createElement("p");
+    const newLogElement = document.createElement('p');
     newLogElement.innerHTML = message;
     div.insertBefore(newLogElement, div.firstChild);
 }
@@ -26,9 +26,9 @@ export function padStart(text: String, toSize: number, padding: String): String 
  */
 export function getCurrentTimestamp() {
     const now = new Date();
-    return `${padStart(now.getHours().toString(), 2, "0")}` +
-        `:${padStart(now.getMinutes().toString(), 2, "0")}` +
-        `:${padStart(now.getSeconds().toString(), 2, "0")}`;
+    return `${padStart(now.getHours().toString(), 2, '0')}` +
+        `:${padStart(now.getMinutes().toString(), 2, '0')}` +
+        `:${padStart(now.getSeconds().toString(), 2, '0')}`;
 }
 
 /**
@@ -45,6 +45,6 @@ export function resizeHost() {
  *
  */
 export function replaceClipPathId(plainSvg: string, clipPathId: string): string {
-    plainSvg = plainSvg.replace(new RegExp("(<clipPath[^>]*id=\\\")a\\\"","gm"), '$1' + clipPathId + '"');
-    return plainSvg.replace(new RegExp("(<g[^>]*clip-path=\")url\\(#a\\)\\\"","gm"),   '$1' + 'url(#' + clipPathId + ')"');
+    plainSvg = plainSvg.replace(new RegExp('(<clipPath[^>]*id=\\")a\\"','gm'), '$1' + clipPathId + '"');
+    return plainSvg.replace(new RegExp('(<g[^>]*clip-path=")url\\(#a\\)\\"','gm'),   '$1' + 'url(#' + clipPathId + ')"');
 }

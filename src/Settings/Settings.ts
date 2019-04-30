@@ -1,14 +1,14 @@
-import {ExtensionDataService} from "VSS/SDK/Services/ExtensionData";
-import {Scope} from "./Scope";
+import {ExtensionDataService} from 'VSS/SDK/Services/ExtensionData';
+import {Scope} from './Scope';
 
 /**
  * Class that facilitates saving settings to VSS.
  * Settings can either be saved on Project or Organization level.
  */
 export class Settings {
-    public static readonly TEAMSCALE_URL = "teamscale-url";
-    public static readonly TEAMSCALE_PROJECT = "teamscale-project";
-    public static readonly EMAIL_CONTACT = "email-contact";
+    public static readonly TEAMSCALE_URL = 'teamscale-url';
+    public static readonly TEAMSCALE_PROJECT = 'teamscale-project';
+    public static readonly EMAIL_CONTACT = 'email-contact';
 
     private readonly scope: Scope;
 

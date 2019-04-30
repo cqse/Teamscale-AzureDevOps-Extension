@@ -1,5 +1,5 @@
-import {Scope} from "./Scope";
-import {Settings} from "./Settings";
+import {Scope} from './Scope';
+import {Settings} from './Settings';
 
 /**
  * Extends the Settings class to be able to save project specific settings.

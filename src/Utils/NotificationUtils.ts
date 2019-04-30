@@ -2,7 +2,7 @@
  * Utils class to handle display of notification or information in the Teamscale ADOS extension.
  */
 
-import UiUtils = require("./UiUtils");
+import UiUtils = require('./UiUtils');
 
 export default class NotificationUtils {
 
@@ -33,11 +33,11 @@ export default class NotificationUtils {
         return VSS.getService(VSS.ServiceIds.Dialog).then((dialogService: IHostDialogService) => {
             const extensionCtx = VSS.getExtensionContext();
             // Build absolute contribution ID for dialogContent
-            const contributionId = extensionCtx.publisherId + "." + extensionCtx.extensionId + ".teamscale-login-dialog";
+            const contributionId = extensionCtx.publisherId + '.' + extensionCtx.extensionId + '.teamscale-login-dialog';
 
             // Show dialog
             const dialogOptions = {
-                title: "Teamscale Login",
+                title: 'Teamscale Login',
                 width: 600,
                 height: 720,
                 buttons: null,
@@ -91,7 +91,7 @@ export default class NotificationUtils {
      * is generated, otherwise a note to contact the administrator
      */
     public generateContactText() {
-        let contact = "your administrator";
+        let contact = 'your administrator';
         if (this.emailContact) {
             contact = `<a href="mailto:${this.emailContact}">the Teamscale-Team</a>`;
         }
@@ -104,7 +104,7 @@ export default class NotificationUtils {
     public showNotLoggedInMessage() {
         if (this.useDialogInsteadOfNewWindow) {
            this.showInfoBanner(`Please log into <a id="login-link">Teamscale</a>`);
-            $("#login-link").click(() => this.showLoginDialog());
+            $('#login-link').click(() => this.showLoginDialog());
         } else {
             this.showInfoBanner(`Please log into <a href="${this.teamscaleUrl}" target="_blank">Teamscale</a> and repeat.`);
         }

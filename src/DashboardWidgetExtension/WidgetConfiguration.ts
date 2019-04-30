@@ -4,12 +4,8 @@
  *  - TS project to use
  *  - number of days to respect in the badges
  */
-
-/// <reference path="../Settings/ITeamscaleWidgetSettings.d.ts" />
-/// <reference path="../ITeamscaleBaseline.d.ts" />
-
-import { ITeamscaleWidgetSettings } from '../Settings/ITeamscaleWidgetSettings.d';
-import { ITeamscaleBaseline } from '../ITeamscaleBaseline.d';
+import { ITeamscaleBaseline } from '../ITeamscaleBaseline';
+import { ITeamscaleWidgetSettings } from '../Settings/ITeamscaleWidgetSettings';
 import { ProjectSettings } from '../Settings/ProjectSettings';
 import { Scope } from '../Settings/Scope';
 import { Settings } from '../Settings/Settings';
@@ -80,7 +76,7 @@ export class Configuration {
      * Propagates configuration changes to the widget. Enables live preview/feedback on configuring the widget settings.
      */
     private initializeOnchangeListeners(notifyWidgetChange) {
-        const inputIds: Array<string> = ['datepicker', 'baseline-days-input', 'ts-baseline-select', 'teamscale-project-select', 'show-test-gap'];
+        const inputIds: string[] = ['datepicker', 'baseline-days-input', 'ts-baseline-select', 'teamscale-project-select', 'show-test-gap'];
         for (const inputId of inputIds) {
             document.getElementById(inputId).onchange = notifyWidgetChange;
         }
@@ -98,7 +94,7 @@ export class Configuration {
      * Loads a list of accessible projects from the Teamscale server and appends them to the dropdown menu.
      */
     private async fillDropdownWithProjects() {
-        let projects: Array<string>;
+        let projects: string[];
         try {
             projects = await this.teamscaleClient.retrieveTeamscaleProjects();
         } catch (error) {
@@ -106,8 +102,8 @@ export class Configuration {
             return Promise.reject(error);
         }
 
-        for (let project of projects) {
-            let element = document.createElement('option');
+        for (const project of projects) {
+            const element = document.createElement('option');
             element.textContent = project;
             element.value = project;
             if (this.widgetSettings) {
@@ -127,7 +123,7 @@ export class Configuration {
         // since the chosen change event of the project selector is fired before the settings object update
         const teamscaleProject: string = this.teamscaleProjectSelect.value;
 
-        let baselines: Array<ITeamscaleBaseline>;
+        let baselines: ITeamscaleBaseline[];
         try {
             baselines = await this.teamscaleClient.retrieveBaselinesForProject(teamscaleProject);
         } catch (error) {
@@ -141,9 +137,9 @@ export class Configuration {
 
         this.disableBaselineDropdownForProjectsWithoutBaselines(baselines, teamscaleProject);
 
-        for (let baseline of baselines) {
-            let element = document.createElement('option');
-            let date = new Date(baseline.timestamp);
+        for (const baseline of baselines) {
+            const element = document.createElement('option');
+            const date = new Date(baseline.timestamp);
             element.textContent = baseline.name + ' (' + date.toLocaleDateString() + ')';
             element.value = baseline.name;
             if (this.widgetSettings) {
@@ -161,9 +157,9 @@ export class Configuration {
     /**
      * Disables the baseline chooser for projects without configured Teamscale baselines.
      */
-    private disableBaselineDropdownForProjectsWithoutBaselines(baselines: Array<ITeamscaleBaseline>, teamscaleProject: string) {
+    private disableBaselineDropdownForProjectsWithoutBaselines(baselines: ITeamscaleBaseline[], teamscaleProject: string) {
         if (baselines.length === 0) {
-            let element = document.createElement('option');
+            const element = document.createElement('option');
             element.textContent = 'No baseline configured for project »' + teamscaleProject + '«';
             this.teamscaleBaselineSelect.appendChild(element);
             $('#ts-baseline-select').prop('disabled', true);
@@ -177,7 +173,7 @@ export class Configuration {
      * name is set in the Azure DevOps project settings.
      */
     private async loadAndCheckConfiguration() {
-        let azureProjectName = VSS.getWebContext().project.name;
+        const azureProjectName = VSS.getWebContext().project.name;
         this.projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
         this.organizationSettings = new Settings(Scope.ProjectCollection);
 
@@ -189,7 +185,7 @@ export class Configuration {
      * Initializes the Teamscale Client with the url configured in the project settings.
      */
     private async initializeTeamscaleClient() {
-        let url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
+        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
 
         if (!url) {
             this.notificationUtils.showErrorBanner(`Teamscale is not configured for this Azure Dev Ops project.`);

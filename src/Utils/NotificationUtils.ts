@@ -7,13 +7,13 @@ import UiUtils = require('./UiUtils');
 export default class NotificationUtils {
 
     private displayedErrorMessage: boolean = false;
-    private teamscaleProject: string;
-    private teamscaleUrl: string;
-    private emailContact: string;
-    private callbackOnLoginClose: any;
+    private readonly teamscaleProject: string;
+    private readonly teamscaleUrl: string;
+    private readonly emailContact: string;
+    private readonly callbackOnLoginClose: any;
+    private readonly useDialogInsteadOfNewWindow: boolean;
     private controlService: any;
     private notificationService: any;
-    private useDialogInsteadOfNewWindow: boolean;
 
     constructor(controlService, notificationService, callbackOnLoginClose, teamscaleProject, teamscaleUrl, emailContact, useDialog) {
         this.controlService = controlService;
@@ -41,7 +41,7 @@ export default class NotificationUtils {
                 width: 600,
                 height: 720,
                 buttons: null,
-                close: this.callbackOnLoginClose
+                close: this.callbackOnLoginClose,
             };
 
             dialogService.openDialog(contributionId, dialogOptions);
@@ -103,7 +103,7 @@ export default class NotificationUtils {
      */
     public showNotLoggedInMessage() {
         if (this.useDialogInsteadOfNewWindow) {
-           this.showInfoBanner(`Please log into <a id="login-link">Teamscale</a>`);
+            this.showInfoBanner(`Please log into <a id="login-link">Teamscale</a>`);
             $('#login-link').click(() => this.showLoginDialog());
         } else {
             this.showInfoBanner(`Please log into <a href="${this.teamscaleUrl}" target="_blank">Teamscale</a> and repeat.`);
@@ -114,7 +114,7 @@ export default class NotificationUtils {
      * Shows an info banner (vss notification).
      * @param message The message to display. It may contain HTML.
      */
-    public showInfoBanner(message: String) {
+    public showInfoBanner(message: string) {
         const notification = this.generateNotification();
         notification.setMessage($(`<div>${message}</div>`), this.notificationService.MessageAreaType.Info);
         UiUtils.resizeHost();
@@ -124,7 +124,7 @@ export default class NotificationUtils {
      * Shows an error banner (vss notification).
      * @param message The message to display. It may contain HTML.
      */
-    public showErrorBanner(message: String) {
+    public showErrorBanner(message: string) {
         const notification = this.generateNotification();
         notification.setMessage($(`<div>${message}</div>`), this.notificationService.MessageAreaType.Error);
         UiUtils.resizeHost();
@@ -140,5 +140,4 @@ export default class NotificationUtils {
             showIcon: true,
         });
     }
-
 }

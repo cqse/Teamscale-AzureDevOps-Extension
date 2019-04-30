@@ -3,7 +3,7 @@ import {Settings} from './Settings/Settings';
 import UiUtils = require('./Utils/UiUtils');
 import {getCurrentTimestamp} from './Utils/UiUtils';
 
-let settings: Settings = new Settings(Scope.ProjectCollection);
+const settings: Settings = new Settings(Scope.ProjectCollection);
 let mailContactInput: HTMLInputElement = null;
 let logDiv: HTMLDivElement = null;
 

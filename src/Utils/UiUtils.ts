@@ -13,12 +13,12 @@ export function logToDiv(div: HTMLDivElement, message: string) {
  * @param toSize Desired size
  * @param padding Padding character
  */
-export function padStart(text: String, toSize: number, padding: String): String {
+export function padStart(text: string, toSize: number, padding: string): string {
     let paddedString = text;
     while (paddedString.length < toSize) {
         paddedString = `${padding}${paddedString}`;
     }
-    return paddedString
+    return paddedString;
 }
 
 /**
@@ -45,6 +45,8 @@ export function resizeHost() {
  *
  */
 export function replaceClipPathId(plainSvg: string, clipPathId: string): string {
-    plainSvg = plainSvg.replace(new RegExp('(<clipPath[^>]*id=\\")a\\"','gm'), '$1' + clipPathId + '"');
-    return plainSvg.replace(new RegExp('(<g[^>]*clip-path=")url\\(#a\\)\\"','gm'),   '$1' + 'url(#' + clipPathId + ')"');
+    plainSvg = plainSvg.replace(
+        new RegExp('(<clipPath[^>]*id=\\")a\\"', 'gm'), '$1' + clipPathId + '"');
+    return plainSvg.replace(
+        new RegExp('(<g[^>]*clip-path=")url\\(#a\\)\\"', 'gm'), '$1' + 'url(#' + clipPathId + ')"');
 }

@@ -17,7 +17,7 @@ VSS.init({
 });
 
 VSS.ready(() => {
-    let azureProjectName = VSS.getWebContext().project.name;
+    const azureProjectName = VSS.getWebContext().project.name;
     settings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
     teamscaleUrlInput = document.getElementById('teamscale-url') as HTMLInputElement;
     teamscaleProjectInput = document.getElementById('teamscale-project') as HTMLInputElement;
@@ -42,7 +42,7 @@ VSS.ready(() => {
 });
 
 function assignOnClickSave() {
-    document.getElementById('save-button').onclick = function () {
+    document.getElementById('save-button').onclick = () => {
         const teamscaleProject = teamscaleProjectInput.value;
         let teamscaleUrl = teamscaleUrlInput.value;
         if (teamscaleUrl.endsWith('/')) {
@@ -56,7 +56,7 @@ function assignOnClickSave() {
             (url) => UiUtils.logToDiv(logDiv, `${timestamp} Saving Teamscale URL "${url ? url : ''}" successful.`),
             () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving Teamscale URL.`));
         settings.save(Settings.TEAMSCALE_PROJECT, teamscaleProject).then(
-            (project) => UiUtils.logToDiv(logDiv, `${timestamp} Saving Teamscale project "${project ? project: ''}" successful.`),
+            (project) => UiUtils.logToDiv(logDiv, `${timestamp} Saving Teamscale project "${project ? project : ''}" successful.`),
             () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving Teamscale project`));
     };
 

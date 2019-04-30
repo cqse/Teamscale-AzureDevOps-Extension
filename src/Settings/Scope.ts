@@ -1,5 +1,4 @@
 export enum Scope {
     User = 'User',
-    ProjectCollection = '' // Default for VSS
+    ProjectCollection = '', // Default for VSS
 }
-

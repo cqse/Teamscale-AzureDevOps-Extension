@@ -2,9 +2,9 @@
  * Contribution for the work item UI. It shows a test gap badge when Teamscale URL and project are properly set up via
  * the project settings contribution
  */
-import {ProjectSettings} from '../Settings/ProjectSettings';
-import {Scope} from '../Settings/Scope';
-import {Settings} from '../Settings/Settings';
+import { ProjectSettings } from '../Settings/ProjectSettings';
+import { Scope } from '../Settings/Scope';
+import { Settings } from '../Settings/Settings';
 import TeamscaleClient from '../TeamscaleClient';
 import NotificationUtils from '../Utils/NotificationUtils';
 import UiUtils = require('../Utils/UiUtils');
@@ -27,56 +27,54 @@ let workItemService = null;
 
 // Set extension properties in VSS
 VSS.init({
-    /* Require the extension to notify VSS that it's ready loading.
-    We do a lot of async processing (querying settings, Teamscale, ...), so this is required.*/
+    // We do a lot of async processing (querying settings, Teamscale, ...), so this is required.
     explicitNotifyLoaded: true,
     // Allow dark theme
     applyTheme: true,
     usePlatformStyles: true, //
-    usePlatformScripts: true // Required for theming/styling
+    usePlatformScripts: true, // Required for theming/styling
 });
 
-//Request the required services from VSS. Once retrieved, register a contribution callback (required by VSS) and load the TGA badge
+// Request the required services from VSS. Once retrieved, register a contribution callback (required by VSS) and
+// load the TGA badge
 VSS.require(['TFS/WorkItemTracking/Services', 'VSS/Controls', 'VSS/Controls/Notifications'],
-    function (workItemServices, controls, notifications) {
-    controlService = controls;
-    notificationService = notifications;
-    workItemService = workItemServices;
+    (workItemServices, controls, notifications) => {
+        controlService = controls;
+        notificationService = notifications;
+        workItemService = workItemServices;
 
-    VSS.register(VSS.getContribution().id, function () {
-        return {
-            // Called when the active work item is modified
-            onFieldChanged() {},
+        VSS.register(VSS.getContribution().id,  () => {
+            /* tslint:disable:no-empty */
+            return {
+                // Called when the active work item is modified
+                onFieldChanged() {},
 
-            // Called when a new work item is being loaded in the UI
-            onLoaded() {},
+                // Called when a new work item is being loaded in the UI
+                onLoaded() {},
 
-            // Called when the active work item is being unloaded in the UI
-            onUnloaded() {
-            },
+                // Called when the active work item is being unloaded in the UI
+                onUnloaded() {},
 
-            // Called after the work item has been saved
-            onSaved: function (args) {
-            },
+                // Called after the work item has been saved
+                onSaved() {},
 
-            // Called when the work item is reset to its unmodified state (undo)
-            onReset: function (args) {
-            },
+                // Called when the work item is reset to its unmodified state (undo)
+                onReset() {},
 
-            // Called when the work item has been refreshed from the server
-            onRefreshed: function (args) {
-            }
-        }
+                // Called when the work item has been refreshed from the server
+                onRefreshed() {},
+            };
+            /* tslint:enable:no-empty */
+        });
+        loadAndCheckConfiguration().then(() => loadBadges());
     });
-    loadAndCheckConfiguration().then(() => loadBadges());
-});
 
 /**
  * Loads the Teamscale email contact from the organization settings and assures that an Teamscale server url and project
  * name is set in the Azure DevOps project settings.
  */
 async function loadAndCheckConfiguration() {
-    let azureProjectName = VSS.getWebContext().project.name;
+    const azureProjectName = VSS.getWebContext().project.name;
     projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
     organizationSettings = new Settings(Scope.ProjectCollection);
 
@@ -110,14 +108,14 @@ async function loadBadges() {
 
     try {
         tgaBadge = await teamscaleClient.queryIssueTestGapBadge(teamscaleProject, issueId);
-        tgaBadge = '<div id="tga-badge">'+titleTestGapBadge+'<br>' + tgaBadge + '</div>';
+        tgaBadge = '<div id="tga-badge">' + titleTestGapBadge + '<br>' + tgaBadge + '</div>';
     } catch (error) {
         notificationUtils.handleErrorInTeamscaleCommunication(error);
     }
 
     try {
         findingsChurnBadge = await teamscaleClient.queryFindingsChurnBadge(teamscaleProject, issueId);
-        findingsChurnBadge = titleFindingsChurnBadge +'<br>' + findingsChurnBadge;
+        findingsChurnBadge = titleFindingsChurnBadge + '<br>' + findingsChurnBadge;
     } catch (error) {
         notificationUtils.handleErrorInTeamscaleCommunication(error);
     }
@@ -135,7 +133,7 @@ async function loadBadges() {
  * Initializes the Teamscale Client with the url configured in the project settings.
  */
 async function initializeTeamscaleClient() {
-    let url = await projectSettings.get(Settings.TEAMSCALE_URL);
+    const url = await projectSettings.get(Settings.TEAMSCALE_URL);
 
     if (!url) {
         endLoadingWithInfoMessage(`Teamscale is not configured for this project. ${notificationUtils.generateContactText()}`);
@@ -153,7 +151,7 @@ async function resolveProjectName() {
 
     if (!teamscaleProject) {
         endLoadingWithInfoMessage('Please make sure that a Teamscale project name is properly configured in the ' +
-          'Azure DevOps Project settings.');
+            'Azure DevOps Project settings.');
         return Promise.reject();
     }
 }
@@ -162,7 +160,7 @@ async function resolveProjectName() {
  * Get the issue id of the opened Work Item.
  */
 async function resolveIssueId() {
-    let service = await workItemService.WorkItemFormService.getService();
+    const service = await workItemService.WorkItemFormService.getService();
     issueId = await service.getId();
 }
 

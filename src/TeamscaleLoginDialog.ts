@@ -9,11 +9,11 @@ VSS.init({
     explicitNotifyLoaded: true,
     usePlatformStyles: true,
     usePlatformScripts: true,
-    applyTheme: true
+    applyTheme: true,
 });
 
 VSS.ready(() => {
-    let azureProjectName = VSS.getWebContext().project.name;
+    const azureProjectName = VSS.getWebContext().project.name;
     const projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
 
     projectSettings.get(Settings.TEAMSCALE_URL).then(url => {
@@ -23,4 +23,3 @@ VSS.ready(() => {
 
     VSS.notifyLoadSucceeded();
 });
-

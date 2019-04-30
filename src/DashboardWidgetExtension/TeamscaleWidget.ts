@@ -3,7 +3,8 @@
  * churn badge. Uses the main branch and uses data from a defined number of days in the past until HEAD.
  */
 
-import { ITeamscaleWidgetSettings } from '../Settings/ITeamscaleWidgetSettings.d';
+import { ITeamscaleBaseline } from '../ITeamscaleBaseline';
+import { ITeamscaleWidgetSettings } from '../Settings/ITeamscaleWidgetSettings';
 import { ProjectSettings } from '../Settings/ProjectSettings';
 import { Scope } from '../Settings/Scope';
 import { Settings } from '../Settings/Settings';
@@ -37,6 +38,31 @@ export class TeamscaleWidget {
     }
 
     /**
+     * Empties the automatically filled (Errors, Teamscale project information, SVGs) div containers.
+     */
+    private static tabulaRasa() {
+        const containersToEmpty: string[] = ['message-div', 'teamscale-info', 'badges'];
+        for (const containerId of containersToEmpty) {
+            const messageContainer = document.getElementById(containerId) as HTMLDivElement;
+            while (messageContainer.firstChild) {
+                messageContainer.removeChild(messageContainer.firstChild);
+            }
+        }
+    }
+
+    /**
+     * Returns version number of internet explorer or edge (eq. to > 12). For other browsers return undefined.
+     */
+    private static getVersionOfInternetExplorer(): undefined | number {
+        const match = /\b(MSIE |Trident.*?rv:|Edge\/)(\d+)/.exec(navigator.userAgent);
+        if (match) {
+            return parseInt(match[2], 10);
+        } else {
+            return undefined;
+        }
+    }
+
+    /**
      * Loads the widget after opening the dashboard; called by ADOS.
      */
     public load(widgetSettings) {
@@ -65,19 +91,6 @@ export class TeamscaleWidget {
     public reload(widgetSettings) {
         TeamscaleWidget.tabulaRasa();
         return this.load(widgetSettings);
-    }
-
-    /**
-     * Empties the automatically filled (Errors, Teamscale project information, SVGs) div containers.
-     */
-    private static tabulaRasa() {
-        const containersToEmpty: Array<string> = ['message-div', 'teamscale-info', 'badges'];
-        for (const containerId of containersToEmpty) {
-            const messageContainer = document.getElementById(containerId) as HTMLDivElement;
-            while (messageContainer.firstChild) {
-                messageContainer.removeChild(messageContainer.firstChild);
-            }
-        }
     }
 
     /**
@@ -114,23 +127,11 @@ export class TeamscaleWidget {
     }
 
     /**
-     * Returns version number of internet explorer or edge (eq. to > 12). For other browsers return undefined.
-     */
-    private static getVersionOfInternetExplorer(): undefined | number {
-        let match = /\b(MSIE |Trident.*?rv:|Edge\/)(\d+)/.exec(navigator.userAgent);
-        if (match) {
-            return parseInt(match[2]);
-        } else {
-            return undefined;
-        }
-    }
-
-    /**
      * Loads the Teamscale email contact from the organization settings and assures that an Teamscale server url and project
      * name is set in the Azure DevOps project settings.
      */
     private async loadAndCheckConfiguration() {
-        let azureProjectName = VSS.getWebContext().project.name;
+        const azureProjectName = VSS.getWebContext().project.name;
         this.projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
         this.organizationSettings = new Settings(Scope.ProjectCollection);
 
@@ -204,10 +205,11 @@ export class TeamscaleWidget {
      * Initializes the Teamscale Client with the url configured in the project settings.
      */
     private async initializeTeamscaleClient() {
-        let url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
+        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
 
         if (!url) {
-            this.notificationUtils.showErrorBanner(`Teamscale is not configured for this project. ${this.notificationUtils.generateContactText()}`);
+            this.notificationUtils.showErrorBanner('Teamscale is not configured for this project.' +
+                this.notificationUtils.generateContactText());
             return Promise.reject();
         }
 
@@ -250,10 +252,10 @@ export class TeamscaleWidget {
             }
             case this.timechooserTsBaseline: {
                 return this.teamscaleClient.retrieveBaselinesForProject(this.currentSettings.teamscaleProject)
-                    .then(baselines => this.getTimestampForConfiguredBaseline(baselines));
+                    .then((baselines) => this.getTimestampForConfiguredBaseline(baselines));
             }
             case this.timechooserTimespan: {
-                let date = new Date();
+                const date = new Date();
                 date.setDate(date.getDate() - this.currentSettings.baselineDays);
                 return Promise.resolve(date.getTime());
             }

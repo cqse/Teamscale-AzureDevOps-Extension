@@ -1,5 +1,5 @@
-import {Scope} from './Scope';
-import {Settings} from './Settings';
+import { Scope } from './Scope';
+import { Settings } from './Settings';
 
 /**
  * Extends the Settings class to be able to save project specific settings.
@@ -15,11 +15,11 @@ export class ProjectSettings extends Settings {
         this.project = project;
     }
 
-    save(key: string, value: string): PromiseLike<string> {
+    public save(key: string, value: string): PromiseLike<string> {
         return super.save(`${this.project}-${key}`, value);
     }
 
-    get(key: string): PromiseLike<string> {
+    public get(key: string): PromiseLike<string> {
         return super.get(`${this.project}-${key}`);
     }
 }

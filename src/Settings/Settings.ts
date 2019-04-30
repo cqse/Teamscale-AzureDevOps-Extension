@@ -1,5 +1,5 @@
-import {ExtensionDataService} from 'VSS/SDK/Services/ExtensionData';
-import {Scope} from './Scope';
+import { ExtensionDataService } from 'VSS/SDK/Services/ExtensionData';
+import { Scope } from './Scope';
 
 /**
  * Class that facilitates saving settings to VSS.
@@ -16,7 +16,7 @@ export class Settings {
         this.scope = scope;
     }
 
-    save(key: string, value: string): PromiseLike<string> {
+    public save(key: string, value: string): PromiseLike<string> {
         return VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: ExtensionDataService) => {
             if (!value) {
                 value = undefined;
@@ -25,7 +25,7 @@ export class Settings {
         });
     }
 
-    get(key: string): PromiseLike<string> {
+    public get(key: string): PromiseLike<string> {
         return VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: ExtensionDataService) => {
             return dataService.getValue(key, {scopeType: this.scope});
         });

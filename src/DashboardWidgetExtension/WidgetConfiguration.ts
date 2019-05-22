@@ -59,7 +59,8 @@ export class Configuration {
         $('#ts-baseline-select').chosen({width: '95%'});
 
         this.loadAndCheckConfiguration().then(() => this.fillDropdownWithProjects())
-            .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange)).catch(() => $('.teamscale-config-group').hide());
+            .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange))
+            .catch(() => $('.teamscale-config-group').hide());
 
         VSS.resize();
         return this.widgetHelpers.WidgetStatusHelper.Success();
@@ -244,6 +245,7 @@ export class Configuration {
 VSS.require(['TFS/Dashboards/WidgetHelpers', 'VSS/Controls', 'VSS/Controls/Notifications'],
     (widgetHelpers, controlService, notificationService) => {
         VSS.register('Teamscale-Configuration', () => {
+            // TODO (TP) return directly?
             const configuration = new Configuration(widgetHelpers, controlService, notificationService);
             return configuration;
         });

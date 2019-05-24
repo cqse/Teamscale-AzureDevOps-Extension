@@ -6,13 +6,13 @@ import { Scope } from './Scope';
  * Settings can either be saved on Project or Organization level.
  */
 export class Settings {
-    /* Key that is used to store the Teamscale Server url. */
+    /** Key that is used to store the Teamscale Server url. */
     public static readonly TEAMSCALE_URL_KEY = 'teamscale-url';
 
-    /* Key that is used to store the Teamscale Project which belongs to the Azure DevOps project. */
+    /** Key that is used to store the Teamscale Project which belongs to the Azure DevOps project. */
     public static readonly TEAMSCALE_PROJECT_KEY = 'teamscale-project';
 
-    /* Key that is used to store the contact email for the TS responsible person. */
+    /** Key that is used to store the contact email for the TS responsible person. */
     public static readonly EMAIL_CONTACT_KEY = 'email-contact';
 
     private readonly scope: Scope;

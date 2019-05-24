@@ -50,22 +50,22 @@ VSS.require(['TFS/WorkItemTracking/Services', 'VSS/Controls', 'VSS/Controls/Noti
         VSS.register(VSS.getContribution().id,  () => {
             /* tslint:disable:no-empty */
             return {
-                /* Called when the active work item is modified */
+                /** Called when the active work item is modified */
                 onFieldChanged() {},
 
-                /* Called when a new work item is being loaded in the UI */
+                /** Called when a new work item is being loaded in the UI */
                 onLoaded() {},
 
-                /* Called when the active work item is being unloaded in the UI */
+                /** Called when the active work item is being unloaded in the UI */
                 onUnloaded() {},
 
-                /* Called after the work item has been saved */
+                /** Called after the work item has been saved */
                 onSaved() {},
 
-                /* Called when the work item is reset to its unmodified state (undo) */
+                /** Called when the work item is reset to its unmodified state (undo) */
                 onReset() {},
 
-                /* Called when the work item has been refreshed from the server */
+                /** Called when the work item has been refreshed from the server */
                 onRefreshed() {},
             };
             /* tslint:enable:no-empty */

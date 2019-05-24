@@ -25,7 +25,9 @@ let controlService = null;
 let notificationService = null;
 let workItemService = null;
 
-// Set extension properties in VSS
+/**
+ * Set extension properties in VSS
+ */
 VSS.init({
     // We do a lot of async processing (querying settings, Teamscale, ...), so this is required.
     explicitNotifyLoaded: true,
@@ -35,8 +37,10 @@ VSS.init({
     usePlatformScripts: true, // Required for theming/styling
 });
 
-// Request the required services from VSS. Once retrieved, register a contribution callback (required by VSS) and
-// load the TGA badge
+/**
+ * Request the required services from VSS. Once retrieved, register a contribution callback (required by VSS)
+ * and load the TGA badge
+ */
 VSS.require(['TFS/WorkItemTracking/Services', 'VSS/Controls', 'VSS/Controls/Notifications'],
     (workItemServices, controls, notifications) => {
         controlService = controls;
@@ -46,22 +50,22 @@ VSS.require(['TFS/WorkItemTracking/Services', 'VSS/Controls', 'VSS/Controls/Noti
         VSS.register(VSS.getContribution().id,  () => {
             /* tslint:disable:no-empty */
             return {
-                // Called when the active work item is modified
+                /* Called when the active work item is modified */
                 onFieldChanged() {},
 
-                // Called when a new work item is being loaded in the UI
+                /* Called when a new work item is being loaded in the UI */
                 onLoaded() {},
 
-                // Called when the active work item is being unloaded in the UI
+                /* Called when the active work item is being unloaded in the UI */
                 onUnloaded() {},
 
-                // Called after the work item has been saved
+                /* Called after the work item has been saved */
                 onSaved() {},
 
-                // Called when the work item is reset to its unmodified state (undo)
+                /* Called when the work item is reset to its unmodified state (undo) */
                 onReset() {},
 
-                // Called when the work item has been refreshed from the server
+                /* Called when the work item has been refreshed from the server */
                 onRefreshed() {},
             };
             /* tslint:enable:no-empty */
@@ -78,7 +82,7 @@ async function loadAndCheckConfiguration() {
     projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
     organizationSettings = new Settings(Scope.ProjectCollection);
 
-    emailContact = await organizationSettings.get(Settings.EMAIL_CONTACT);
+    emailContact = await organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
     return Promise.all([initializeTeamscaleClient(), resolveProjectName(), resolveIssueId(),
         initializeNotificationUtils()]);
 }
@@ -87,8 +91,8 @@ async function loadAndCheckConfiguration() {
  * Initializes the notification and login management handling errors in Teamscale communication.
  */
 async function initializeNotificationUtils() {
-    const url = await projectSettings.get(Settings.TEAMSCALE_URL);
-    const project = await projectSettings.get(Settings.TEAMSCALE_PROJECT);
+    const url = await projectSettings.get(Settings.TEAMSCALE_URL_KEY);
+    const project = await projectSettings.get(Settings.TEAMSCALE_PROJECT_KEY);
     const callbackOnLoginClose = () => {
         $('#tga-badge').empty();
         $('#message-div').empty();
@@ -133,7 +137,7 @@ async function loadBadges() {
  * Initializes the Teamscale Client with the url configured in the project settings.
  */
 async function initializeTeamscaleClient() {
-    const url = await projectSettings.get(Settings.TEAMSCALE_URL);
+    const url = await projectSettings.get(Settings.TEAMSCALE_URL_KEY);
 
     if (!url) {
         endLoadingWithInfoMessage(`Teamscale is not configured for this project. ${notificationUtils.generateContactText()}`);
@@ -147,7 +151,7 @@ async function initializeTeamscaleClient() {
  * Read the teamscale project name from the ADOS project settings.
  */
 async function resolveProjectName() {
-    teamscaleProject = await projectSettings.get(Settings.TEAMSCALE_PROJECT);
+    teamscaleProject = await projectSettings.get(Settings.TEAMSCALE_PROJECT_KEY);
 
     if (!teamscaleProject) {
         endLoadingWithInfoMessage('Please make sure that a Teamscale project name is properly configured in the ' +

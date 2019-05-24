@@ -15,10 +15,16 @@ export class ProjectSettings extends Settings {
         this.project = project;
     }
 
+    /**
+     * Saves a key value pair in Azure DevOps.
+     */
     public save(key: string, value: string): PromiseLike<string> {
         return super.save(`${this.project}-${key}`, value);
     }
 
+    /**
+     * Gets a value by key from Azure DevOps.
+     */
     public get(key: string): PromiseLike<string> {
         return super.get(`${this.project}-${key}`);
     }

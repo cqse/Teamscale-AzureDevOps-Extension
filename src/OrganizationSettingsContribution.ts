@@ -18,7 +18,7 @@ VSS.ready(() => {
     assignOnClickSave();
 
     // Load current settings
-    settings.get(Settings.EMAIL_CONTACT).then(email => {
+    settings.get(Settings.EMAIL_CONTACT_KEY).then(email => {
         if (email) {
             mailContactInput.value = email;
         }
@@ -28,6 +28,10 @@ VSS.ready(() => {
     });
 });
 
+/**
+ * Saves the entered mail address in the Organization settings.
+ * There is no validation check performed.
+ */
 function assignOnClickSave() {
     document.getElementById('save-button').onclick = () => {
         const mailContact = mailContactInput.value;
@@ -36,7 +40,7 @@ function assignOnClickSave() {
         logDiv.innerHTML = '';
         const timestamp = getCurrentTimestamp();
         settings
-            .save(Settings.EMAIL_CONTACT, mailContact)
+            .save(Settings.EMAIL_CONTACT_KEY, mailContact)
             .then(email => UiUtils.logToDiv(logDiv, `${timestamp} Saving Email address "${email ? email : ''}" successful.`),
                 () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving Email address.`));
     };

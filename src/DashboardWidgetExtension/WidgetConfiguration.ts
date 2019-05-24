@@ -178,7 +178,7 @@ export class Configuration {
         this.projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
         this.organizationSettings = new Settings(Scope.ProjectCollection);
 
-        this.emailContact = await this.organizationSettings.get(Settings.EMAIL_CONTACT);
+        this.emailContact = await this.organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
         return Promise.all([this.initializeTeamscaleClient(), this.initializeNotificationUtils()]);
     }
 
@@ -186,7 +186,7 @@ export class Configuration {
      * Initializes the Teamscale Client with the url configured in the project settings.
      */
     private async initializeTeamscaleClient() {
-        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
+        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL_KEY);
 
         if (!url) {
             this.notificationUtils.showErrorBanner(`Teamscale is not configured for this Azure Dev Ops project.`);
@@ -200,7 +200,7 @@ export class Configuration {
      * Initializes the notification and login management handling errors in Teamscale communication.
      */
     private async initializeNotificationUtils() {
-        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
+        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL_KEY);
 
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
             null, '', url, this.emailContact, false);

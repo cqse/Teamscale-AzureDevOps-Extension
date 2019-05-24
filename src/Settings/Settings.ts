@@ -6,9 +6,14 @@ import { Scope } from './Scope';
  * Settings can either be saved on Project or Organization level.
  */
 export class Settings {
-    public static readonly TEAMSCALE_URL = 'teamscale-url';
-    public static readonly TEAMSCALE_PROJECT = 'teamscale-project';
-    public static readonly EMAIL_CONTACT = 'email-contact';
+    /* Key that is used to store the Teamscale Server url. */
+    public static readonly TEAMSCALE_URL_KEY = 'teamscale-url';
+
+    /* Key that is used to store the Teamscale Project which belongs to the Azure DevOps project. */
+    public static readonly TEAMSCALE_PROJECT_KEY = 'teamscale-project';
+
+    /* Key that is used to store the contact email for the TS responsible person. */
+    public static readonly EMAIL_CONTACT_KEY = 'email-contact';
 
     private readonly scope: Scope;
 
@@ -16,6 +21,9 @@ export class Settings {
         this.scope = scope;
     }
 
+    /**
+     * Saves a key value pair in Azure DevOps.
+     */
     public save(key: string, value: string): PromiseLike<string> {
         return VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: ExtensionDataService) => {
             if (!value) {
@@ -25,6 +33,9 @@ export class Settings {
         });
     }
 
+    /**
+     * Gets a value by key from Azure DevOps.
+     */
     public get(key: string): PromiseLike<string> {
         return VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: ExtensionDataService) => {
             return dataService.getValue(key, {scopeType: this.scope});

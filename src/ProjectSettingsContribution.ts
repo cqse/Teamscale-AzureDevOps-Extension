@@ -26,11 +26,11 @@ VSS.ready(() => {
     assignOnClickSave();
 
     // Load the current settings
-    settings.get(Settings.TEAMSCALE_URL).then(url => {
+    settings.get(Settings.TEAMSCALE_URL_KEY).then(url => {
         if (url) {
             teamscaleUrlInput.value = url;
         }
-        return settings.get(Settings.TEAMSCALE_PROJECT);
+        return settings.get(Settings.TEAMSCALE_PROJECT_KEY);
     }).then(project => {
         if (project) {
             teamscaleProjectInput.value = project;
@@ -42,6 +42,9 @@ VSS.ready(() => {
     });
 });
 
+/**
+ * Saves the entered TS Server an Project values to the Project settings.
+ */
 function assignOnClickSave() {
     document.getElementById('save-button').onclick = () => {
         const teamscaleProject = teamscaleProjectInput.value;
@@ -53,10 +56,10 @@ function assignOnClickSave() {
         // Log success/error events to have some feedback
         logDiv.innerHTML = '';
         const timestamp = getCurrentTimestamp();
-        settings.save(Settings.TEAMSCALE_URL, teamscaleUrl)
+        settings.save(Settings.TEAMSCALE_URL_KEY, teamscaleUrl)
             .then(url => UiUtils.logToDiv(logDiv, `${timestamp} Saving Teamscale URL "${url ? url : ''}" successful.`),
             () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving Teamscale URL.`));
-        settings.save(Settings.TEAMSCALE_PROJECT, teamscaleProject)
+        settings.save(Settings.TEAMSCALE_PROJECT_KEY, teamscaleProject)
             .then(project => UiUtils.logToDiv(logDiv, `${timestamp} Saving Teamscale project "${project ? project : ''}" successful.`),
             () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving Teamscale project`));
     };

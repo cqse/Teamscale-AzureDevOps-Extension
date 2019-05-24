@@ -16,7 +16,7 @@ VSS.ready(() => {
     const azureProjectName = VSS.getWebContext().project.name;
     const projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
 
-    projectSettings.get(Settings.TEAMSCALE_URL).then(url => {
+    projectSettings.get(Settings.TEAMSCALE_URL_KEY).then(url => {
         const body = $('#teamscale-login-container');
         body.html(`<iframe id="teamscale-frame" width="520" height="634" src="${url}"></iframe>`);
     });

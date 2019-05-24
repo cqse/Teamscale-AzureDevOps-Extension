@@ -1,7 +1,7 @@
-import {Scope} from './Settings/Scope';
-import {Settings} from './Settings/Settings';
+import { Scope } from './Settings/Scope';
+import { Settings } from './Settings/Settings';
 import UiUtils = require('./Utils/UiUtils');
-import {getCurrentTimestamp} from './Utils/UiUtils';
+import { getCurrentTimestamp } from './Utils/UiUtils';
 
 const settings: Settings = new Settings(Scope.ProjectCollection);
 let mailContactInput: HTMLInputElement = null;
@@ -18,7 +18,7 @@ VSS.ready(() => {
     assignOnClickSave();
 
     // Load current settings
-    settings.get(Settings.EMAIL_CONTACT).then((email) => {
+    settings.get(Settings.EMAIL_CONTACT).then(email => {
         if (email) {
             mailContactInput.value = email;
         }
@@ -35,8 +35,9 @@ function assignOnClickSave() {
         // Log success/error events to have some feedback
         logDiv.innerHTML = '';
         const timestamp = getCurrentTimestamp();
-        settings.save(Settings.EMAIL_CONTACT, mailContact).then(
-            (email) => UiUtils.logToDiv(logDiv, `${timestamp} Saving Email address "${email ? email : ''}" successful.`),
-            () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving Email address.`));
+        settings
+            .save(Settings.EMAIL_CONTACT, mailContact)
+            .then(email => UiUtils.logToDiv(logDiv, `${timestamp} Saving Email address "${email ? email : ''}" successful.`),
+                () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving Email address.`));
     };
 }

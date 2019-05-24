@@ -36,7 +36,6 @@ VSS.ready(() => {
             teamscaleProjectInput.value = project;
         }
         VSS.notifyLoadSucceeded();
-    // TODO (TP): Why no catch?
     }, () => {
         VSS.notifyLoadFailed('');
     });

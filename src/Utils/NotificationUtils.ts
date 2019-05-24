@@ -93,7 +93,6 @@ export default class NotificationUtils {
     public generateContactText() {
         let contact = 'your administrator';
         if (this.emailContact) {
-            // TODO (TP) Mixing of quotation marks ` and '
             contact = `<a href="mailto:${this.emailContact}">the Teamscale-Team</a>`;
         }
         return `Please contact ${contact}.`;

@@ -245,9 +245,7 @@ export class Configuration {
 VSS.require(['TFS/Dashboards/WidgetHelpers', 'VSS/Controls', 'VSS/Controls/Notifications'],
     (widgetHelpers, controlService, notificationService) => {
         VSS.register('Teamscale-Configuration', () => {
-            // TODO (TP) return directly?
-            const configuration = new Configuration(widgetHelpers, controlService, notificationService);
-            return configuration;
+            return new Configuration(widgetHelpers, controlService, notificationService);
         });
 
         VSS.notifyLoadSucceeded();

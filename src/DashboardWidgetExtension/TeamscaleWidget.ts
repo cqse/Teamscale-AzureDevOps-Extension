@@ -44,8 +44,7 @@ export class TeamscaleWidget {
         const containersToEmpty: string[] = ['message-div', 'teamscale-info', 'badges'];
         for (const containerId of containersToEmpty) {
             const messageContainer = document.getElementById(containerId) as HTMLDivElement;
-            // TODO (TP): Maybe add a little null check for "messageContainer" as well, just in case :-D
-            while (messageContainer.firstChild) {
+            while (messageContainer && messageContainer.firstChild) {
                 messageContainer.removeChild(messageContainer.firstChild);
             }
         }
@@ -81,23 +80,12 @@ export class TeamscaleWidget {
         }
 
         return this.loadAndCheckConfiguration()
-            // TODO (TP) If the loading and checking of the configs fails the error message will be the same as for the
-            // loading and rendering
             .then(() => this.loadAndRenderBadges())
             .then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
-                // TODO (TP) Is there a reason to not use .catch?
-                // They way it is used here, it will not catch any errors which are happening in the "then" block
-                // See https://stackoverflow.com/questions/33278280/promise-then-vs-then-catch
-                // I tested it with the following, which returns 3 and not 5
-                // Promise.resolve()
-                //     .then(function() {throw("abc")}, () => 5)
-                //     .catch(()=>3)
-                //     .then(a => console.log(a))
-
-                // TODO (TP) Why is it returning a function?
-                // Maybe I'm missing something but I think it is odd that success is returning "WidgetStatusHelper.Success()"
-                // but this is returning "() => WidgetStatusHelper.Failure(...)"
-                () => () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
+                () => this.widgetHelpers.WidgetStatusHelper.Failure('Could not load configuration.'))
+            // All possible errors should not lead to an unresolved promise, since we want to use our
+            // error handling and messages and not a generic Azure DevOps error
+            .catch(e => this.widgetHelpers.WidgetStatusHelper.Failure(e));
     }
 
     /**
@@ -182,7 +170,6 @@ export class TeamscaleWidget {
                 tgaBadge = '<div id="tga-badge">' + tgaBadge + '</div>';
             } catch (error) {
                 this.notificationUtils.handleErrorInTeamscaleCommunication(error);
-                // TODO (TP): This is the only catch(error) without exiting the function
             }
         }
 
@@ -195,8 +182,7 @@ export class TeamscaleWidget {
             return Promise.resolve();
         }
 
-        // TODO (TP): Is there a reason that a value is returned and a variable is set?
-        tgaBadge = this.insertBadges(tgaBadge, findingsChurnBadge);
+        this.insertBadges(tgaBadge, findingsChurnBadge);
     }
 
     /**
@@ -205,7 +191,6 @@ export class TeamscaleWidget {
     private insertBadges(tgaBadge: string, findingsChurnBadge: string) {
         tgaBadge = UiUtils.replaceClipPathId(tgaBadge, 'tgaBadge');
         const badgesElement = $('#badges');
-        // TODO (TP) In WorkItemContribution you replace the clip-path for findingsChurnBadge as well
         badgesElement.html(tgaBadge.concat(findingsChurnBadge));
 
         const infoElement = $('#teamscale-info');
@@ -216,8 +201,6 @@ export class TeamscaleWidget {
         }
 
         UiUtils.resizeHost();
-        // TODO (TP) Something leftover from a previous rework?
-        return tgaBadge;
     }
 
     /**
@@ -236,6 +219,7 @@ export class TeamscaleWidget {
         // TODO (TP) It works for Promise.all, but for me it is a little bit inconsistent to have a function which
         // *might* return something. If this is ok for programming typescript then just delete this.
         // There are more functions like this in WidgetConfig as well
+        // TODO (JR) See comment in GitHub
     }
 
     /**
@@ -248,8 +232,7 @@ export class TeamscaleWidget {
         const callbackOnLoginClose = () => {
             TeamscaleWidget.tabulaRasa();
             this.loadAndRenderBadges().then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
-                // TODO (TP) Same comments as in load()
-                () => () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
+                () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
         };
 
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService, callbackOnLoginClose,
@@ -304,9 +287,7 @@ VSS.require(['TFS/Dashboards/WidgetHelpers', 'VSS/Controls', 'VSS/Controls/Notif
         widgetHelpers.IncludeWidgetStyles();
 
         VSS.register('TeamscaleWidget', () => {
-            // TODO (TP): return directly
-            const configuration = new TeamscaleWidget(widgetHelpers, controlService, notificationService);
-            return configuration;
+            return new TeamscaleWidget(widgetHelpers, controlService, notificationService);
         });
 
         VSS.notifyLoadSucceeded();

@@ -9,6 +9,7 @@ let logDiv: HTMLDivElement = null;
 
 VSS.init({
     explicitNotifyLoaded: true,
+    usePlatformStyles: true,
 });
 
 VSS.ready(() => {

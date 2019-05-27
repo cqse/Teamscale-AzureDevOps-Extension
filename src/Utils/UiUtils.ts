@@ -50,3 +50,15 @@ export function replaceClipPathId(plainSvg: string, clipPathId: string): string 
     return plainSvg.replace(
         new RegExp('(<g[^>]*clip-path=")url\\(#a\\)\\"', 'gm'), '$1' + 'url(#' + clipPathId + ')"');
 }
+
+/**
+ * Converts a string representation of a boolean value back to a Boolean value. Return undefined in case of an
+ * unexpected error.
+ */
+export function convertToBoolean(input: string): boolean | undefined {
+    try {
+        return JSON.parse(input);
+    } catch (e) {
+        return undefined;
+    }
+}

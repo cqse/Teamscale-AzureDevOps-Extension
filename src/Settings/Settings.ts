@@ -9,8 +9,26 @@ export class Settings {
     /** Key that is used to store the Teamscale Server url. */
     public static readonly TEAMSCALE_URL_KEY = 'teamscale-url';
 
-    /** Key that is used to store the Teamscale Project which belongs to the Azure DevOps project. */
-    public static readonly TEAMSCALE_PROJECT_KEY = 'teamscale-project';
+    /** Key that is used to store the Teamscale Project list which belongs to the Azure DevOps project. */
+    public static readonly TEAMSCALE_PROJECTS_KEY = 'teamscale-project';
+
+    /**
+     *  Key that is used to store whether a separate Teamscale Server should be used for retrieving information
+     *  of Test Gap Analysis.
+     */
+    public static readonly USE_SEPARATE_TEST_GAP_SERVER = 'use-separate-test-gap-sever';
+
+    /** Key that is used to store the separate TGA Teamscale Server url. */
+    public static readonly TGA_TEAMSCALE_URL_KEY = 'tga-teamscale-url';
+
+    /** Key that is used to store the separate Teamscale Project list which belongs to the Azure DevOps project. */
+    public static readonly TGA_TEAMSCALE_PROJECTS_KEY = 'tga-teamscale-project';
+
+    /** Key that is used to store whether a Findings Badge should be shown in the Work Item View. */
+    public static readonly SHOW_FINDINGS_BADGE_KEY = 'show-findings-badge-for-work-item';
+
+    /** Key that is used to store whether a Test Gap Badge should be shown in the Work Item View. */
+    public static readonly SHOW_TEST_GAP_BADGE_KEY = 'show-test-gap-badge-for-work-item';
 
     /** Key that is used to store the contact email for the TS responsible person. */
     public static readonly EMAIL_CONTACT_KEY = 'email-contact';

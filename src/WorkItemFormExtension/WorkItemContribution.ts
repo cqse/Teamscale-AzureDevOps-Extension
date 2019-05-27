@@ -7,6 +7,7 @@ import { Scope } from '../Settings/Scope';
 import { Settings } from '../Settings/Settings';
 import TeamscaleClient from '../TeamscaleClient';
 import NotificationUtils from '../Utils/NotificationUtils';
+import ProjectUtils = require('../Utils/ProjectsUtils');
 import UiUtils = require('../Utils/UiUtils');
 
 const titleTestGapBadge: string = 'Tests';
@@ -15,9 +16,14 @@ const titleFindingsChurnBadge: string = 'Findings Churn';
 let notificationUtils: NotificationUtils = null;
 let teamscaleClient: TeamscaleClient = null;
 let teamscaleProject: string = '';
+let useExtraTgaConfiguration: boolean = false;
+let tgaTeamscaleClient: TeamscaleClient = null;
+let tgaTeamscaleProject: string = '';
+let showFindingsBadge: boolean = false;
+let showTestGapBadge: boolean = false;
 let emailContact: string = '';
 let issueId: number = 0;
-let projectSettings: Settings = null;
+let projectSettings: ProjectSettings = null;
 let organizationSettings: Settings = null;
 
 // VSS services
@@ -83,8 +89,8 @@ async function loadAndCheckConfiguration() {
     organizationSettings = new Settings(Scope.ProjectCollection);
 
     emailContact = await organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
-    return Promise.all([initializeTeamscaleClient(), resolveProjectName(), resolveIssueId(),
-        initializeNotificationUtils()]);
+    return Promise.all([initializeTeamscaleClient(), resolveIssueId(), initializeNotificationUtils()]).then(() =>
+        resolveProjectName());
 }
 
 /**
@@ -92,7 +98,7 @@ async function loadAndCheckConfiguration() {
  */
 async function initializeNotificationUtils() {
     const url = await projectSettings.get(Settings.TEAMSCALE_URL_KEY);
-    const project = await projectSettings.get(Settings.TEAMSCALE_PROJECT_KEY);
+    const project = await projectSettings.get(Settings.TEAMSCALE_PROJECTS_KEY);
     const callbackOnLoginClose = () => {
         $('#tga-badge').empty();
         $('#message-div').empty();
@@ -110,18 +116,27 @@ async function loadBadges() {
     let tgaBadge: string = '';
     let findingsChurnBadge: string = '';
 
-    try {
-        tgaBadge = await teamscaleClient.queryIssueTestGapBadge(teamscaleProject, issueId);
-        tgaBadge = '<div id="tga-badge">' + titleTestGapBadge + '<br>' + tgaBadge + '</div>';
-    } catch (error) {
-        notificationUtils.handleErrorInTeamscaleCommunication(error);
+    if (!showTestGapBadge && !showFindingsBadge) {
+        notificationUtils.showInfoBanner('Please activate at least one Badge to show in the Project settings' +
+            ' (Extensions → Teamscale).');
     }
 
-    try {
-        findingsChurnBadge = await teamscaleClient.queryFindingsChurnBadge(teamscaleProject, issueId);
-        findingsChurnBadge = titleFindingsChurnBadge + '<br>' + findingsChurnBadge;
-    } catch (error) {
-        notificationUtils.handleErrorInTeamscaleCommunication(error);
+    if (showTestGapBadge) {
+        try {
+            tgaBadge = await tgaTeamscaleClient.queryIssueTestGapBadge(tgaTeamscaleProject, issueId);
+            tgaBadge = '<div id="tga-badge">' + titleTestGapBadge + '<br>' + tgaBadge + '</div>';
+        } catch (error) {
+            notificationUtils.handleErrorInTeamscaleCommunication(error);
+        }
+    }
+
+    if (showFindingsBadge) {
+        try {
+            findingsChurnBadge = await teamscaleClient.queryFindingsChurnBadge(teamscaleProject, issueId);
+            findingsChurnBadge = titleFindingsChurnBadge + '<br>' + findingsChurnBadge;
+        } catch (error) {
+            notificationUtils.handleErrorInTeamscaleCommunication(error);
+        }
     }
 
     tgaBadge = UiUtils.replaceClipPathId(tgaBadge, 'tgaBadge');
@@ -137,24 +152,51 @@ async function loadBadges() {
  * Initializes the Teamscale Client with the url configured in the project settings.
  */
 async function initializeTeamscaleClient() {
+    showFindingsBadge = UiUtils.convertToBoolean(await projectSettings.get(Settings.SHOW_FINDINGS_BADGE_KEY));
+    showTestGapBadge = UiUtils.convertToBoolean(await projectSettings.get(Settings.SHOW_TEST_GAP_BADGE_KEY));
+
     const url = await projectSettings.get(Settings.TEAMSCALE_URL_KEY);
 
-    if (!url) {
-        endLoadingWithInfoMessage(`Teamscale is not configured for this project. ${notificationUtils.generateContactText()}`);
+    if (!url && (showFindingsBadge || (!useExtraTgaConfiguration && showTestGapBadge))) {
+        endLoadingWithInfoMessage('Teamscale is not configured for this project.' + notificationUtils.generateContactText());
         return Promise.reject();
     }
-
     teamscaleClient = new TeamscaleClient(url);
+
+    useExtraTgaConfiguration = UiUtils.convertToBoolean(await projectSettings.get(Settings.USE_SEPARATE_TEST_GAP_SERVER));
+    if (!showTestGapBadge) {
+        return;
+    }
+
+    if (!useExtraTgaConfiguration) {
+        tgaTeamscaleClient = teamscaleClient;
+        return;
+    }
+    const tgaUrl = await projectSettings.get(Settings.TGA_TEAMSCALE_URL_KEY);
+
+    if (!tgaUrl) {
+        endLoadingWithInfoMessage('No Teamscale for Test Gap Analysis is correctly configured for this project.' +
+            notificationUtils.generateContactText());
+        return Promise.reject();
+    }
+    tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
 }
 
 /**
  * Read the teamscale project name from the ADOS project settings.
  */
 async function resolveProjectName() {
-    teamscaleProject = await projectSettings.get(Settings.TEAMSCALE_PROJECT_KEY);
+    const teamscaleCandidateProjects = await projectSettings.getProjectsList(Settings.TEAMSCALE_PROJECTS_KEY);
+    teamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(teamscaleClient, teamscaleCandidateProjects,
+        issueId, ProjectUtils.BadgeType.FindingsChurn);
 
-    if (!teamscaleProject) {
-        endLoadingWithInfoMessage('Please make sure that a Teamscale project name is properly configured in the ' +
+    if (tgaTeamscaleClient) {
+        tgaTeamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(teamscaleClient, teamscaleCandidateProjects,
+            issueId, ProjectUtils.BadgeType.TestGap);
+    }
+
+    if (!teamscaleProject || (tgaTeamscaleClient && !tgaTeamscaleProject)) {
+        endLoadingWithInfoMessage('Please make sure that Teamscale project option is properly configured in the ' +
             'Azure DevOps Project settings.');
         return Promise.reject();
     }

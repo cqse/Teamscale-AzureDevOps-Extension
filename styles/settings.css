@@ -1,5 +1,15 @@
+html {
+    margin-left: 16px;
+}
+
+.ts-option-header {
+    margin-bottom: 0.3em;
+}
+
 .text-input {
     width: 80%;
+    padding: 5px 11px;
+    box-sizing: border-box;
 }
 
 #save-button {

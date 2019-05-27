@@ -2,7 +2,9 @@
  * Encapsulates calls to Teamscale
  */
 
+import { IFindingsChurnList } from './IFindingsChurnList';
 import { ITeamscaleBaseline } from './ITeamscaleBaseline';
+import { ITgaIssueQueryPercentage } from './ITgaIssueQueryPercentage';
 
 export default class TeamscaleClient {
     constructor(public readonly url: string) {
@@ -54,6 +56,28 @@ export default class TeamscaleClient {
             const findingsDeltaLink = `${this.url}/delta.html#findings/${project}/?from=${startTimestamp}&to=HEAD`;
             return `<a href="${findingsDeltaLink}" target="_top">${badge}</a>`;
         });
+        xhr.send();
+        return promise;
+    }
+
+    /**
+     * Retrieves the findings churn for a single issue.
+     */
+    public retrieveFindingsChurnListForIssue(project: string, issueId: string): PromiseLike<IFindingsChurnList> {
+        const xhr = this.generateRequest(
+            'GET', `/p/${project}/issue-finding-churn/${issueId}`);
+        const promise = this.generatePromise<string>(xhr).then(findingsChurnList => JSON.parse(findingsChurnList));
+        xhr.send();
+        return promise;
+    }
+
+    /**
+     * Retrieves the an TGA issue percentage object for a single issue.
+     */
+    public retrieveTgaPercentagesForIssue(project: string, issueId: string): PromiseLike<ITgaIssueQueryPercentage> {
+        const xhr = this.generateRequest(
+            'GET', `/p/${project}/tga-issue-query-percentage/?query=` + encodeURI('id=' + issueId));
+        const promise = this.generatePromise<string>(xhr).then(tgaPercentages => JSON.parse(tgaPercentages));
         xhr.send();
         return promise;
     }

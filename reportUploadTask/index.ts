@@ -3,7 +3,6 @@ import * as task from 'azure-pipelines-task-lib/task';
 import * as os from 'os';
 import * as toolRunner from 'azure-pipelines-task-lib/toolrunner';
 import * as utils from './utils';
-import { stringify } from 'querystring';
 
 // c.f. https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml#build-variables
 const revision = task.getVariable('Build.SourceVersion');

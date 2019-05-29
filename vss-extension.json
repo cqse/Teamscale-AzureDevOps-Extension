@@ -94,6 +94,12 @@
         },
         {
             "path": "reportUploadTask"
+        },
+        {
+            "path": "LICENSE"
+        },
+        {
+            "path": "vstest.LICENSE"
         }
     ]
 }

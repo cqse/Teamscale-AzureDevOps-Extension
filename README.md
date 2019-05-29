@@ -45,3 +45,11 @@ Create a file called `token` containing an access token with Marketplace publish
 npm run test-publish
 ```
 
+# Distributed Binaries
+
+We distribute both curl and CodeCoverage.exe with this extension to make it work "out of the box" without additional
+dependencies.
+
+For curl under Linux, we use the Ermine build which should work under all modern distributions.
+For Windows, we use the 32bit variant which works on both 32 and 64bit machines.
+

@@ -4,15 +4,15 @@ import * as path from 'path';
 
 describe('firstWildcardIndex', function() {
     it('should return null if no wildcards present', function() {
-        assert.equal(utils.firstWildcardIndex(""), null);
-        assert.equal(utils.firstWildcardIndex("test"), null);
+        assert.strictEqual(utils.firstWildcardIndex(""), null);
+        assert.strictEqual(utils.firstWildcardIndex("test"), null);
     });
 
     it('should return index of first wildcard if present', function() {
-        assert.equal(utils.firstWildcardIndex("test*"), 4);
-        assert.equal(utils.firstWildcardIndex("test*?"), 4);
-        assert.equal(utils.firstWildcardIndex("test?*"), 4);
-        assert.equal(utils.firstWildcardIndex("*test"), 0);
+        assert.strictEqual(utils.firstWildcardIndex("test*"), 4);
+        assert.strictEqual(utils.firstWildcardIndex("test*?"), 4);
+        assert.strictEqual(utils.firstWildcardIndex("test?*"), 4);
+        assert.strictEqual(utils.firstWildcardIndex("*test"), 0);
     });
 });
 
@@ -28,18 +28,18 @@ describe('resolveFiles', function() {
     });
 
     it('should return a single file when it exists', function() {
-        assert.deepEqual(utils.resolveFiles(`${fixturePath}/coverage.simple`), [`${fixturePath}/coverage.simple`]);
+        assert.deepStrictEqual(utils.resolveFiles(`${fixturePath}/coverage.simple`), [`${fixturePath}/coverage.simple`]);
     });
 
     it('should return all matching files', function() {
-        assert.deepEqual(utils.resolveFiles(`${fixturePath}/**.simple`), 
+        assert.deepStrictEqual(utils.resolveFiles(`${fixturePath}/**.simple`), 
                 [`${fixturePath}/coverage.simple`, `${fixturePath}/coverage2.simple`]);
     });
 });
 
 describe('createUploadUrl', function() {
     it('should encode characters that are not allowed in URLs', function() {
-        assert.equal(utils.createUploadUrl('http://localhost', 'proj', 'SIMPLE', 'Partition with Spaces', 'encoded message?', 'revision'),
+        assert.strictEqual(utils.createUploadUrl('http://localhost', 'proj', 'SIMPLE', 'Partition with Spaces', 'encoded message?', 'revision'),
                 'http://localhost/p/proj/external-report?format=SIMPLE&revision=revision&partition=Partition%20with%20Spaces&message=encoded%20message%3F');
     });
 });

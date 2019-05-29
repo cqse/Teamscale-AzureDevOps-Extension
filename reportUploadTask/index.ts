@@ -92,7 +92,7 @@ function createCurlRunner(username: string, accessKey: string, filesToUpload: st
     const curlPath: string = task.which('curl');
     if (!curlPath) {
         throw new Error("Could not locate curl or cannot execute curl." +
-            " Please make sure curl.exe is available on the PATH and this user"
+            " Please make sure curl.exe is available on the PATH and this user" +
             " has enough permissions to be able to run it.");
     }
 

@@ -8,6 +8,12 @@ import * as utils from './utils';
 const revision = task.getVariable('Build.SourceVersion');
 const buildId = task.getVariable('Build.BuildNumber');
 
+const isWindows = os.type().match(/^Win/)
+let curlPath = path.join(__dirname, `curl/linux/curl`);
+if (isWindows) {
+    curlPath = path.join(__dirname, `curl/windows/curl.exe`);
+}
+
 async function run() {
     try {
         return runUnsafe();
@@ -89,13 +95,6 @@ async function runUnsafe() {
 }
 
 function createCurlRunner(username: string, accessKey: string, filesToUpload: string[], uploadUrl: string) {
-    const curlPath: string = task.which('curl');
-    if (!curlPath) {
-        throw new Error("Could not locate curl or cannot execute curl." +
-            " Please make sure curl.exe is available on the PATH and this user" +
-            " has enough permissions to be able to run it.");
-    }
-
     const curlRunner: toolRunner.ToolRunner = task.tool(curlPath);
     curlRunner.arg('-X');
     curlRunner.arg('POST');

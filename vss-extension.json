@@ -97,9 +97,6 @@
         },
         {
             "path": "LICENSE"
-        },
-        {
-            "path": "vstest.LICENSE"
         }
     ]
 }

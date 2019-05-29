@@ -9,8 +9,8 @@ dist/*
 
 token
 
-**.js
-!scripts/**.js
+**/*.js
+!scripts/**/*.js
 
 **/.taskkey
 

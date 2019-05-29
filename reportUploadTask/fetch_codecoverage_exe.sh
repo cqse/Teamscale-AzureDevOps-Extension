@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e # fail this script if any of its commands fail
+
 [ -e CodeCoverage ] && rm -r CodeCoverage
 mkdir tmp
 cd tmp

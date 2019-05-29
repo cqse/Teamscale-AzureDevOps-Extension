@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as task from 'azure-pipelines-task-lib/task';
 import * as urlLib from 'url';
 
-export function firstWildcardIndex(str: string) {
+export function firstWildcardIndex(str: string) : number | null {
     const starIndex = str.indexOf('*');
     const questionMarkIndex = str.indexOf('?');
     if (starIndex === -1 && questionMarkIndex === -1) {

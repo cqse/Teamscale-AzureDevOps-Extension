@@ -8,8 +8,6 @@ import * as utils from './utils';
 const revision = task.getVariable('Build.SourceVersion');
 const buildId = task.getVariable('Build.BuildNumber');
 
-const isWindows = os.type().match(/^Win/);
-
 async function run() {
     try {
         return runUnsafe();
@@ -23,7 +21,7 @@ async function convertCoverageFiles(coverageFiles: string[]) : Promise<string> {
     const outputXmlFile = path.join(path.dirname(coverageFiles[0]), 'coverage.xml');
 
     let codeCoverageExePath: string = task.getInput('codeCoverageExePath');
-    if (!codeCoverageExePath || codeCoverageExePath == "") {
+    if (!codeCoverageExePath || codeCoverageExePath.trim() === "") {
         codeCoverageExePath = path.join(__dirname, 'CodeCoverage/CodeCoverage.exe');
     }
 
@@ -84,16 +82,18 @@ async function runUnsafe() {
 
     const exitCode: number = await curlRunner.exec();
     if (exitCode === 0) {
-        task.setResult(task.TaskResult.Succeeded, `Upload finished with exit code ${exitCode}`);
+        task.setResult(task.TaskResult.Succeeded, "Upload finished successfully");
     } else {
-        task.setResult(task.TaskResult.Failed, `Upload finished with exit code ${exitCode}`);
+        task.setResult(task.TaskResult.Failed, `Upload failed with exit code ${exitCode}`);
     }
 }
 
 function createCurlRunner(username: string, accessKey: string, filesToUpload: string[], uploadUrl: string) {
     const curlPath: string = task.which('curl');
     if (!curlPath) {
-        throw new Error(`Could not locate curl. Please make sure it's available on the PATH.`);
+        throw new Error("Could not locate curl or cannot execute curl." +
+            " Please make sure curl.exe is available on the PATH and this user"
+            " has enough permissions to be able to run it.");
     }
 
     const curlRunner: toolRunner.ToolRunner = task.tool(curlPath);

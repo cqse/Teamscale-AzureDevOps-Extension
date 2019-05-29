@@ -28,7 +28,12 @@ npm test
 ```
 
 You can test the pipeline task against <https://cqse.visualstudio.com/CSharpWithTests> which is also hosted on
-[our demo instance](https://demo.teamscale.com).
+[our demo instance](https://demo.teamscale.com):
+
+- Publish the extension as described below
+- Go to <https://cqse.visualstudio.com>
+- Go to _Organization Settings > Extensions_
+- Uninstall the extension and then reinstall it
 
 # Publishing
 

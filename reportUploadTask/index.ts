@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as task from 'azure-pipelines-task-lib/task';
 import * as os from 'os';
+import * as fs from 'fs';
 import * as toolRunner from 'azure-pipelines-task-lib/toolrunner';
 import * as utils from './utils';
 
@@ -9,9 +10,12 @@ const revision = task.getVariable('Build.SourceVersion');
 const buildId = task.getVariable('Build.BuildNumber');
 
 const isWindows = os.type().match(/^Win/)
-let curlPath = path.join(__dirname, `curl/linux/curl`);
-if (isWindows) {
-    curlPath = path.join(__dirname, `curl/windows/curl.exe`);
+let curlPath = path.join(__dirname, `curl/windows/curl.exe`);
+if (!isWindows) {
+    curlPath = path.join(__dirname, `curl/linux/curl`);
+    // the vsix is a zip which does not preserve permissions
+    // so our curl binary is not executable by default
+    fs.chmodSync(curlPath, '777');
 }
 
 async function run() {

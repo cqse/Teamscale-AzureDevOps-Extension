@@ -1,7 +1,7 @@
 Plugin for Azure DevOps that provides
 
 - Extension for the WorkItems pages to show a TestGap badge
-- Pipeline Task to upload coverage, findings, ... reports to Teamscale
+- Pipeline Task to upload coverage, findings, and other reports to Teamscale
 
 # Building
 

@@ -27,8 +27,8 @@ To run the unit tests:
 npm test
 ```
 
-You can test the pipeline task against <https://cqse.visualstudio.com/CSharpWithTests> which is also hosted on
-[our demo instance](https://demo.teamscale.com):
+You can test the pipeline task against <https://cqse.visualstudio.com/AzureDevOps-Plugin-Test> which is also hosted on
+[our demo instance](https://demo.teamscale.com). This project also contains a pipeline with our build task.
 
 - Publish the extension as described below
 - Go to <https://cqse.visualstudio.com>

@@ -216,10 +216,6 @@ export class TeamscaleWidget {
         }
 
         this.teamscaleClient = new TeamscaleClient(url);
-        // TODO (TP) It works for Promise.all, but for me it is a little bit inconsistent to have a function which
-        // *might* return something. If this is ok for programming typescript then just delete this.
-        // There are more functions like this in WidgetConfig as well
-        // TODO (JR) See comment in GitHub
     }
 
     /**

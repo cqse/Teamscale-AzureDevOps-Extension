@@ -75,18 +75,25 @@ function saveUrlAndProject(teamscaleUrl: string, teamscaleProject: string, serve
     logDiv.innerHTML = '';
 
     settings.save(serverUrlKey, teamscaleUrl)
-        .then(url => createSuccessfulLog('Teamscale URL', url), () => createFailedLog('Teamscale URL'));
+        .then(url => createSuccessfulLog('Teamscale URL', url),
+                e => createFailedLog('Teamscale URL', e));
 
     settings.saveProjectsList(projectNameKey, teamscaleProjects)
-        .then(projects => createSuccessfulLog('Teamscale Projects', projects), () => createFailedLog('Teamscale Projects'));
+        .then(projects => createSuccessfulLog('Teamscale Projects', projects),
+                e => createFailedLog('Teamscale Projects', e));
 }
 
 function createSuccessfulLog(valueDescription: string, value: string) {
     UiUtils.logToDiv(logDiv, `${getCurrentTimestamp()} Saving ${valueDescription} "${value ? value : ''}" successful.`);
 }
 
-function createFailedLog(valueDescription: string) {
-    UiUtils.logToDiv(logDiv, `${getCurrentTimestamp()} Error saving ${valueDescription}.`);
+function createFailedLog(valueDescription: string, error?: any) {
+    let errorMessage: string = '';
+    if (error && error.message) {
+        errorMessage = error.message;
+    }
+
+    UiUtils.logToDiv(logDiv, `${getCurrentTimestamp()} Error saving &quot;${valueDescription}&quot;. ${errorMessage}`);
 }
 
 /**
@@ -100,13 +107,13 @@ function saveFormValues() {
 
     settings.save(Settings.SHOW_TEST_GAP_BADGE_KEY, String(showTestGapBadgeInput.checked))
         .then(showTestGapBadge => createSuccessfulLog('Show Test Gap Badge Option', showTestGapBadge),
-            () => createFailedLog('Show Test Gap Badge Option'));
+            e => createFailedLog('Show Test Gap Badge Option', e));
 
     settings.save(Settings.SHOW_FINDINGS_BADGE_KEY, String(showFindingsBadgeInput.checked))
         .then(showFindingsBadge => createSuccessfulLog('Show Findings Churn Badge Option', showFindingsBadge),
-            () => createFailedLog('Show Findings Churn Badge Option'));
+            e => createFailedLog('Show Findings Churn Badge Option', e));
 
     settings.save(Settings.USE_SEPARATE_TEST_GAP_SERVER, String(useSeparateTestGapServerInput.checked))
         .then(extraTgaServer => createSuccessfulLog('Use Extra Test Gap Server Option', extraTgaServer),
-            () => createFailedLog('Use Extra Test Gap Option'));
+            e => createFailedLog('Use Extra Test Gap Option', e));
 }

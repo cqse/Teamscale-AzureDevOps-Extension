@@ -9,48 +9,40 @@ export enum BadgeType { TestGap, FindingsChurn }
 
 export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClient, projectCandidates: string[],
                                                   issueId: number, badgeType: BadgeType): Promise<string> {
-    let project = projectCandidates[0];
-
-    if (projectCandidates.length === 1) {
-        return project;
+    if (projectCandidates.length === 0) {
+        throw new Error('No Teamscale Project is configured for this Azure DevOps Project.');
     }
 
-    for (const projectCandidate of projectCandidates) {
-        if (project === '') {
-            project = projectCandidate;
-        }
+    const validProjects: string[] = [];
 
-        if (badgeType === BadgeType.TestGap) {
-            try {
+    for (const projectCandidate of projectCandidates) {
+        try {
+            if (badgeType === BadgeType.TestGap) {
                 const testGapPercentages = await teamscaleClient.retrieveTgaPercentagesForIssue(projectCandidate, issueId.toString());
+
                 if (testGapPercentages.summary && testGapPercentages.summary.numberOfChangedMethods > 0) {
-                    project = projectCandidate;
-                    break;
+                    return projectCandidate;
                 }
-            } catch (e) {
-                project = '';
-                // try next (e.g. no project defined on server)
-            }
-        } else {
-            try {
+            } else {
                 const findingsChurnList = await teamscaleClient.retrieveFindingsChurnListForIssue(projectCandidate, issueId.toString());
 
                 if (findingsChurnList.addedFindings && findingsChurnList.addedFindings.length > 0 ||
                     findingsChurnList.findingsInChangedCode && findingsChurnList.findingsInChangedCode.length > 0 ||
                     findingsChurnList.removedFindings && findingsChurnList.removedFindings.length > 0) {
-                    project = projectCandidate;
-                    break;
+                    return projectCandidate;
                 }
-            } catch (e) {
-                project = '';
-                // try next (e.g. no project defined on server)
             }
+
+            validProjects.push(projectCandidate);
+        } catch (e) {
+            // try next (e.g. no project defined on server)
         }
     }
 
-    if (project === '') {
-        throw new Error('Error retrieving any project of ' + projectCandidates.join(','));
+    if (validProjects.length === 0) {
+        throw new Error('None of the configured Teamscale projects (' + projectCandidates.join(',') + ') has valid' +
+            ' information for issue ' + issueId + '.');
     }
 
-    return project;
+    return validProjects[0];
 }

@@ -47,7 +47,8 @@ export default class NotificationUtils {
     /**
      * If receiving the badges from the Teamscale server failed, available information is displayed as info or error banner.
      */
-    public handleErrorInTeamscaleCommunication(reason: any, teamscaleServer: string, teamscaleProject?: string) {
+    public handleErrorInTeamscaleCommunication(reason: any, teamscaleServer: string, teamscaleProject?: string,
+                                               action?: string) {
         let projectInfo: string = '';
         if (teamscaleProject) {
             projectInfo = `Configured Teamscale project is: <i>${teamscaleProject}</i> `;
@@ -66,7 +67,7 @@ export default class NotificationUtils {
                 VSS.notifyLoadSucceeded();
                 break;
             default:
-                let message = `Failed with error code ${reason.status}`;
+                let message = `Failed ${action ? action + ' ' : ''}with error code ${reason.status}`;
                 if (reason.statusText) {
                     message += `: ${reason.statusText}`;
                 }

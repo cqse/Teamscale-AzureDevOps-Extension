@@ -155,7 +155,7 @@ export class TeamscaleWidget {
         } catch (error) {
             if (error.status === 403 || error.status === 404) {
                 this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
-                    this.currentSettings.teamscaleProject);
+                    this.currentSettings.teamscaleProject, 'calculating start date for badge');
             } else if (this.currentSettings.activeTimeChooser === 'start-ts-baseline') {
                 this.notificationUtils.showErrorBanner('Teamscale baseline definition for <i>'
                     + this.currentSettings.tsBaseline + '</i> not found on server.');
@@ -170,7 +170,8 @@ export class TeamscaleWidget {
                 tgaBadge = '<div id="tga-badge">' + tgaBadge + '</div>';
             } catch (error) {
                 this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
-                    this.currentSettings.teamscaleProject);            }
+                    this.currentSettings.teamscaleProject, 'loading Test Gap Badge');
+            }
         }
 
         try {
@@ -179,7 +180,7 @@ export class TeamscaleWidget {
             findingsChurnBadge = '<div id="findings-badge">Findings churn<br>' + findingsChurnBadge + '<br></div>';
         } catch (error) {
             this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
-                this.currentSettings.teamscaleProject);
+                this.currentSettings.teamscaleProject, 'loading Findings Churn Badge');
             return Promise.resolve();
         }
 

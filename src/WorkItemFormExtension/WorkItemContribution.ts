@@ -130,7 +130,8 @@ async function loadBadges() {
             tgaBadge = await tgaTeamscaleClient.queryIssueTestGapBadge(tgaTeamscaleProject, issueId);
             tgaBadge = '<div id="tga-badge">' + titleTestGapBadge + '<br>' + tgaBadge + '</div>';
         } catch (error) {
-            notificationUtils.handleErrorInTeamscaleCommunication(error, tgaTeamscaleClient.url, tgaTeamscaleProject);
+            notificationUtils.handleErrorInTeamscaleCommunication(error, tgaTeamscaleClient.url, tgaTeamscaleProject,
+                'loading Test Gap Badge');
         }
     }
 
@@ -139,7 +140,8 @@ async function loadBadges() {
             findingsChurnBadge = await teamscaleClient.queryFindingsChurnBadge(teamscaleProject, issueId);
             findingsChurnBadge = titleFindingsChurnBadge + '<br>' + findingsChurnBadge;
         } catch (error) {
-            notificationUtils.handleErrorInTeamscaleCommunication(error, teamscaleClient.url, teamscaleProject);
+            notificationUtils.handleErrorInTeamscaleCommunication(error, teamscaleClient.url, teamscaleProject,
+                'loading Findings Churn Badge');
         }
     }
 

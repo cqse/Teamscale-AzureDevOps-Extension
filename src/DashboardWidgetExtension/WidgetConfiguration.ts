@@ -99,7 +99,7 @@ export class Configuration {
         try {
             projects = await this.teamscaleClient.retrieveTeamscaleProjects();
         } catch (error) {
-            this.notificationUtils.handleErrorInTeamscaleCommunication(error);
+            this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url);
             return Promise.reject(error);
         }
 
@@ -128,7 +128,8 @@ export class Configuration {
         try {
             baselines = await this.teamscaleClient.retrieveBaselinesForProject(teamscaleProject);
         } catch (error) {
-            this.notificationUtils.handleErrorInTeamscaleCommunication(error);
+            this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
+                teamscaleProject);
             return Promise.reject(error);
         }
 
@@ -203,7 +204,7 @@ export class Configuration {
         const url = await this.projectSettings.get(Settings.TEAMSCALE_URL_KEY);
 
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
-            null, '', url, this.emailContact, false);
+            null, this.emailContact, false);
     }
 
     /**

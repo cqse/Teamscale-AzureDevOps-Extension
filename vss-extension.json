@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "teamscale-azure-devops-plugin",
     "publisher": "CQSEGmbH",
-    "version": "0.0.811",
+    "version": "0.0.823",
     "name": "Teamscale DevOps",
     "description": "A sample Visual Studio Services extension",
     "public": false,
@@ -101,7 +101,7 @@
               "type": "ms.vss-web.control",
               "targets": [],
               "properties": {
-                  "uri": "sites/teamscale-login-dialog.html"
+                  "uri": "sites/teamscale-login-dialog.html?{{server}}"
           }
     }
     ],

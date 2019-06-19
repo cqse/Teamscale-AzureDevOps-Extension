@@ -4,16 +4,19 @@
  * findings churn for the given issue.
  */
 import TeamscaleClient from '../TeamscaleClient';
+import NotificationUtils from './NotificationUtils';
 
 export enum BadgeType { TestGap, FindingsChurn }
 
 export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClient, projectCandidates: string[],
-                                                  issueId: number, badgeType: BadgeType): Promise<string> {
+                                                  issueId: number, notificationUtils: NotificationUtils,
+                                                  badgeType: BadgeType): Promise<string> {
     if (projectCandidates.length === 0) {
         throw new Error('No Teamscale Project is configured for this Azure DevOps Project.');
     }
 
     const validProjects: string[] = [];
+    let errorCodeSum: number = 0;
 
     for (const projectCandidate of projectCandidates) {
         try {
@@ -34,12 +37,20 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
             }
 
             validProjects.push(projectCandidate);
-        } catch (e) {
+        } catch (reason) {
+            if (reason && reason.status) {
+                errorCodeSum += reason.status;
+            }
             // try next (e.g. no project defined on server)
         }
     }
 
     if (validProjects.length === 0) {
+        if (errorCodeSum % 403 === 0) {
+            notificationUtils.handleErrorInTeamscaleCommunication({status: 403}, teamscaleClient.url);
+            return Promise.reject();
+        }
+
         throw new Error('None of the configured Teamscale projects (' + projectCandidates.join(',') + ') has valid' +
             ' information for issue ' + issueId + '.');
     }

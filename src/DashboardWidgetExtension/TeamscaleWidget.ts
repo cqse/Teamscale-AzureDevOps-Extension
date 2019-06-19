@@ -33,8 +33,7 @@ export class TeamscaleWidget {
         this.widgetHelpers = widgetHelpers;
         this.controlService = controlService;
         this.notificationService = notificationService;
-        this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
-            null, '', '', '', false);
+        this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService, null, '', false);
     }
 
     /**
@@ -155,7 +154,8 @@ export class TeamscaleWidget {
             startTimestamp = await this.calculateStartTimestamp();
         } catch (error) {
             if (error.status === 403 || error.status === 404) {
-                this.notificationUtils.handleErrorInTeamscaleCommunication(error);
+                this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
+                    this.currentSettings.teamscaleProject);
             } else if (this.currentSettings.activeTimeChooser === 'start-ts-baseline') {
                 this.notificationUtils.showErrorBanner('Teamscale baseline definition for <i>'
                     + this.currentSettings.tsBaseline + '</i> not found on server.');
@@ -169,8 +169,8 @@ export class TeamscaleWidget {
                     startTimestamp);
                 tgaBadge = '<div id="tga-badge">' + tgaBadge + '</div>';
             } catch (error) {
-                this.notificationUtils.handleErrorInTeamscaleCommunication(error);
-            }
+                this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
+                    this.currentSettings.teamscaleProject);            }
         }
 
         try {
@@ -178,7 +178,8 @@ export class TeamscaleWidget {
                 startTimestamp);
             findingsChurnBadge = '<div id="findings-badge">Findings churn<br>' + findingsChurnBadge + '<br></div>';
         } catch (error) {
-            this.notificationUtils.handleErrorInTeamscaleCommunication(error);
+            this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
+                this.currentSettings.teamscaleProject);
             return Promise.resolve();
         }
 
@@ -222,17 +223,14 @@ export class TeamscaleWidget {
      * Initializes the notification and login management handling errors in Teamscale communication.
      */
     private async initializeNotificationUtils() {
-        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL_KEY);
-        const project = this.currentSettings.teamscaleProject;
-
         const callbackOnLoginClose = () => {
             TeamscaleWidget.tabulaRasa();
             this.loadAndRenderBadges().then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
                 () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
         };
 
-        this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService, callbackOnLoginClose,
-            project, url, this.emailContact, true);
+        this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
+            callbackOnLoginClose, this.emailContact, true);
     }
 
     /**

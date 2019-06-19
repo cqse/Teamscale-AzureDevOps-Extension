@@ -76,7 +76,11 @@ VSS.require(['TFS/WorkItemTracking/Services', 'VSS/Controls', 'VSS/Controls/Noti
             };
             /* tslint:enable:no-empty */
         });
-        loadAndCheckConfiguration().then(() => loadBadges());
+        loadAndCheckConfiguration().then(() => loadBadges(), e => {
+            if (e) {
+                endLoadingWithInfoMessage(e);
+            }
+        });
     });
 
 /**
@@ -102,11 +106,11 @@ async function initializeNotificationUtils() {
     const callbackOnLoginClose = () => {
         $('#tga-badge').empty();
         $('#message-div').empty();
-        loadBadges();
+        resolveProjectName().then(() => loadBadges());
     };
 
-    notificationUtils = new NotificationUtils(controlService, notificationService, callbackOnLoginClose,
-        project, url, emailContact, true);
+    notificationUtils = new NotificationUtils(controlService, notificationService, callbackOnLoginClose, emailContact,
+        true);
 }
 
 /**
@@ -126,7 +130,7 @@ async function loadBadges() {
             tgaBadge = await tgaTeamscaleClient.queryIssueTestGapBadge(tgaTeamscaleProject, issueId);
             tgaBadge = '<div id="tga-badge">' + titleTestGapBadge + '<br>' + tgaBadge + '</div>';
         } catch (error) {
-            notificationUtils.handleErrorInTeamscaleCommunication(error);
+            notificationUtils.handleErrorInTeamscaleCommunication(error, tgaTeamscaleClient.url, tgaTeamscaleProject);
         }
     }
 
@@ -135,7 +139,7 @@ async function loadBadges() {
             findingsChurnBadge = await teamscaleClient.queryFindingsChurnBadge(teamscaleProject, issueId);
             findingsChurnBadge = titleFindingsChurnBadge + '<br>' + findingsChurnBadge;
         } catch (error) {
-            notificationUtils.handleErrorInTeamscaleCommunication(error);
+            notificationUtils.handleErrorInTeamscaleCommunication(error, teamscaleClient.url, teamscaleProject);
         }
     }
 
@@ -158,8 +162,7 @@ async function initializeTeamscaleClient() {
     const url = await projectSettings.get(Settings.TEAMSCALE_URL_KEY);
 
     if (!url && (showFindingsBadge || (!useExtraTgaConfiguration && showTestGapBadge))) {
-        endLoadingWithInfoMessage('Teamscale is not configured for this project.' + notificationUtils.generateContactText());
-        return Promise.reject();
+        throw new Error('Teamscale is not configured for this project.' + notificationUtils.generateContactText());
     }
     teamscaleClient = new TeamscaleClient(url);
 
@@ -175,9 +178,8 @@ async function initializeTeamscaleClient() {
     const tgaUrl = await projectSettings.get(Settings.TGA_TEAMSCALE_URL_KEY);
 
     if (!tgaUrl) {
-        endLoadingWithInfoMessage('No Teamscale for Test Gap Analysis is correctly configured for this project.' +
+        throw new Error('No Teamscale for Test Gap Analysis is correctly configured for this project.' +
             notificationUtils.generateContactText());
-        return Promise.reject();
     }
     tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
 }
@@ -188,17 +190,16 @@ async function initializeTeamscaleClient() {
 async function resolveProjectName() {
     const teamscaleCandidateProjects = await projectSettings.getProjectsList(Settings.TEAMSCALE_PROJECTS_KEY);
     teamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(teamscaleClient, teamscaleCandidateProjects,
-        issueId, ProjectUtils.BadgeType.FindingsChurn);
+        issueId, notificationUtils, ProjectUtils.BadgeType.FindingsChurn);
 
     if (tgaTeamscaleClient) {
         tgaTeamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(teamscaleClient, teamscaleCandidateProjects,
-            issueId, ProjectUtils.BadgeType.TestGap);
+            issueId, notificationUtils, ProjectUtils.BadgeType.TestGap);
     }
 
     if (!teamscaleProject || (tgaTeamscaleClient && !tgaTeamscaleProject)) {
-        endLoadingWithInfoMessage('Please make sure that Teamscale project option is properly configured in the ' +
+        throw new Error('Please make sure that Teamscale project option is properly configured in the ' +
             'Azure DevOps Project settings.');
-        return Promise.reject();
     }
 }
 

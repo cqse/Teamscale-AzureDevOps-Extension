@@ -12,7 +12,9 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
                                                   issueId: number, notificationUtils: NotificationUtils,
                                                   badgeType: BadgeType): Promise<string> {
     if (projectCandidates.length === 0) {
-        throw new Error('No Teamscale Project is configured for this Azure DevOps Project.');
+        notificationUtils.showErrorBanner('No Teamscale Project is configured for this Azure DevOps Project (Badge: ' +
+            BadgeType[badgeType] + ').');
+        return;
     }
 
     const validProjects: string[] = [];
@@ -46,13 +48,15 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
     }
 
     if (validProjects.length === 0) {
-        if (errorCodeSum % 403 === 0) {
+        if (errorCodeSum > 0 && errorCodeSum % 403 === 0) {
             notificationUtils.handleErrorInTeamscaleCommunication({status: 403}, teamscaleClient.url);
-            return Promise.reject();
+            return;
         }
 
-        throw new Error('None of the configured Teamscale projects (' + projectCandidates.join(',') + ') has valid' +
-            ' information for issue ' + issueId + '.');
+        notificationUtils.showErrorBanner('None of the configured Teamscale projects (' + projectCandidates.join(',') +
+            ') on Server <i>' + teamscaleClient.url + '</i> has valid information for issue ' + issueId + ' (Badge: ' +
+            BadgeType[badgeType] + ').');
+        return;
     }
 
     return validProjects[0];

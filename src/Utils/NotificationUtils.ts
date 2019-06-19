@@ -106,15 +106,7 @@ export default class NotificationUtils {
      * @param message The message to display. It may contain HTML.
      */
     public showInfoBanner(message: string) {
-        const notificationContainer = $('#message-div')
-        if (notificationContainer.html().includes(message)) {
-            // do not display the same message more than once
-            return;
-        }
-
-        const notification = this.generateNotification();
-        notification.setMessage($(`<div>${message}</div>`), this.notificationService.MessageAreaType.Info);
-        UiUtils.resizeHost();
+        this.showBanner(message, this.notificationService.MessageAreaType.Info);
     }
 
     /**
@@ -122,8 +114,18 @@ export default class NotificationUtils {
      * @param message The message to display. It may contain HTML.
      */
     public showErrorBanner(message: string) {
+        this.showBanner(message, this.notificationService.MessageAreaType.Error);
+    }
+
+    private showBanner(message: string, bannerType: any) {
+        const notificationContainer = $('#message-div');
+        if (notificationContainer.html().includes(message)) {
+            // do not display the same message more than once
+            return;
+        }
+
         const notification = this.generateNotification();
-        notification.setMessage($(`<div>${message}</div>`), this.notificationService.MessageAreaType.Error);
+        notification.setMessage($(`<div>${message}</div>`), bannerType);
         UiUtils.resizeHost();
     }
 

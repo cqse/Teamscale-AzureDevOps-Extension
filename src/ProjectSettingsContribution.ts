@@ -65,16 +65,18 @@ function zipTgaConfiguration() {
     tgaConfigurationDiv.style.display = 'none';
 }
 
-function saveUrlAndProject(teamscaleUrl: string, teamscaleProject: string, serverUrlKey: string, projectNameKey: string) {
-    let teamscaleProjects: string[] = teamscaleProjectInput.value.split(projectSeparator);
+function saveUrlAndProject(teamscaleUrlFormInput: string, teamscaleProjectsFormInput: string, serverUrlKey: string, projectNameKey: string) {
+    let teamscaleProjects: string[] = teamscaleProjectsFormInput.split(projectSeparator);
     teamscaleProjects = teamscaleProjects.map(entry => entry.trim());
-    if (teamscaleUrl.endsWith('/')) {
-        teamscaleUrl = teamscaleUrl.substring(0, teamscaleUrl.length - 1);
+    teamscaleProjects = teamscaleProjects.filter(entry => entry !== '');
+
+    if (teamscaleUrlFormInput.endsWith('/')) {
+        teamscaleUrlFormInput = teamscaleUrlFormInput.substring(0, teamscaleUrlFormInput.length - 1);
     }
 
     logDiv.innerHTML = '';
 
-    settings.save(serverUrlKey, teamscaleUrl)
+    settings.save(serverUrlKey, teamscaleUrlFormInput)
         .then(url => createSuccessfulLog('Teamscale URL', url),
                 e => createFailedLog('Teamscale URL', e));
 

@@ -125,7 +125,7 @@ async function loadBadges() {
             ' (Extensions → Teamscale).');
     }
 
-    if (showTestGapBadge) {
+    if (showTestGapBadge && tgaTeamscaleProject) {
         try {
             tgaBadge = await tgaTeamscaleClient.queryIssueTestGapBadge(tgaTeamscaleProject, issueId);
             tgaBadge = '<div id="tga-badge">' + titleTestGapBadge + '<br>' + tgaBadge + '</div>';
@@ -135,7 +135,7 @@ async function loadBadges() {
         }
     }
 
-    if (showFindingsBadge) {
+    if (showFindingsBadge && teamscaleProject) {
         try {
             findingsChurnBadge = await teamscaleClient.queryFindingsChurnBadge(teamscaleProject, issueId);
             findingsChurnBadge = titleFindingsChurnBadge + '<br>' + findingsChurnBadge;
@@ -190,18 +190,26 @@ async function initializeTeamscaleClient() {
  * Read the teamscale project name from the ADOS project settings.
  */
 async function resolveProjectName() {
-    const teamscaleCandidateProjects = await projectSettings.getProjectsList(Settings.TEAMSCALE_PROJECTS_KEY);
-    teamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(teamscaleClient, teamscaleCandidateProjects,
-        issueId, notificationUtils, ProjectUtils.BadgeType.FindingsChurn);
+    if (showFindingsBadge) {
+        const teamscaleCandidateProjects = await projectSettings.getProjectsList(Settings.TEAMSCALE_PROJECTS_KEY);
+        teamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(teamscaleClient, teamscaleCandidateProjects,
+            issueId, notificationUtils, ProjectUtils.BadgeType.FindingsChurn);
 
-    if (tgaTeamscaleClient) {
-        tgaTeamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(teamscaleClient, teamscaleCandidateProjects,
-            issueId, notificationUtils, ProjectUtils.BadgeType.TestGap);
+        if (!teamscaleProject) {
+            notificationUtils.showInfoBanner('Please make sure that Teamscale project option is properly set for' +
+                ' Findings Churn Badges in the Azure DevOps Project settings.');
+        }
     }
 
-    if (!teamscaleProject || (tgaTeamscaleClient && !tgaTeamscaleProject)) {
-        throw new Error('Please make sure that Teamscale project option is properly configured in the ' +
-            'Azure DevOps Project settings.');
+    if (showTestGapBadge) {
+        const tgaTeamscaleCandidateProjects = await projectSettings.getProjectsList(Settings.TGA_TEAMSCALE_PROJECTS_KEY);
+        tgaTeamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(tgaTeamscaleClient,
+            tgaTeamscaleCandidateProjects, issueId, notificationUtils, ProjectUtils.BadgeType.TestGap);
+
+        if (!tgaTeamscaleProject) {
+            notificationUtils.showInfoBanner('Please make sure that Teamscale project option is properly set for' +
+                ' Test Gap Badges in the Azure DevOps Project settings.');
+        }
     }
 }
 

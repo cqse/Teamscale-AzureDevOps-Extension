@@ -1,4 +1,7 @@
 {
+    "exclude": [
+        "reportUploadTask",
+    ],
     "compilerOptions": {
         "module": "amd",
         "moduleResolution": "node",

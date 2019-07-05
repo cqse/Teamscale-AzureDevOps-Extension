@@ -90,7 +90,7 @@ async function runUnsafe() {
         output = output.concat(buffer ? buffer.toString() : '');
     });
 
-    const exitCode: number = await curlRunner.exec();
+    const exitCode: number = await curlRunner.exec({silent: true} as toolRunner.IExecOptions);
     if (exitCode === 0) {
         task.setResult(task.TaskResult.Succeeded, "Upload finished successfully");
     } else {

@@ -8,6 +8,8 @@ import NotificationUtils from './NotificationUtils';
 
 export enum BadgeType { TestGap, FindingsChurn }
 
+export const NOT_AUTHORIZED_ERROR = 'Not authorized for Teamscale usage. Please log in.';
+
 export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClient, projectCandidates: string[],
                                                   issueId: number, notificationUtils: NotificationUtils,
                                                   badgeType: BadgeType): Promise<string> {
@@ -50,7 +52,7 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
     if (validProjects.length === 0) {
         if (errorCodeSum > 0 && (errorCodeSum % 401 === 0 || errorCodeSum % 403 === 0)) {
             notificationUtils.handleErrorInTeamscaleCommunication({status: 403}, teamscaleClient.url);
-            return;
+            throw new Error(NOT_AUTHORIZED_ERROR);
         }
 
         notificationUtils.showErrorBanner('None of the configured Teamscale projects (' + projectCandidates.join(',') +

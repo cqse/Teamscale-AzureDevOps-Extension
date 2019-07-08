@@ -6,7 +6,7 @@
     "jsRules": {},
     "rules": {
     	"quotemark": [true, "single", "avoid-escape"],
-		"arrow-parens": [false],
+		"arrow-parens": [true,  "ban-single-arg-parens"],
 		"array-type": [true, "array-simple"],
 		"ordered-imports": true,
 		"max-line-length": [true, 140],

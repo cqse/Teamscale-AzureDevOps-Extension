@@ -1,23 +1,20 @@
 {
   "name": "AzureDevOps-Plugin",
   "version": "1.0.0",
-  "description": "TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project.",
+  "description": "Teamscale integration into Azure DevOps",
   "main": "index.js",
   "scripts": {
-    "replace": "replace \"\\s+nodeType: number;\" \"\" \"node_modules/vss-web-extension-sdk/typings/vss.d.ts\" -r",
-    "compileTypeScript": "$(npm bin)/tsc -p .",
-    "build": "npm run-script replace && npm run-script compileTypeScript",
-    "package": "npm run-script build && $(npm bin)/tfx extension create --output-path ./deployment/",
-    "test-publish": "npm run-script build && $(npm bin)/tfx extension publish --share-with cqse --rev-version --output-path deployment --token $(node scripts/cat.js token)",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git@ssh.dev.azure.com:v3/apps-munichre/QualityTools/AzureDevOps-Plugin"
+    "replace": "echo fixes https://github.com/Microsoft/vss-web-extension-sdk/issues/112; replace \"\\s+nodeType: number;\" \"\" \"node_modules/vss-web-extension-sdk/typings/vss.d.ts\" -r",
+    "compileTypeScript": "$(npm bin)/tsc && cd reportUploadTask && npm run compile",
+    "restore": "npm ci && cd reportUploadTask && npm run restore",
+    "build": "npm run restore && npm run replace && npm run compileTypeScript",
+    "package": "npm run build && $(npm bin)/tfx extension create --output-path ./deployment/",
+    "test-publish": "npm run build && $(npm bin)/tfx extension publish --share-with cqse --rev-version --output-path deployment --token $(node scripts/cat.js token)",
+    "test": "cd reportUploadTask && npm run test"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "tfx-cli": "^0.6.3",
     "typescript": "^3.1.6",

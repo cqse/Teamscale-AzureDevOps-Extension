@@ -59,7 +59,8 @@ export class Configuration {
         $('#ts-baseline-select').chosen({width: '95%'});
 
         this.loadAndCheckConfiguration().then(() => this.fillDropdownWithProjects())
-            .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange)).catch(() => $('.teamscale-config-group').hide());
+            .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange))
+            .catch(() => $('.teamscale-config-group').hide());
 
         VSS.resize();
         return this.widgetHelpers.WidgetStatusHelper.Success();
@@ -98,7 +99,7 @@ export class Configuration {
         try {
             projects = await this.teamscaleClient.retrieveTeamscaleProjects();
         } catch (error) {
-            this.notificationUtils.handleErrorInTeamscaleCommunication(error);
+            this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url);
             return Promise.reject(error);
         }
 
@@ -127,7 +128,8 @@ export class Configuration {
         try {
             baselines = await this.teamscaleClient.retrieveBaselinesForProject(teamscaleProject);
         } catch (error) {
-            this.notificationUtils.handleErrorInTeamscaleCommunication(error);
+            this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
+                teamscaleProject);
             return Promise.reject(error);
         }
 
@@ -177,7 +179,7 @@ export class Configuration {
         this.projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
         this.organizationSettings = new Settings(Scope.ProjectCollection);
 
-        this.emailContact = await this.organizationSettings.get(Settings.EMAIL_CONTACT);
+        this.emailContact = await this.organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
         return Promise.all([this.initializeTeamscaleClient(), this.initializeNotificationUtils()]);
     }
 
@@ -185,7 +187,7 @@ export class Configuration {
      * Initializes the Teamscale Client with the url configured in the project settings.
      */
     private async initializeTeamscaleClient() {
-        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
+        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL_KEY);
 
         if (!url) {
             this.notificationUtils.showErrorBanner(`Teamscale is not configured for this Azure Dev Ops project.`);
@@ -199,10 +201,10 @@ export class Configuration {
      * Initializes the notification and login management handling errors in Teamscale communication.
      */
     private async initializeNotificationUtils() {
-        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
+        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL_KEY);
 
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
-            null, '', url, this.emailContact, false);
+            null, this.emailContact, false);
     }
 
     /**
@@ -244,8 +246,7 @@ export class Configuration {
 VSS.require(['TFS/Dashboards/WidgetHelpers', 'VSS/Controls', 'VSS/Controls/Notifications'],
     (widgetHelpers, controlService, notificationService) => {
         VSS.register('Teamscale-Configuration', () => {
-            const configuration = new Configuration(widgetHelpers, controlService, notificationService);
-            return configuration;
+            return new Configuration(widgetHelpers, controlService, notificationService);
         });
 
         VSS.notifyLoadSucceeded();

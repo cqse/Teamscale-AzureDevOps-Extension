@@ -6,21 +6,16 @@ import UiUtils = require('./UiUtils');
 
 export default class NotificationUtils {
 
-    private displayedErrorMessage: boolean = false;
-    private readonly teamscaleProject: string;
-    private readonly teamscaleUrl: string;
     private readonly emailContact: string;
     private readonly callbackOnLoginClose: any;
     private readonly useDialogInsteadOfNewWindow: boolean;
     private controlService: any;
     private notificationService: any;
 
-    constructor(controlService, notificationService, callbackOnLoginClose, teamscaleProject, teamscaleUrl, emailContact, useDialog) {
+    constructor(controlService, notificationService, callbackOnLoginClose, emailContact, useDialog) {
         this.controlService = controlService;
         this.notificationService = notificationService;
 
-        this.teamscaleProject = teamscaleProject;
-        this.teamscaleUrl = teamscaleUrl;
         this.emailContact = emailContact;
         this.callbackOnLoginClose = callbackOnLoginClose;
         this.useDialogInsteadOfNewWindow = useDialog;
@@ -29,7 +24,7 @@ export default class NotificationUtils {
     /**
      * Opens the Teamscale login dialog. Assigns the predefined callback function to the dialog close event.
      */
-    public showLoginDialog() {
+    public showLoginDialog(serverUrl: string) {
         return VSS.getService(VSS.ServiceIds.Dialog).then((dialogService: IHostDialogService) => {
             const extensionCtx = VSS.getExtensionContext();
             // Build absolute contribution ID for dialogContent
@@ -42,6 +37,7 @@ export default class NotificationUtils {
                 height: 720,
                 buttons: null,
                 close: this.callbackOnLoginClose,
+                urlReplacementObject: { server: encodeURIComponent(serverUrl)}
             };
 
             dialogService.openDialog(contributionId, dialogOptions);
@@ -51,32 +47,28 @@ export default class NotificationUtils {
     /**
      * If receiving the badges from the Teamscale server failed, available information is displayed as info or error banner.
      */
-    public handleErrorInTeamscaleCommunication(reason: any) {
-        if (this.displayedErrorMessage) {
-            return;
+    public handleErrorInTeamscaleCommunication(reason: any, teamscaleServer: string, teamscaleProject?: string,
+                                               action?: string) {
+        let projectInfo: string = '';
+        if (teamscaleProject) {
+            projectInfo = `Configured Teamscale project is: <i>${teamscaleProject}</i> `;
         }
 
-        this.displayedErrorMessage = true;
         switch (reason.status) {
+            case 401:
             case 403:
-                this.showNotLoggedInMessage();
+                this.showNotLoggedInMessage(teamscaleServer);
                 VSS.notifyLoadSucceeded();
                 break;
             case 404:
-                if (this.teamscaleProject.length > 0) {
-                    this.showInfoBanner(`Could not find project "${this.teamscaleProject}" ` +
-                        `on the Teamscale server <a href="${this.teamscaleUrl}" target="_top">${this.teamscaleUrl}</a>. ` +
-                        `${this.generateContactText()}`);
-                } else {
-                    this.showInfoBanner(`Could not find <a href="${this.teamscaleUrl}" target="_top">${this.teamscaleUrl}</a> ` +
-                        `which is configured as Teamscale server.` +
-                        `${this.generateContactText()}`);
-                }
+                this.showInfoBanner(`Server <a href="${teamscaleServer}" target="_top">${teamscaleServer}</a> which is `
+                    + 'configured as Teamscale server, returned a <i>Not found</i> (404) error. ' +
+                    + projectInfo + this.generateContactText());
 
                 VSS.notifyLoadSucceeded();
                 break;
             default:
-                let message = `Failed with error code ${reason.status}`;
+                let message = `Failed ${action ? action + ' ' : ''}with error code ${reason.status}`;
                 if (reason.statusText) {
                     message += `: ${reason.statusText}`;
                 }
@@ -101,12 +93,12 @@ export default class NotificationUtils {
     /**
      * Shows an info message with a link to open the login dialog for Teamscale
      */
-    public showNotLoggedInMessage() {
+    public showNotLoggedInMessage(serverUrl: string) {
         if (this.useDialogInsteadOfNewWindow) {
             this.showInfoBanner(`Please log into <a id="login-link">Teamscale</a>`);
-            $('#login-link').click(() => this.showLoginDialog());
+            $('#login-link').click(() => this.showLoginDialog(serverUrl));
         } else {
-            this.showInfoBanner(`Please log into <a href="${this.teamscaleUrl}" target="_blank">Teamscale</a> and repeat.`);
+            this.showInfoBanner(`Please log into <a href="${serverUrl}" target="_blank">Teamscale</a> and repeat.`);
         }
     }
 
@@ -115,9 +107,7 @@ export default class NotificationUtils {
      * @param message The message to display. It may contain HTML.
      */
     public showInfoBanner(message: string) {
-        const notification = this.generateNotification();
-        notification.setMessage($(`<div>${message}</div>`), this.notificationService.MessageAreaType.Info);
-        UiUtils.resizeHost();
+        this.showBanner(message, this.notificationService.MessageAreaType.Info);
     }
 
     /**
@@ -125,8 +115,18 @@ export default class NotificationUtils {
      * @param message The message to display. It may contain HTML.
      */
     public showErrorBanner(message: string) {
+        this.showBanner(message, this.notificationService.MessageAreaType.Error);
+    }
+
+    private showBanner(message: string, bannerType: any) {
+        const notificationContainer = $('#message-div');
+        if (notificationContainer.html().includes(message)) {
+            // do not display the same message more than once
+            return;
+        }
+
         const notification = this.generateNotification();
-        notification.setMessage($(`<div>${message}</div>`), this.notificationService.MessageAreaType.Error);
+        notification.setMessage($(`<div>${message}</div>`), bannerType);
         UiUtils.resizeHost();
     }
 

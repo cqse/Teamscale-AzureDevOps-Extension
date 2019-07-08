@@ -1,6 +1,6 @@
 .idea/workspace.xml
 
-node_modules
+**/node_modules
 
 *.vsix
 
@@ -8,3 +8,9 @@ dist/*
 !dist/.gitkeep
 
 token
+
+**/*.js
+!scripts/**/*.js
+
+**/.taskkey
+

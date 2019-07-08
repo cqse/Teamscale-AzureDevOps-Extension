@@ -33,8 +33,7 @@ export class TeamscaleWidget {
         this.widgetHelpers = widgetHelpers;
         this.controlService = controlService;
         this.notificationService = notificationService;
-        this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
-            null, '', '', '', false);
+        this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService, null, '', false);
     }
 
     /**
@@ -44,7 +43,7 @@ export class TeamscaleWidget {
         const containersToEmpty: string[] = ['message-div', 'teamscale-info', 'badges'];
         for (const containerId of containersToEmpty) {
             const messageContainer = document.getElementById(containerId) as HTMLDivElement;
-            while (messageContainer.firstChild) {
+            while (messageContainer && messageContainer.firstChild) {
                 messageContainer.removeChild(messageContainer.firstChild);
             }
         }
@@ -82,7 +81,10 @@ export class TeamscaleWidget {
         return this.loadAndCheckConfiguration()
             .then(() => this.loadAndRenderBadges())
             .then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
-                () => () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
+                () => this.widgetHelpers.WidgetStatusHelper.Failure('Could not load configuration.'))
+            // All possible errors should not lead to an unresolved promise, since we want to use our
+            // error handling and messages and not a generic Azure DevOps error
+            .catch(e => this.widgetHelpers.WidgetStatusHelper.Failure(e));
     }
 
     /**
@@ -135,7 +137,7 @@ export class TeamscaleWidget {
         this.projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
         this.organizationSettings = new Settings(Scope.ProjectCollection);
 
-        this.emailContact = await this.organizationSettings.get(Settings.EMAIL_CONTACT);
+        this.emailContact = await this.organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
         return Promise.all([this.initializeTeamscaleClient(), this.initializeNotificationUtils()]);
     }
 
@@ -151,8 +153,9 @@ export class TeamscaleWidget {
         try {
             startTimestamp = await this.calculateStartTimestamp();
         } catch (error) {
-            if (error.status === 403 || error.status === 404) {
-                this.notificationUtils.handleErrorInTeamscaleCommunication(error);
+            if (error.status === 401 || error.status === 403 || error.status === 404) {
+                this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
+                    this.currentSettings.teamscaleProject, 'calculating start date for badge');
             } else if (this.currentSettings.activeTimeChooser === 'start-ts-baseline') {
                 this.notificationUtils.showErrorBanner('Teamscale baseline definition for <i>'
                     + this.currentSettings.tsBaseline + '</i> not found on server.');
@@ -166,7 +169,8 @@ export class TeamscaleWidget {
                     startTimestamp);
                 tgaBadge = '<div id="tga-badge">' + tgaBadge + '</div>';
             } catch (error) {
-                this.notificationUtils.handleErrorInTeamscaleCommunication(error);
+                this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
+                    this.currentSettings.teamscaleProject, 'loading Test Gap Badge');
             }
         }
 
@@ -175,11 +179,12 @@ export class TeamscaleWidget {
                 startTimestamp);
             findingsChurnBadge = '<div id="findings-badge">Findings churn<br>' + findingsChurnBadge + '<br></div>';
         } catch (error) {
-            this.notificationUtils.handleErrorInTeamscaleCommunication(error);
+            this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
+                this.currentSettings.teamscaleProject, 'loading Findings Churn Badge');
             return Promise.resolve();
         }
 
-        tgaBadge = this.insertBadges(tgaBadge, findingsChurnBadge);
+        this.insertBadges(tgaBadge, findingsChurnBadge);
     }
 
     /**
@@ -198,14 +203,13 @@ export class TeamscaleWidget {
         }
 
         UiUtils.resizeHost();
-        return tgaBadge;
     }
 
     /**
      * Initializes the Teamscale Client with the url configured in the project settings.
      */
     private async initializeTeamscaleClient() {
-        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
+        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL_KEY);
 
         if (!url) {
             this.notificationUtils.showErrorBanner('Teamscale is not configured for this project.' +
@@ -220,17 +224,14 @@ export class TeamscaleWidget {
      * Initializes the notification and login management handling errors in Teamscale communication.
      */
     private async initializeNotificationUtils() {
-        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL);
-        const project = this.currentSettings.teamscaleProject;
-
         const callbackOnLoginClose = () => {
             TeamscaleWidget.tabulaRasa();
             this.loadAndRenderBadges().then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
-                () => () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
+                () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
         };
 
-        this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService, callbackOnLoginClose,
-            project, url, this.emailContact, true);
+        this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
+            callbackOnLoginClose, this.emailContact, true);
     }
 
     /**
@@ -281,8 +282,7 @@ VSS.require(['TFS/Dashboards/WidgetHelpers', 'VSS/Controls', 'VSS/Controls/Notif
         widgetHelpers.IncludeWidgetStyles();
 
         VSS.register('TeamscaleWidget', () => {
-            const configuration = new TeamscaleWidget(widgetHelpers, controlService, notificationService);
-            return configuration;
+            return new TeamscaleWidget(widgetHelpers, controlService, notificationService);
         });
 
         VSS.notifyLoadSucceeded();

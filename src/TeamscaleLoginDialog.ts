@@ -13,13 +13,9 @@ VSS.init({
 });
 
 VSS.ready(() => {
-    const azureProjectName = VSS.getWebContext().project.name;
-    const projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
-
-    projectSettings.get(Settings.TEAMSCALE_URL).then(url => {
-        const body = $('#teamscale-login-container');
-        body.html(`<iframe id="teamscale-frame" width="520" height="634" src="${url}"></iframe>`);
-    });
+    const body = $('#teamscale-login-container');
+    body.html(`<iframe id="teamscale-frame" width="520" height="634" 
+            src="${decodeURIComponent(window.location.search).substr(1)}"></iframe>`);
 
     VSS.notifyLoadSucceeded();
 });

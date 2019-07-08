@@ -2,11 +2,11 @@
     "manifestVersion": 1,
     "id": "teamscale-azure-devops-plugin",
     "publisher": "CQSEGmbH",
-    "version": "0.0.777",
+    "version": "0.0.837",
     "name": "Teamscale DevOps",
-    "description": "A sample Visual Studio Services extension",
+    "description": "Teamscale Integration with Azure DevOps",
     "public": false,
-    "categories": ["Azure Repos"],
+    "categories": ["Azure Repos", "Azure Pipelines"],
     "targets": [
         {
             "id": "Microsoft.VisualStudio.Services"
@@ -15,6 +15,9 @@
     "scopes": [
         "vso.code_full"
     ],
+    "icons": {
+        "default": "images/teamscale.png"
+    },
     "contributions": [
         {
             "id": "teamscale-test-gap-group",
@@ -118,9 +121,19 @@
             "type": "ms.vss-web.control",
             "targets": [],
             "properties": {
-                "uri": "sites/teamscale-login-dialog.html"
-            }
-        }
+                  "uri": "sites/teamscale-login-dialog.html?{{server}}"
+              }
+          },
+          {
+              "id": "teamscale-upload-build-task",
+              "type": "ms.vss-distributed-task.task",
+              "targets": [
+                  "ms.vss-distributed-task.tasks"
+              ],
+              "properties": {
+                  "name": "reportUploadTask"
+              }
+          }
     ],
     "files": [
         {
@@ -178,6 +191,12 @@
         {
             "path": "scripts/require.js",
             "addressable": true
+        },
+        {
+            "path": "reportUploadTask"
+        },
+        {
+            "path": "LICENSE"
         }
     ]
 }

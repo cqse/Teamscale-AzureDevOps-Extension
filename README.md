@@ -1,20 +1,55 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+Plugin for Azure DevOps that provides
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+- Extension for the WorkItems pages to show a TestGap badge
+- Pipeline Task to upload coverage, findings, and other reports to Teamscale
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+# Building
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+We recommend editing with VS Code.
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://www.visualstudio.com/en-us/docs/git/create-a-readme). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+To compile the code:
+
+```bash
+npm run build
+```
+
+To package as a .vsix:
+
+```bash
+npm run package
+```
+
+# Testing
+
+To run the unit tests:
+
+```bash
+npm test
+```
+
+You can test the pipeline task against <https://cqse.visualstudio.com/AzureDevOps-Plugin-Test> which is also hosted on
+[our demo instance](https://demo.teamscale.com). This project also contains a pipeline with our build task.
+
+- Publish the extension as described below
+- Go to <https://cqse.visualstudio.com>
+- Go to _Organization Settings > Extensions_
+- Uninstall the extension and then reinstall it
+
+# Publishing
+
+To publish to our Azure DevOps space for testing:
+
+Create a file called `token` containing an access token with Marketplace publishing rights for our space.
+
+```bash
+npm run test-publish
+```
+
+# Distributed Binaries
+
+We distribute both curl and CodeCoverage.exe with this extension to make it work "out of the box" without additional
+dependencies.
+
+For curl under Linux, we use the Ermine build which should work under all modern distributions.
+For Windows, we use the 32bit variant which works on both 32 and 64bit machines.
+

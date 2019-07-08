@@ -1,0 +1,6 @@
+Microsoft.CodeCoverage is downloaded during the build process
+from https://www.nuget.org/packages/Microsoft.CodeCoverage/ into the folder CodeCoverage.
+
+For license information see:
+ * https://www.microsoft.com/web/webpi/eula/net_library_eula_enu.htm and
+ * https://raw.githubusercontent.com/microsoft/vstest/master/LICENSE

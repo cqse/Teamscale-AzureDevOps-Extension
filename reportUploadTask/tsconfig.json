@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "module": "commonjs",
+
+        // disable automatic lookup of types in ../node_modules which causes compile errors
+        "types": [ "node", "mocha" ]
+    }
+}

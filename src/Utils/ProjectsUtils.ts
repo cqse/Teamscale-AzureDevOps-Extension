@@ -48,7 +48,7 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
     }
 
     if (validProjects.length === 0) {
-        if (errorCodeSum > 0 && errorCodeSum % 403 === 0) {
+        if (errorCodeSum > 0 && (errorCodeSum % 401 === 0 || errorCodeSum % 403 === 0)) {
             notificationUtils.handleErrorInTeamscaleCommunication({status: 403}, teamscaleClient.url);
             return;
         }

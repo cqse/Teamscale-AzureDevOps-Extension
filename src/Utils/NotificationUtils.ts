@@ -55,6 +55,7 @@ export default class NotificationUtils {
         }
 
         switch (reason.status) {
+            case 401:
             case 403:
                 this.showNotLoggedInMessage(teamscaleServer);
                 VSS.notifyLoadSucceeded();

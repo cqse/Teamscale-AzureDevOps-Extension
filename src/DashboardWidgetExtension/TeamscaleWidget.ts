@@ -153,7 +153,7 @@ export class TeamscaleWidget {
         try {
             startTimestamp = await this.calculateStartTimestamp();
         } catch (error) {
-            if (error.status === 403 || error.status === 404) {
+            if (error.status === 401 || error.status === 403 || error.status === 404) {
                 this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
                     this.currentSettings.teamscaleProject, 'calculating start date for badge');
             } else if (this.currentSettings.activeTimeChooser === 'start-ts-baseline') {

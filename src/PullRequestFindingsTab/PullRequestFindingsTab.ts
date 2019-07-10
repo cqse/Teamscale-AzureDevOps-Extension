@@ -25,7 +25,9 @@ VSS.require(["TFS/VersionControl/GitRestClient"], function (GitService) {
     VSS.notifyLoadSucceeded();
 });
 
-
+/**
+ * Includes the Teamscale Findings Delta page in an iframe for the currently viewed ADOS Pull Request.
+ */
 async function showTeamscaleIframe(gitClient) {
     const azureProjectName: string = VSS.getWebContext().project.name;
     const projectSettings: ProjectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
@@ -63,13 +65,7 @@ async function showTeamscaleIframe(gitClient) {
         document.getElementById('container').style.background = 'transparent';
 
         if (error && error.status && (error.status === 401 || error.status === 403)) {
-            const messageElement: HTMLParagraphElement = document.createElement('p');
-            messageElement.id = 'message';
-            messageElement.innerText = 'Please log in to Teamscale first and reload this Azure DevOps page.';
-            document.getElementById('container').appendChild(messageElement);
-
-            const loginUrl = teamscaleUrl + '/login.html?target=delta.html';
-            appendIframe(loginUrl);
+            handleUnauthorized(teamscaleUrl);
             return;
         }
 
@@ -80,6 +76,20 @@ async function showTeamscaleIframe(gitClient) {
         }
     }
 }
+
+/**
+ * Displays an error message and opens the iframe with the TS login page.
+ */
+function handleUnauthorized(teamscaleUrl) {
+    const messageElement: HTMLParagraphElement = document.createElement('p');
+    messageElement.id = 'message';
+    messageElement.innerText = 'Please log in to Teamscale first and reload this Azure DevOps page.';
+    document.getElementById('container').appendChild(messageElement);
+
+    const loginUrl = teamscaleUrl + '/login.html?target=delta.html';
+    appendIframe(loginUrl);
+}
+
 
 /**
  * Appends an iframe targeting the given url.

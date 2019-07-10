@@ -62,7 +62,10 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
     return validProjects[0];
 }
 
-
+/**
+ * Loads for each project candidate the existing branches and returns the id of the first project that has the
+ * given branches (e.g. source and target branch of a merge request).
+ */
 export async function getFirstProjectHavingGivenBranches(teamscaleClient: TeamscaleClient, projectCandidates: string[],
                                                          branchesThatShouldExist: string[]) {
     if (projectCandidates.length === 0) {
@@ -79,7 +82,7 @@ export async function getFirstProjectHavingGivenBranches(teamscaleClient: Teamsc
                 return projectCandidate;
             }
         } catch (reason) {
-            if (reason && reason.status && (reason.status === 401 || reason.status == 403)) {
+            if (reason && reason.status && (reason.status === 401 || reason.status === 403)) {
                 // redirect to login, can not resolve right project
                 throw reason;
             }

@@ -61,3 +61,40 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
 
     return validProjects[0];
 }
+
+
+export async function getFirstProjectHavingGivenBranches(teamscaleClient: TeamscaleClient, projectCandidates: string[],
+                                                         branchesThatShouldExist: string[]) {
+    if (projectCandidates.length === 0) {
+        throw new Error('No Teamscale Project is configured for this Azure DevOps Project.');
+        return;
+    }
+
+    let errorMessages: string = '';
+    for (const projectCandidate of projectCandidates) {
+        try {
+            const existingProjectBranches: string[] = await teamscaleClient.retrieveBranchesForProject(projectCandidate);
+
+            if (branchesThatShouldExist.every(branch => existingProjectBranches.indexOf(branch) !== -1)) {
+                return projectCandidate;
+            }
+        } catch (reason) {
+            if (reason && reason.status && (reason.status === 401 || reason.status == 403)) {
+                // redirect to login, can not resolve right project
+                throw reason;
+            }
+
+            if (reason && reason.message) {
+                if (errorMessages.length === 0) {
+                    errorMessages = 'Logged error messages per project: ';
+                }
+
+                errorMessages += `'${projectCandidate}' → '${reason.message}'. `;
+            }
+            // try next (e.g. 404: project not defined on server)
+        }
+    }
+
+    throw new Error('None of the Teamscale Projects configured in the Azure DevOps Extension has the branches' +
+        ' involved in the viewed Pull Request in analysis. ' + errorMessages);
+}

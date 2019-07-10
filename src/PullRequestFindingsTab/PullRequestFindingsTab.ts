@@ -4,6 +4,8 @@
 
 import { GitHttpClient4_1 } from "TFS/VersionControl/GitRestClient";
 import { ProjectSettings } from '../Settings/ProjectSettings';
+import TeamscaleClient from '../TeamscaleClient';
+import { getFirstProjectHavingGivenBranches } from '../Utils/ProjectsUtils';
 import { Scope } from '../Settings/Scope';
 import { Settings } from '../Settings/Settings';
 import { PullRequestTabExtensionConfig, GitPullRequest } from 'TFS/VersionControl/Contracts';
@@ -27,8 +29,7 @@ VSS.require(["TFS/VersionControl/GitRestClient"], function (GitService) {
 async function showTeamscaleIframe(gitClient) {
     const azureProjectName: string = VSS.getWebContext().project.name;
     const projectSettings: ProjectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
-    const teamscaleProject: string = await projectSettings.get(Settings.TEAMSCALE_PROJECT);
-    const teamscaleUrl = await projectSettings.get(Settings.TEAMSCALE_URL);
+    const teamscaleUrl = await projectSettings.get(Settings.TEAMSCALE_URL_KEY);
 
     const SUPPORTED_BRANCH_PREFIX = 'refs/heads/';
     const configuration: PullRequestTabExtensionConfig = VSS.getConfiguration();
@@ -49,12 +50,55 @@ async function showTeamscaleIframe(gitClient) {
     const sourceBranch = pullRequest.sourceRefName.substring(SUPPORTED_BRANCH_PREFIX.length);
     const targetBranch = pullRequest.targetRefName.substring(SUPPORTED_BRANCH_PREFIX.length);
 
-    const deltaPerspectiveUrl = teamscaleUrl + '/delta.html#findings/' + teamscaleProject + '/?from=' + sourceBranch +
-        ':HEAD&to=' + targetBranch + ':HEAD&showMergeFindings=true&kioskViewMode=true';
+    try {
+        const teamscaleProject: string = await getFirstProjectHavingGivenBranches(getTeamscaleClient(teamscaleUrl),
+            await projectSettings.getProjectsList(Settings.TEAMSCALE_PROJECTS_KEY), [sourceBranch, targetBranch]);
 
-    let iframe: HTMLIFrameElement = document.createElement('iframe');
-    iframe.src = deltaPerspectiveUrl;
+        const deltaPerspectiveUrl = teamscaleUrl + '/delta.html#findings/' + teamscaleProject + '/?from=' + sourceBranch +
+            ':HEAD&to=' + targetBranch + ':HEAD&showMergeFindings=true&kioskViewMode=true';
+
+        appendIframe(deltaPerspectiveUrl);
+    } catch (error) {
+        // disable loading spinner
+        document.getElementById('container').style.background = 'transparent';
+
+        if (error && error.status && (error.status === 401 || error.status === 403)) {
+            const messageElement: HTMLParagraphElement = document.createElement('p');
+            messageElement.id = 'message';
+            messageElement.innerText = 'Please log in to Teamscale first and reload this Azure DevOps page.';
+            document.getElementById('container').appendChild(messageElement);
+
+            const loginUrl = teamscaleUrl + '/login.html?target=delta.html';
+            appendIframe(loginUrl);
+            return;
+        }
+
+        if (error.message) {
+            VSS.notifyLoadFailed(error.message);
+        } else {
+            VSS.notifyLoadFailed('Failed with unknown error.');
+        }
+    }
+}
+
+/**
+ * Appends an iframe targeting the given url.
+ */
+function appendIframe(targetUrl) {
+    const iframe: HTMLIFrameElement = document.createElement('iframe');
+    iframe.src = targetUrl;
     iframe.id = 'iframe';
     document.getElementById('container').appendChild(iframe);
 }
 
+
+/**
+ * Initializes the Teamscale Client with the url configured in the project settings.
+ */
+function getTeamscaleClient(url: string) {
+    if (!url) {
+        throw new Error('Teamscale is not configured for this Azure Dev Ops project.');
+    }
+
+    return new TeamscaleClient(url);
+}

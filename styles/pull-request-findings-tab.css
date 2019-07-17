@@ -1,0 +1,39 @@
+body, html {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0
+}
+
+#container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    overflow: hidden;
+    background: transparent url('../images/spinner.gif') no-repeat center center;
+}
+
+#iframe {
+    flex-grow: 1;
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+#message {
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: lightcoral;
+    border-color: darkred;
+    border-width: medium;
+    display: block;
+    border-style: solid;
+    padding: 5px;
+    text-align: center;
+    font-size: 1.3em;
+    margin: 0 auto;
+    position: absolute;
+}

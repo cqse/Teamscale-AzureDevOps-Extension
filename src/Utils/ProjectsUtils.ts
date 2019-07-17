@@ -81,18 +81,18 @@ export async function getFirstProjectHavingGivenBranches(teamscaleClient: Teamsc
             if (branchesThatShouldExist.every(branch => existingProjectBranches.indexOf(branch) !== -1)) {
                 return projectCandidate;
             }
-        } catch (reason) {
-            if (reason && reason.status && (reason.status === 401 || reason.status === 403)) {
+        } catch (error) {
+            if (error && error.status && (error.status === 401 || error.status === 403)) {
                 // redirect to login, can not resolve right project
-                throw reason;
+                throw error;
             }
 
-            if (reason && reason.message) {
+            if (error && error.message) {
                 if (errorMessages.length === 0) {
                     errorMessages = 'Logged error messages per project: ';
                 }
 
-                errorMessages += `'${projectCandidate}' → '${reason.message}'. `;
+                errorMessages += `'${projectCandidate}' → '${error.message}'. `;
             }
             // try next (e.g. 404: project not defined on server)
         }

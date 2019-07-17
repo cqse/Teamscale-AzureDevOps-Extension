@@ -86,7 +86,7 @@ function handleUnauthorized(teamscaleUrl) {
     messageElement.innerText = 'Please log in to Teamscale first and reload this Azure DevOps page.';
     document.getElementById('container').appendChild(messageElement);
 
-    const loginUrl = teamscaleUrl + '/login.html?target=delta.html';
+    const loginUrl = teamscaleUrl + '/login.html?target=delta.html%23%3FkioskViewMode%3Dtrue';
     appendIframe(loginUrl);
 }
 

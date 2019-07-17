@@ -95,8 +95,12 @@ export default class NotificationUtils {
      */
     public showNotLoggedInMessage(serverUrl: string) {
         if (this.useDialogInsteadOfNewWindow) {
-            this.showInfoBanner(`Please log into <a id="login-link">Teamscale</a>`);
-            $('#login-link').click(() => this.showLoginDialog(serverUrl));
+            const message: string = `Please log into <a class="login-link" data-ts-url="${encodeURIComponent(serverUrl)}"> Teamscale</a>`;
+            if (this.showInfoBanner(message)) {
+                // do not add listener twice
+                $(`.login-link[data-ts-url="${encodeURIComponent(serverUrl)}"]`).on('click',
+                    () => this.showLoginDialog(serverUrl));
+            }
         } else {
             this.showInfoBanner(`Please log into <a href="${serverUrl}" target="_blank">Teamscale</a> and repeat.`);
         }
@@ -105,29 +109,36 @@ export default class NotificationUtils {
     /**
      * Shows an info banner (vss notification).
      * @param message The message to display. It may contain HTML.
+     * @return True, if banner was added. False, otherwise.
      */
-    public showInfoBanner(message: string) {
-        this.showBanner(message, this.notificationService.MessageAreaType.Info);
+    public showInfoBanner(message: string): boolean {
+        return this.showBanner(message, this.notificationService.MessageAreaType.Info);
     }
 
     /**
      * Shows an error banner (vss notification).
      * @param message The message to display. It may contain HTML.
+     * @return True, if banner was added. False, otherwise.
      */
-    public showErrorBanner(message: string) {
-        this.showBanner(message, this.notificationService.MessageAreaType.Error);
+    public showErrorBanner(message: string): boolean {
+        return this.showBanner(message, this.notificationService.MessageAreaType.Error);
     }
 
-    private showBanner(message: string, bannerType: any) {
+    /**
+     * Adds an info or error banner.
+     * @return True, if banner was added. False, otherwise.
+     */
+    private showBanner(message: string, bannerType: any): boolean {
         const notificationContainer = $('#message-div');
         if (notificationContainer.html().includes(message)) {
             // do not display the same message more than once
-            return;
+            return false;
         }
 
         const notification = this.generateNotification();
         notification.setMessage($(`<div>${message}</div>`), bannerType);
         UiUtils.resizeHost();
+        return true;
     }
 
     /**

@@ -7,6 +7,7 @@ import { Scope } from '../Settings/Scope';
 import { Settings } from '../Settings/Settings';
 import TeamscaleClient from '../TeamscaleClient';
 import NotificationUtils from '../Utils/NotificationUtils';
+import { NOT_AUTHORIZED_ERROR } from '../Utils/ProjectsUtils';
 import ProjectUtils = require('../Utils/ProjectsUtils');
 import UiUtils = require('../Utils/UiUtils');
 
@@ -94,7 +95,7 @@ async function loadAndCheckConfiguration() {
 
     emailContact = await organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
     return Promise.all([initializeTeamscaleClient(), resolveIssueId(), initializeNotificationUtils()]).then(() =>
-        resolveProjectName());
+        resolveProjectNames());
 }
 
 /**
@@ -106,7 +107,7 @@ async function initializeNotificationUtils() {
     const callbackOnLoginClose = () => {
         $('#tga-badge').empty();
         $('#message-div').empty();
-        resolveProjectName().then(() => loadBadges());
+        resolveProjectNames().then(() => loadBadges());
     };
 
     notificationUtils = new NotificationUtils(controlService, notificationService, callbackOnLoginClose, emailContact,
@@ -187,31 +188,46 @@ async function initializeTeamscaleClient() {
 }
 
 /**
- * Read the teamscale project name from the ADOS project settings.
+ * Sets the Teamscale project names for Test Gap and Findings Churn badges.
  */
-async function resolveProjectName() {
+async function resolveProjectNames() {
     if (showFindingsBadge) {
-        const teamscaleCandidateProjects = await projectSettings.getProjectsList(Settings.TEAMSCALE_PROJECTS_KEY);
-        teamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(teamscaleClient, teamscaleCandidateProjects,
-            issueId, notificationUtils, ProjectUtils.BadgeType.FindingsChurn);
-
-        if (!teamscaleProject) {
-            notificationUtils.showInfoBanner('Please make sure that Teamscale project option is properly set for' +
-                ' Findings Churn Badges in the Azure DevOps Project settings.');
-        }
+        teamscaleProject = await resolveProjectName(teamscaleClient, Settings.TEAMSCALE_PROJECTS_KEY,
+            ProjectUtils.BadgeType.FindingsChurn, 'Findings Churn');
     }
 
     if (showTestGapBadge) {
-        const tgaTeamscaleCandidateProjects = await projectSettings.getProjectsList(Settings.TGA_TEAMSCALE_PROJECTS_KEY);
-        tgaTeamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(tgaTeamscaleClient,
-            tgaTeamscaleCandidateProjects, issueId, notificationUtils, ProjectUtils.BadgeType.TestGap);
-
-        if (!tgaTeamscaleProject) {
-            notificationUtils.showInfoBanner('Please make sure that Teamscale project option is properly set for' +
-                ' Test Gap Badges in the Azure DevOps Project settings.');
-        }
+        tgaTeamscaleProject = await resolveProjectName(tgaTeamscaleClient, Settings.TGA_TEAMSCALE_PROJECTS_KEY,
+            ProjectUtils.BadgeType.TestGap, 'Test Gap');
     }
 }
+
+/**
+ * Read the potential teamscale project names from the ADOS project settings and resolves it to the corresponding
+ * Teamscale project.
+ */
+async function resolveProjectName(teamscaleClient, storageProjectsKey, badgeType, readableBadgeType) {
+    let teamscaleProject: string;
+    let unauthorized: boolean = false;
+    const teamscaleCandidateProjects = await projectSettings.getProjectsList(storageProjectsKey);
+    try {
+        teamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(teamscaleClient,
+            teamscaleCandidateProjects, issueId, notificationUtils, badgeType);
+    } catch (e) {
+        if (e.message !== NOT_AUTHORIZED_ERROR) {
+            throw e;
+        }
+        unauthorized = true;
+        // not authorized message already displayed
+    }
+
+    if (!teamscaleProject && !unauthorized) {
+        notificationUtils.showInfoBanner('Please make sure that Teamscale project option is properly set for ' +
+            readableBadgeType + ' Badges in the Azure DevOps Project settings.');
+    }
+    return teamscaleProject;
+}
+
 
 /**
  * Get the issue id of the opened Work Item.

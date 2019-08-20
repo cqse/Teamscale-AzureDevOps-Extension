@@ -24,7 +24,7 @@ body, html {
 #dialog-info {
     text-align: center;
     width: 250px;
-    border: 1px solid orange;
+    border: 1px solid #fd7b34;
     margin: 20px;
 }
 

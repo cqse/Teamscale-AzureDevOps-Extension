@@ -86,21 +86,22 @@ async function showTeamscaleIframe(gitClient) {
  * Returns whether the extension is executed on a hosted installation (Azure DevOps Service; return value: true) or
  * on an on-premise installation (Azure DevOps Server; return value: false). This is determined on the host's url.
  */
-function isHostedAzureDevOpsService() {
+function isHostedAzureDevOpsService(): boolean {
     const serverUri: string = VSS.getWebContext().host.uri;
-    return serverUri.match('^https:\/\/([A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?.visualstudio\.com|dev.azure.com)');
+    return serverUri.match('^https:\/\/([^/]*\.visualstudio\.com|dev\.azure\.com)') !== null;
 }
 
 /**
- * In Azure DevOps Server (on-premise installations) the iframe in which the findings kiosk would normally open is
- * sandboxed and thus the Findings Kiosk is opened in a dialog.
+ * In Azure DevOps Server (on-premise installations) iframes containing pages from the extension are sandboxed. So
+ * would be the iframe in which normally the Teamscale iframe is included. The workaround for this is to directly
+ * open the Findings Kiosk (which is part of Teamscale and not the extension and thus not sandboxed) in a dialog.
  */
-function openFindingsKioskAsDialog(pullRequestId: number, teamscaleUrl: string, teamscaleProject: string,
+async function openFindingsKioskAsDialog(pullRequestId: number, teamscaleUrl: string, teamscaleProject: string,
                                    sourceBranch: string, targetBranch: string) {
-    const extensionCtx = VSS.getExtensionContext();
-    const contributionId = extensionCtx.publisherId + '.' + extensionCtx.extensionId + '.pull-request-findings-dialog';
+    const extensionContext = VSS.getExtensionContext();
+    const contributionId = extensionContext.publisherId + '.' + extensionContext.extensionId + '.pull-request-findings-dialog';
     const teamscaleProtocolAndHost = teamscaleUrl.split('://', 2);
-    const dialogOptions = {
+    const dialogOptions: IHostDialogOptions = {
         title: 'Teamscale Findings for Pull Request ' + pullRequestId,
         width: 1000,
         height: 650,
@@ -113,20 +114,13 @@ function openFindingsKioskAsDialog(pullRequestId: number, teamscaleUrl: string, 
             sourceBranch: sourceBranch,
             targetBranch: targetBranch,
         },
-    };
+    } as IHostDialogOptions;
 
-    VSS.getService(VSS.ServiceIds.Dialog).then(function (dialogService: IHostDialogService) {
-        dialogService.openDialog(contributionId, dialogOptions);
-        disableTeamscaleLoadingSpinner();
-        const dialogInfoBox: HTMLDivElement = document.createElement('div');
-        dialogInfoBox.id = 'dialog-info';
-        dialogInfoBox.innerHTML = '<img src="../images/teamscale.png" width="64">' +
-            '<p>Findings were opened in a separate dialog.<br><br>' +
-            'Loading the findings in the dialog might take some time.</p>';
-        document.getElementById('container').appendChild(dialogInfoBox);
-    });
-
-    registerTabChangeListenerToReopenDialog(contributionId, dialogOptions);
+    const dialogService: IHostDialogService = await VSS.getService(VSS.ServiceIds.Dialog) as IHostDialogService;
+    dialogService.openDialog(contributionId, dialogOptions);
+    disableTeamscaleLoadingSpinner();
+    showDialogInfoBox();
+    registerTabChangeListenerToReopenDialog(contributionId, dialogOptions, dialogService);
 }
 
 /**
@@ -134,45 +128,52 @@ function openFindingsKioskAsDialog(pullRequestId: number, teamscaleUrl: string, 
  * Findings" tab is reopened. This function listens on navigation changes and opens the dialog again, if the
  * appropriate tab is opened.
  */
-function registerTabChangeListenerToReopenDialog(contributionId, dialogOptions) {
-    const reopenDialogOnTabChangeCallback = function (state) {
-        if (state.action && state.action === 'Teamscale Findings') {
-            VSS.getService(VSS.ServiceIds.Dialog).then(function (dialogService: IHostDialogService) {
-                dialogService.openDialog(contributionId, dialogOptions);
-            });
+async function registerTabChangeListenerToReopenDialog(contributionId: string, dialogOptions: IHostDialogOptions,
+                                                       dialogService: IHostDialogService) {
+    const navigationService: IHostNavigationService = await VSS.getService(VSS.ServiceIds.Navigation) as IHostNavigationService;
+
+    const reopenDialogListener = async state => {
+        if (state.action === 'Teamscale Findings') {
+            dialogService.openDialog(contributionId, dialogOptions);
         }
     };
+    navigationService.onHashChanged(hash => navigationService.getCurrentState().then(reopenDialogListener));
+}
 
-    VSS.getService(VSS.ServiceIds.Navigation).then(function (navigationService: IHostNavigationService) {
-        navigationService.onHashChanged(function (hash) {
-            VSS.getService(VSS.ServiceIds.Navigation).then(function (navigationService: IHostNavigationService) {
-                navigationService.getCurrentState().then(reopenDialogOnTabChangeCallback);
-            });
-        });
-    });
+/**
+ * Adds a info message in the "Teamscale Findings" tab, that the Findings Kiosk is opened in a separate popup dialog.
+ */
+function showDialogInfoBox(): void {
+    const dialogInfoBox: HTMLDivElement = document.createElement('div');
+    dialogInfoBox.id = 'dialog-info';
+    dialogInfoBox.innerHTML = '<img src="../images/teamscale.png" width="64">' +
+        '<p>Findings were opened in a separate dialog.<br><br>' +
+        'Loading the findings in the dialog might take some time.</p>';
+    document.getElementById('container').appendChild(dialogInfoBox);
 }
 
 /**
  * Displays an error message and opens the iframe with the TS login page.
  */
-function handleUnauthorized(teamscaleUrl) {
+function handleUnauthorized(teamscaleUrl): void {
     const messageElement: HTMLParagraphElement = document.createElement('p');
     messageElement.id = 'message';
     messageElement.innerText = 'Please log in to Teamscale first and reload this Azure DevOps page.';
+    document.getElementById('container').appendChild(messageElement);
 
-    if (isHostedAzureDevOpsService()) {
-        document.getElementById('container').appendChild(messageElement);
-
-        const loginUrl = teamscaleUrl + '/login.html?target=delta.html%23%3FkioskViewMode%3Dtrue';
-        appendIframe(loginUrl);
+    if (!isHostedAzureDevOpsService()) {
+        // sandboxed iframe on on-premise installation does not allow integrated iframe login to Teamscale
+        return;
     }
-    // sandboxed iframe on on-premise installation does not allow integrated iframe login to Teamscale
+
+    const loginUrl = teamscaleUrl + '/login.html?target=delta.html%23%3FkioskViewMode%3Dtrue';
+    appendIframe(loginUrl);
 }
 
 /**
  * Appends an iframe targeting the given url.
  */
-function appendIframe(targetUrl) {
+function appendIframe(targetUrl): void {
     const iframe: HTMLIFrameElement = document.createElement('iframe');
     iframe.src = targetUrl;
     iframe.id = 'iframe';
@@ -182,14 +183,14 @@ function appendIframe(targetUrl) {
 /**
  * Disables the loading spinner.
  */
-function disableTeamscaleLoadingSpinner() {
+function disableTeamscaleLoadingSpinner(): void {
     document.getElementById('container').style.background = 'transparent';
 }
 
 /**
  * Initializes the Teamscale Client with the url configured in the project settings.
  */
-function getTeamscaleClient(url: string) {
+function getTeamscaleClient(url: string): TeamscaleClient {
     if (!url) {
         throw new Error('Teamscale is not configured for this Azure Dev Ops project.');
     }

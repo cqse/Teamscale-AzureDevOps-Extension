@@ -2,7 +2,7 @@
  * Shows the TS Delta findings view in a tab in the Azure Devops Pull Request perspective.
  */
 
-import { GitHttpClient4_1 } from "TFS/VersionControl/GitRestClient";
+import { GitHttpClient4_1 } from 'TFS/VersionControl/GitRestClient';
 import { ProjectSettings } from '../Settings/ProjectSettings';
 import TeamscaleClient from '../TeamscaleClient';
 import { getFirstProjectHavingGivenBranches } from '../Utils/ProjectsUtils';
@@ -18,12 +18,13 @@ VSS.init({
 });
 
 
-VSS.require(["TFS/VersionControl/GitRestClient"], function (GitService) {
+VSS.require(['TFS/VersionControl/GitRestClient'], function (GitService) {
     let gitClient: GitHttpClient4_1 = GitService.getClient();
 
     showTeamscaleIframe(gitClient);
     VSS.notifyLoadSucceeded();
 });
+
 
 /**
  * Includes the Teamscale Findings Delta page in an iframe for the currently viewed ADOS Pull Request.
@@ -59,7 +60,39 @@ async function showTeamscaleIframe(gitClient) {
         const deltaPerspectiveUrl = teamscaleUrl + '/delta.html#findings/' + teamscaleProject + '/?from=' + sourceBranch +
             ':HEAD&to=' + targetBranch + ':HEAD&showMergeFindings=true&kioskViewMode=true';
 
-        appendIframe(deltaPerspectiveUrl);
+        if (isHostedAzureDevOpsService()) {
+            appendIframe(deltaPerspectiveUrl);
+            return;
+        }
+
+        // In Azure DevOps Server (on-premise installations) the iframe in which the findings kiosk would normally
+        // open is sandboxed and thus  Open the Findings Kiosk in a dialog
+        // window
+        const extensionCtx = VSS.getExtensionContext();
+        const contributionId = extensionCtx.publisherId + "." + extensionCtx.extensionId + ".pull-request-findings-dialog";
+        const teamscaleProtocolAndHost = teamscaleUrl.split('://', 2);
+        const dialogOptions = {
+            title: 'Teamscale Findings for Pull Request',
+            width: 1000,
+            height: 650,
+            resizable: true,
+            buttons: null,
+            urlReplacementObject: {
+                protocol: teamscaleProtocolAndHost[0],
+                teamscaleServer: teamscaleProtocolAndHost[1],
+                teamscaleProject: teamscaleProject,
+                sourceBranch: sourceBranch,
+                targetBranch: targetBranch,
+            }
+        };
+
+        VSS.getService(VSS.ServiceIds.Dialog).then(function(dialogService: IHostDialogService) {
+            dialogService.openDialog(contributionId, dialogOptions);
+            document.getElementById('container').style.background = 'transparent';
+            document.getElementById('container').innerText = 'Findings are opened in dialog.';
+        });
+
+        registerTabChangeListenerToReopenDialog(contributionId, dialogOptions);
     } catch (error) {
         // disable loading spinner
         document.getElementById('container').style.background = 'transparent';
@@ -78,16 +111,52 @@ async function showTeamscaleIframe(gitClient) {
 }
 
 /**
+ * Returns whether the extension is executed on a hosted installation (Azure DevOps Service; return value: true) or
+ * on an on-premise installation (Azure DevOps Server; return value: false). This is determined on the host's url.
+ */
+function isHostedAzureDevOpsService() {
+    const serverUri: string = VSS.getWebContext().host.uri;
+    return serverUri.match('^https:\/\/([A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?.visualstudio\.com|dev.azure.com)');
+}
+
+/**
+ * On on-premise installations, the dialog with the findings kiosk has to be opened again, when the "Teamscale
+ * Findings" tab is reopened. This function listens on navigation changes and opens the dialog again, if the
+ * appropriate tab is opened.
+ */
+function registerTabChangeListenerToReopenDialog(contributionId, dialogOptions) {
+    const reopenDialogOnTabChangeCallback = function (state) {
+        if (state.action && state.action === 'Teamscale Findings') {
+            VSS.getService(VSS.ServiceIds.Dialog).then(function (dialogService: IHostDialogService) {
+                dialogService.openDialog(contributionId, dialogOptions);
+            });
+        }
+    };
+
+    VSS.getService(VSS.ServiceIds.Navigation).then(function (navigationService: IHostNavigationService) {
+        navigationService.onHashChanged(function (hash) {
+            VSS.getService(VSS.ServiceIds.Navigation).then(function (navigationService: IHostNavigationService) {
+                navigationService.getCurrentState().then(reopenDialogOnTabChangeCallback);
+            });
+        });
+    });
+}
+
+/**
  * Displays an error message and opens the iframe with the TS login page.
  */
 function handleUnauthorized(teamscaleUrl) {
     const messageElement: HTMLParagraphElement = document.createElement('p');
     messageElement.id = 'message';
     messageElement.innerText = 'Please log in to Teamscale first and reload this Azure DevOps page.';
-    document.getElementById('container').appendChild(messageElement);
 
-    const loginUrl = teamscaleUrl + '/login.html?target=delta.html%23%3FkioskViewMode%3Dtrue';
-    appendIframe(loginUrl);
+    if (isHostedAzureDevOpsService()) {
+        document.getElementById('container').appendChild(messageElement);
+
+        const loginUrl = teamscaleUrl + '/login.html?target=delta.html%23%3FkioskViewMode%3Dtrue';
+        appendIframe(loginUrl);
+    }
+    // sandboxed iframe on on-premise installation does not allow integrated iframe login to Teamscale
 }
 
 

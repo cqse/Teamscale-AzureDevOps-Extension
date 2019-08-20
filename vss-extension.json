@@ -2,7 +2,7 @@
     "manifestVersion": 1,
     "id": "teamscale-azure-devops-plugin",
     "publisher": "CQSEGmbH",
-    "version": "0.0.876",
+    "version": "1.0.2",
     "name": "Teamscale DevOps",
     "description": "Teamscale Integration with Azure DevOps",
     "public": false,
@@ -105,7 +105,7 @@
         {
             "id": "pull-request-ts-findings-tab",
             "type": "ms.vss-web.tab",
-            "description": "Shows Teamscale findings for this Pull reques.",
+            "description": "Shows Teamscale findings for this Pull Request.",
             "targets": [
                 "ms.vss-code-web.pr-tabs"
             ],
@@ -114,6 +114,16 @@
                 "title": "Teamscale Findings",
                 "uri": "sites/pull-request-findings.html",
                 "action": "Teamscale Findings"
+            }
+        },
+        {
+            "id": "pull-request-findings-dialog",
+            "type": "ms.vss-web.external-content",
+            "targets": [],
+            "properties": {
+                "uri": "{{protocol}}://{{teamscaleServer}}/delta.html#findings/{{teamscaleProject}}/?from={{sourceBranch}}:HEAD&to={{targetBranch}}:HEAD&showMergeFindings=true&kioskViewMode=true",
+                "external": true,
+                "interactive": false
             }
         },
         {

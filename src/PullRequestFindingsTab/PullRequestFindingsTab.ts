@@ -27,7 +27,8 @@ VSS.require(['TFS/VersionControl/GitRestClient'], function (GitService) {
 
 
 /**
- * Includes the Teamscale Findings Delta page in an iframe for the currently viewed ADOS Pull Request.
+ * Includes the Teamscale Findings Kiosk (delta perspective) in an iframe (for Azure DevOps Service) or opens it in a
+ * dialog (for Azure DevOps Server; on-premise) for the currently viewed ADOS Pull Request.
  */
 async function showTeamscaleIframe(gitClient) {
     const azureProjectName: string = VSS.getWebContext().project.name;
@@ -64,38 +65,9 @@ async function showTeamscaleIframe(gitClient) {
             appendIframe(deltaPerspectiveUrl);
             return;
         }
-
-        // In Azure DevOps Server (on-premise installations) the iframe in which the findings kiosk would normally
-        // open is sandboxed and thus  Open the Findings Kiosk in a dialog
-        // window
-        const extensionCtx = VSS.getExtensionContext();
-        const contributionId = extensionCtx.publisherId + "." + extensionCtx.extensionId + ".pull-request-findings-dialog";
-        const teamscaleProtocolAndHost = teamscaleUrl.split('://', 2);
-        const dialogOptions = {
-            title: 'Teamscale Findings for Pull Request',
-            width: 1000,
-            height: 650,
-            resizable: true,
-            buttons: null,
-            urlReplacementObject: {
-                protocol: teamscaleProtocolAndHost[0],
-                teamscaleServer: teamscaleProtocolAndHost[1],
-                teamscaleProject: teamscaleProject,
-                sourceBranch: sourceBranch,
-                targetBranch: targetBranch,
-            }
-        };
-
-        VSS.getService(VSS.ServiceIds.Dialog).then(function(dialogService: IHostDialogService) {
-            dialogService.openDialog(contributionId, dialogOptions);
-            document.getElementById('container').style.background = 'transparent';
-            document.getElementById('container').innerText = 'Findings are opened in dialog.';
-        });
-
-        registerTabChangeListenerToReopenDialog(contributionId, dialogOptions);
+        openFindingsKioskAsDialog(configuration.pullRequestId, teamscaleUrl, teamscaleProject, sourceBranch, targetBranch);
     } catch (error) {
-        // disable loading spinner
-        document.getElementById('container').style.background = 'transparent';
+        disableTeamscaleLoadingSpinner();
 
         if (error && error.status && (error.status === 401 || error.status === 403)) {
             handleUnauthorized(teamscaleUrl);
@@ -117,6 +89,44 @@ async function showTeamscaleIframe(gitClient) {
 function isHostedAzureDevOpsService() {
     const serverUri: string = VSS.getWebContext().host.uri;
     return serverUri.match('^https:\/\/([A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?.visualstudio\.com|dev.azure.com)');
+}
+
+/**
+ * In Azure DevOps Server (on-premise installations) the iframe in which the findings kiosk would normally open is
+ * sandboxed and thus the Findings Kiosk is opened in a dialog.
+ */
+function openFindingsKioskAsDialog(pullRequestId: number, teamscaleUrl: string, teamscaleProject: string,
+                                   sourceBranch: string, targetBranch: string) {
+    const extensionCtx = VSS.getExtensionContext();
+    const contributionId = extensionCtx.publisherId + '.' + extensionCtx.extensionId + '.pull-request-findings-dialog';
+    const teamscaleProtocolAndHost = teamscaleUrl.split('://', 2);
+    const dialogOptions = {
+        title: 'Teamscale Findings for Pull Request ' + pullRequestId,
+        width: 1000,
+        height: 650,
+        resizable: true,
+        buttons: null,
+        urlReplacementObject: {
+            protocol: teamscaleProtocolAndHost[0],
+            teamscaleServer: teamscaleProtocolAndHost[1],
+            teamscaleProject: teamscaleProject,
+            sourceBranch: sourceBranch,
+            targetBranch: targetBranch,
+        },
+    };
+
+    VSS.getService(VSS.ServiceIds.Dialog).then(function (dialogService: IHostDialogService) {
+        dialogService.openDialog(contributionId, dialogOptions);
+        disableTeamscaleLoadingSpinner();
+        const dialogInfoBox: HTMLDivElement = document.createElement('div');
+        dialogInfoBox.id = 'dialog-info';
+        dialogInfoBox.innerHTML = '<img src="../images/teamscale.png" width="64">' +
+            '<p>Findings were opened in a separate dialog.<br><br>' +
+            'Loading the findings in the dialog might take some time.</p>';
+        document.getElementById('container').appendChild(dialogInfoBox);
+    });
+
+    registerTabChangeListenerToReopenDialog(contributionId, dialogOptions);
 }
 
 /**
@@ -159,7 +169,6 @@ function handleUnauthorized(teamscaleUrl) {
     // sandboxed iframe on on-premise installation does not allow integrated iframe login to Teamscale
 }
 
-
 /**
  * Appends an iframe targeting the given url.
  */
@@ -170,6 +179,12 @@ function appendIframe(targetUrl) {
     document.getElementById('container').appendChild(iframe);
 }
 
+/**
+ * Disables the loading spinner.
+ */
+function disableTeamscaleLoadingSpinner() {
+    document.getElementById('container').style.background = 'transparent';
+}
 
 /**
  * Initializes the Teamscale Client with the url configured in the project settings.

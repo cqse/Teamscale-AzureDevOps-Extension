@@ -21,6 +21,13 @@ body, html {
     padding: 0;
 }
 
+#dialog-info {
+    text-align: center;
+    width: 250px;
+    border: 1px solid orange;
+    margin: 20px;
+}
+
 #message {
     z-index: 1;
     left: 0;

@@ -84,6 +84,11 @@ export async function getFirstProjectHavingGivenBranches(teamscaleClient: Teamsc
                 return projectCandidate;
             }
         } catch (error) {
+            if (error && error.status && error.status < 100) {
+                // not a HTTP status code, connection failed
+                throw new Error('Failed to connect to the Teamscale server.');
+            }
+
             if (error && error.status && (error.status === 401 || error.status === 403)) {
                 // redirect to login, can not resolve right project
                 throw error;

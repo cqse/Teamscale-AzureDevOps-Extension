@@ -42,8 +42,8 @@ VSS.ready(() => {
 });
 
 async function loadCurrentSettings() {
-    teamscaleUrlInput.value = await settings.get(Settings.TEAMSCALE_URL_KEY);
-    tgaTeamscaleUrlInput.value = await settings.get(Settings.TGA_TEAMSCALE_URL_KEY);
+    teamscaleUrlInput.value = await getTeamscaleUrlForKey(Settings.TEAMSCALE_URL_KEY);
+    tgaTeamscaleUrlInput.value = await getTeamscaleUrlForKey(Settings.TGA_TEAMSCALE_URL_KEY);
     useSeparateTestGapServerInput.checked = UiUtils.convertToBoolean(await settings.get(Settings.USE_SEPARATE_TEST_GAP_SERVER));
     showFindingsBadgeInput.checked = UiUtils.convertToBoolean(await settings.get(Settings.SHOW_FINDINGS_BADGE_KEY));
     showTestGapBadgeInput.checked = UiUtils.convertToBoolean(await settings.get(Settings.SHOW_TEST_GAP_BADGE_KEY));
@@ -55,6 +55,14 @@ async function loadCurrentSettings() {
 
     zipTgaConfiguration();
     VSS.notifyLoadSucceeded();
+}
+
+async function getTeamscaleUrlForKey(key: string) {
+    const url = await settings.get(key);
+    if (url !== null && url !== undefined) {
+        return url;
+    }
+    return '';
 }
 
 function zipTgaConfiguration() {

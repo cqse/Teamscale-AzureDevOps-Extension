@@ -15,8 +15,18 @@
 
     <div class="teamscale-config-group">
         <label class="config-label">Project:</label>
-        <div style="float: right; width: 80%;">
+        <div style="float: right; width: 70%;">
             <select id="teamscale-project-select"></select>
+        </div>
+
+        <br>
+        <div style="padding-top: 8px; clear: both; height: 33px;">
+            <div id="config-container-teamscale-tga-project-select">
+                <label class="config-label">TGA Project:</label>
+                <div style="float: right; width: 70%;">
+                    <select id="teamscale-tga-project-select"></select>
+                </div>
+            </div>
         </div>
 
         <p>This widget uses data on the Teamscale default branch
@@ -26,7 +36,7 @@
 
         Start date:
         <div style="clear: both; margin-top: 5px;">
-            <div id="tabs" style="height: 130px;">
+            <div id="tabs" style="height: 160px;">
                 <ul>
                     <li><a href="#start-fixed-date">Fixed date</a></li>
                     <li><a href="#start-timespan">Timespan</a></li>
@@ -44,7 +54,9 @@
                     <select id="ts-baseline-select"></select>
 
                     <p>Note that changing the baseline on the Teamscale server
-                        will also influence the date used in this Widget.</p>
+                        will also influence the date used in this Widget.<br>
+                    <span id="baseline-tga-hint">The baselines always stem from the primary Teamscale server, so
+                        baselines of a separate server for Test Gap Analysis (TGA) will not be shown.</span></p>
                 </div>
             </div>
         </div>
@@ -52,6 +64,12 @@
         <br>
         <div style="margin-top: 5px;">
             <label><input id="show-test-gap" type="checkbox"> Show Test-Gap-Badge</label>
+        </div>
+
+        <br>
+        <div id="config-container-separate-tga-server" style="margin-top: 5px;">
+            <label><input id="separate-tga-server" type="checkbox"> Use separate Teamscale Server for
+                Test-Gap-Badge</label>
         </div>
     </div>
 </div>

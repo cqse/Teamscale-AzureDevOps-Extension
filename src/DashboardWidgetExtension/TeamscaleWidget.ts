@@ -14,6 +14,7 @@ import UiUtils = require('../Utils/UiUtils');
 
 export class TeamscaleWidget {
     private teamscaleClient: TeamscaleClient = null;
+    private tgaTeamscaleClient: TeamscaleClient = null;
     private notificationUtils: NotificationUtils = null;
     private emailContact: string = '';
     private projectSettings: Settings = null;
@@ -164,13 +165,17 @@ export class TeamscaleWidget {
         }
 
         if (this.currentSettings.showTestGapBadge === true) {
+            let tgaTeamscaleProject = this.currentSettings.teamscaleProject;
+            if (this.currentSettings.useSeparateTgaServer === true) {
+                tgaTeamscaleProject = this.currentSettings.tgaTeamscaleProject;
+            }
+
             try {
-                tgaBadge = await this.teamscaleClient.retrieveTestGapDeltaBadge(this.currentSettings.teamscaleProject,
-                    startTimestamp);
+                tgaBadge = await this.tgaTeamscaleClient.retrieveTestGapDeltaBadge(tgaTeamscaleProject, startTimestamp);
                 tgaBadge = '<div id="tga-badge">' + tgaBadge + '</div>';
             } catch (error) {
-                this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
-                    this.currentSettings.teamscaleProject, 'loading Test Gap Badge');
+                this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.tgaTeamscaleClient.url,
+                    this.currentSettings.tgaTeamscaleProject, 'loading Test Gap Badge');
             }
         }
 
@@ -218,6 +223,19 @@ export class TeamscaleWidget {
         }
 
         this.teamscaleClient = new TeamscaleClient(url);
+
+        if (!this.currentSettings.useSeparateTgaServer) {
+            this.tgaTeamscaleClient = this.teamscaleClient;
+            return;
+        }
+        const tgaUrl = await this.projectSettings.get(Settings.TGA_TEAMSCALE_URL_KEY);
+
+        if (!tgaUrl) {
+            this.notificationUtils.showErrorBanner('No Teamscale for Test Gap Analysis is correctly configured for this project.' +
+                this.notificationUtils.generateContactText());
+            return Promise.reject();
+        }
+        this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
     }
 
     /**

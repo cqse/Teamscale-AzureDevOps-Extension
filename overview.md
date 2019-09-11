@@ -2,7 +2,7 @@ The Teamscale DevOps Extension was designed to integrate results of Source Code 
 
 This Extension works with Azure DevOps Service as well as with Azure DevOps Server (on premise installation).
 
-# Integration of Teamscale Analyses i Azure DevOps
+# Integration of Teamscale Analyses in Azure DevOps
 
 Analyses results are integrated into
 * Azure DevOps Work Items as Test Gap- and Findings Churn Badges

@@ -7,6 +7,11 @@
     "description": "Teamscale Integration with Azure DevOps",
     "public": false,
     "categories": ["Azure Repos", "Azure Pipelines"],
+    "content": {
+        "details": {
+            "path": "overview.md"
+        }
+    },
     "targets": [
         {
             "id": "Microsoft.VisualStudio.Services"

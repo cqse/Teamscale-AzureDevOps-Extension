@@ -1,4 +1,8 @@
-The Teamscale DevOps Extension was designed to integrate results of Source Code Analyses and Test Analyses of a [Teamscale](https://www.teamscale.com/) Instance to Azure DevOps and provides a build step that uploads coverage recorded during test execution in the build to a Teamscale server.
+The Teamscale DevOps Extension was designed to integrate results of Source Code Analyses and Test Analyses of a [Teamscale](https://www.teamscale.com/) Instance to Azure DevOps and provides a build step that uploads coverage recorded during test execution or other reports in the build to a Teamscale server.
+
+This Extension works with Azure DevOps Service as well as with Azure DevOps Server (on premise installation).
+
+# Integration of Teamscale Analyses i Azure DevOps
 
 Analyses results are integrated into
 * Azure DevOps Work Items as Test Gap- and Findings Churn Badges
@@ -21,15 +25,21 @@ Feature branch develop is common in many projects. The integration of Teamscale 
 
 ![Teamscale Azure DevOps Request Integration](images/overview/findings-in-ados-merge-request.png)
 
-## Setting things up
+# Upload coverage or other reports to Teamscale
+Coverage or other reports that are created during the build can be uploaded to a Teamscale server for further analysis.
+Add the Task "Teamscale Report Uploader" to the build and fill in the configuration form. Be sure the Teamscale server is reachable from your Build Agent.
+
+![Report Upload Build Pipeline Task](images/overview/report-upload-build-pipeline-task.png)
+
+# Setup
 After installing this extension it can be configured on Organization and Project level.
 
 The configuration page is reached from the lower left corner of Azure DevOps, showing either "Organization Settings" or "Project Settings". Choose "Extensions" -> "Teamscale" in the middle bar.
 
-### Organization settings
+## Organization settings
 You can define a "Contact e-mail address" here, which will appear to users in case of connectivity or other problems regarding the Teamscale Extension.
 
-### Project settings
+## Project settings
 Add the address of your Teamscale server here. For the integration in Azure DevOps Pull Requests and Work Items, specify the name of the Teamscale project for the current Azure DevOps project.
 
 In some development environments a separate Teamscale server is operated for the Test Gap Analysis (TGA) beside a Teamscale server for Source Code Analyses. If so you can specify the second Teamscale server for TGA here.

@@ -41,6 +41,9 @@ VSS.ready(() => {
     }
 });
 
+/**
+ * Loads the current settings stored in ADOS.
+ */
 async function loadCurrentSettings() {
     teamscaleUrlInput.value = await getTeamscaleUrlForKey(Settings.TEAMSCALE_URL_KEY);
     tgaTeamscaleUrlInput.value = await getTeamscaleUrlForKey(Settings.TGA_TEAMSCALE_URL_KEY);
@@ -57,6 +60,9 @@ async function loadCurrentSettings() {
     VSS.notifyLoadSucceeded();
 }
 
+/**
+ * Gets the server address stored in ADOS for the stored key (TGA vs. TQE server).
+ */
 async function getTeamscaleUrlForKey(key: string) {
     const url = await settings.get(key);
     if (url !== null && url !== undefined) {
@@ -65,6 +71,9 @@ async function getTeamscaleUrlForKey(key: string) {
     return '';
 }
 
+/**
+ * Hides and shows the tga configuration items, depending on whether a separate TGA server should be used.
+ */
 function zipTgaConfiguration() {
     if (useSeparateTestGapServerInput.checked) {
         tgaConfigurationDiv.style.display = 'block';

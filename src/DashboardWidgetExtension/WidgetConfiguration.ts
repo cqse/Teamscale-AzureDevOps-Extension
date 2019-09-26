@@ -102,11 +102,12 @@ export class Configuration {
     }
 
     private zipTgaConfiguration() {
+        const separateTgaServerConfigContainer = document.getElementById('config-container-separate-tga-server');
         if (this.testGapCheckbox.is(':checked')) {
-            document.getElementById('config-container-separate-tga-server').style.display = 'block';
+            separateTgaServerConfigContainer.style.display = 'block';
         } else {
             this.separateTgaServerCheckbox.prop('checked', false);
-            document.getElementById('config-container-separate-tga-server').style.display = 'none';
+            separateTgaServerConfigContainer.style.display = 'none';
         }
 
         const elementIds: string[] = ['config-container-teamscale-tga-project-select', 'baseline-tga-hint'];

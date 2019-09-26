@@ -4,6 +4,8 @@
 
 export interface ITeamscaleWidgetSettings {
     teamscaleProject: string;
+    tgaTeamscaleProject: string;
+    useSeparateTgaServer: boolean;
     activeTimeChooser: string;
     startFixedDate: number;
     baselineDays: number;

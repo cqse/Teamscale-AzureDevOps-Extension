@@ -95,7 +95,7 @@ export default class NotificationUtils {
      */
     public showNotLoggedInMessage(serverUrl: string) {
         if (this.useDialogInsteadOfNewWindow) {
-            const message: string = `Please log into <a class="login-link" data-ts-url="${encodeURIComponent(serverUrl)}"> Teamscale</a>`;
+            const message: string = `Please log into <a class="login-link" data-ts-url="${encodeURIComponent(serverUrl)}"> Teamscale</a> (${$('<div/>').text(serverUrl).html()})`;
             if (this.showInfoBanner(message)) {
                 // do not add listener twice
                 $(`.login-link[data-ts-url="${encodeURIComponent(serverUrl)}"]`).on('click',

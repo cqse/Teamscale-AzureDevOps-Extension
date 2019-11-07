@@ -3,6 +3,7 @@
  * returns for a given issue ID the first project in the list for that either has test gap information or a
  * findings churn for the given issue.
  */
+import { ITgaSummary } from '../ITgaSummary';
 import TeamscaleClient from '../TeamscaleClient';
 import NotificationUtils from './NotificationUtils';
 
@@ -25,9 +26,9 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
     for (const projectCandidate of projectCandidates) {
         try {
             if (badgeType === BadgeType.TestGap) {
-                const testGapPercentages = await teamscaleClient.retrieveTgaPercentagesForIssue(projectCandidate, issueId.toString());
+                const testGapSummary: ITgaSummary = await getTestGapSummary(teamscaleClient, projectCandidate, issueId);
 
-                if (testGapPercentages.summary && testGapPercentages.summary.numberOfChangedMethods > 0) {
+                if (testGapSummary && testGapSummary.numberOfChangedMethods > 0) {
                     return projectCandidate;
                 }
             } else {
@@ -62,6 +63,22 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
     }
 
     return validProjects[0];
+}
+
+/*
+ * Wrapper (needed since API changed with TS 5.5) method to get the Test Gap summary for an issue; tries both API calls.
+ */
+async function getTestGapSummary(teamscaleClient: TeamscaleClient, projectCandidate, issueId: number): Promise<ITgaSummary> {
+    try {
+        return await teamscaleClient.retrieveTgaSummaryForIssue(projectCandidate, issueId.toString());
+    } catch (reason) {
+        if (reason && reason.status && reason.status === 404) {
+            // reason for 404 can be a non-existing project or Teamscale API with version < 5.5
+            return (await teamscaleClient.retrieveTgaPercentagesForIssue(projectCandidate, issueId.toString())).summary;
+        }
+
+        throw reason;
+    }
 }
 
 /**

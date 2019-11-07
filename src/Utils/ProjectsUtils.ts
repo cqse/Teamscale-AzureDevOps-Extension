@@ -65,7 +65,7 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
     return validProjects[0];
 }
 
-/*
+/**
  * Wrapper (needed since API changed with TS 5.5) method to get the Test Gap summary for an issue; tries both API calls.
  */
 async function getTestGapSummary(teamscaleClient: TeamscaleClient, projectCandidate, issueId: number): Promise<ITgaSummary> {

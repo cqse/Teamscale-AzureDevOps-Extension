@@ -52,7 +52,7 @@ export class Configuration {
                 this.widgetHelpers.WidgetEvent.Args(this.getWrappedCustomSettings()));
 
         this.initializeOnchangeListeners(notifyWidgetChange);
-        this.datepicker.datepicker();
+        this.datepicker.datepicker({onSelect: notifyWidgetChange});
 
         if (this.widgetSettings) {
             this.baselineDaysInput.value = String(this.widgetSettings.baselineDays);
@@ -61,9 +61,10 @@ export class Configuration {
             this.separateTgaServerCheckbox.prop('checked', this.widgetSettings.useSeparateTgaServer);
             this.zipTgaConfiguration();
         }
-        $('#teamscale-project-select').chosen({width: '100%'}).change(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange));
-        $('#teamscale-tga-project-select').chosen({width: '100%'});
-        $('#ts-baseline-select').chosen({width: '95%'});
+        $('#teamscale-project-select').chosen({width: '100%'}).on('change',
+            () => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange));
+        $('#teamscale-tga-project-select').chosen({width: '100%'}).on('change', notifyWidgetChange);
+        $('#ts-baseline-select').chosen({width: '95%'}).on('change', notifyWidgetChange);
 
         this.loadAndCheckConfiguration().then(() => this.fillDropdownsWithProjects())
             .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange))
@@ -84,10 +85,9 @@ export class Configuration {
      * Propagates configuration changes to the widget. Enables live preview/feedback on configuring the widget settings.
      */
     private initializeOnchangeListeners(notifyWidgetChange) {
-        const inputIds: string[] = ['datepicker', 'baseline-days-input', 'ts-baseline-select',
-            'teamscale-project-select', 'show-test-gap', 'separate-tga-server', 'teamscale-tga-project-select'];
+        const inputIds: string[] = ['baseline-days-input', 'show-test-gap', 'separate-tga-server'];
         for (const inputId of inputIds) {
-            document.getElementById(inputId).addEventListener('change', notifyWidgetChange);
+            document.getElementById(inputId).addEventListener('input', notifyWidgetChange);
         }
         let activeTabIndex: number = 0;
         if (this.widgetSettings) {
@@ -101,7 +101,7 @@ export class Configuration {
         document.getElementById('separate-tga-server').addEventListener('change', () => this.zipTgaConfiguration());
     }
 
-    private zipTgaConfiguration() {
+    private async zipTgaConfiguration() {
         const separateTgaServerConfigContainer = document.getElementById('config-container-separate-tga-server');
         if (this.testGapCheckbox.is(':checked')) {
             separateTgaServerConfigContainer.style.display = 'block';
@@ -115,11 +115,24 @@ export class Configuration {
         let displayAttribute = 'none';
         if (this.separateTgaServerCheckbox.is(':checked')) {
             displayAttribute = 'block';
+
+            if (!this.teamscaleTgaProjectSelect.firstChild) {
+                this.fillTgaDropdownWithProjects();
+            }
         }
 
         for (const elementId of elementIds) {
             document.getElementById(elementId).style.display = displayAttribute;
         }
+    }
+
+    private handleMissingTgaServerConfig() {
+        const element = document.createElement('option');
+        element.textContent = 'Error: No TGA server configured. Deactivate separate Server option or' +
+            ' configure TGA Server.';
+        this.teamscaleTgaProjectSelect.appendChild(element);
+        $('#' + this.teamscaleTgaProjectSelect.id).prop('disabled', true);
+        $('#' + this.teamscaleTgaProjectSelect.id).trigger('chosen:updated');
     }
 
     private async fillDropdownsWithProjects() {
@@ -141,6 +154,11 @@ export class Configuration {
      * Loads a list of accessible projects from the Teamscale server and appends them to the TGA dropdown menu.
      */
     private async fillTgaDropdownWithProjects() {
+        const tgaUrl = await this.projectSettings.get(Settings.TGA_TEAMSCALE_URL_KEY);
+        if (!tgaUrl){
+            this.handleMissingTgaServerConfig();
+            return Promise.resolve();
+        }
         return this.fillDropdownWithProjects(this.tgaTeamscaleClient, this.teamscaleTgaProjectSelect, '#teamscale-tga-project-select');
     }
 
@@ -248,19 +266,16 @@ export class Configuration {
         }
 
         this.teamscaleClient = new TeamscaleClient(url);
+        this.tgaTeamscaleClient = this.teamscaleClient;
 
         if (!this.widgetSettings.useSeparateTgaServer) {
-            this.tgaTeamscaleClient = this.teamscaleClient;
             return Promise.resolve();
         }
-        const tgaUrl = await this.projectSettings.get(Settings.TGA_TEAMSCALE_URL_KEY);
 
-        if (!tgaUrl) {
-            this.notificationUtils.showErrorBanner('No Teamscale for Test Gap Analysis is correctly configured for this project.' +
-                this.notificationUtils.generateContactText());
-            return Promise.reject();
+        const tgaUrl = await this.projectSettings.get(Settings.TGA_TEAMSCALE_URL_KEY);
+        if (tgaUrl) {
+            this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
         }
-        this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
     }
 
     /**

@@ -6,6 +6,7 @@ import { IFindingsChurnList } from './IFindingsChurnList';
 import { ITeamscaleBaseline } from './ITeamscaleBaseline';
 import { ITeamscaleBranchesInfo } from './ITeamscaleBranchesInfo';
 import { ITgaIssueQueryPercentage } from './ITgaIssueQueryPercentage';
+import { ITgaSummary } from './ITgaSummary';
 
 export default class TeamscaleClient {
     constructor(public readonly url: string) {
@@ -68,6 +69,17 @@ export default class TeamscaleClient {
         const xhr = this.generateRequest(
             'GET', `/p/${project}/issue-finding-churn/${issueId}`);
         const promise = this.generatePromise<string>(xhr).then(findingsChurnList => JSON.parse(findingsChurnList));
+        xhr.send();
+        return promise;
+    }
+
+    /**
+     * Retrieves the an TGA issue percentage object for a single issue.
+     */
+    public retrieveTgaSummaryForIssue(project: string, issueId: string): PromiseLike<ITgaSummary> {
+        const xhr = this.generateRequest(
+            'GET', `/api/projects/${project}/issues/${encodeURIComponent(issueId)}/tga-summary`);
+        const promise = this.generatePromise<string>(xhr).then(tgaSummary => JSON.parse(tgaSummary));
         xhr.send();
         return promise;
     }

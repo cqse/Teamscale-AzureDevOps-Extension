@@ -196,8 +196,13 @@ async function resolveProjectNames() {
             ProjectUtils.BadgeType.FindingsChurn, 'Findings Churn');
     }
 
+    let tgaProjectsSettingsKey = Settings.TGA_TEAMSCALE_PROJECTS_KEY;
+    if (!useExtraTgaConfiguration) {
+        tgaProjectsSettingsKey = Settings.TEAMSCALE_PROJECTS_KEY;
+    }
+
     if (showTestGapBadge) {
-        tgaTeamscaleProject = await resolveProjectName(tgaTeamscaleClient, Settings.TGA_TEAMSCALE_PROJECTS_KEY,
+        tgaTeamscaleProject = await resolveProjectName(tgaTeamscaleClient, tgaProjectsSettingsKey,
             ProjectUtils.BadgeType.TestGap, 'Test Gap');
     }
 }

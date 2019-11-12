@@ -59,8 +59,8 @@ export class Configuration {
             this.datepicker.datepicker('setDate', new Date(this.widgetSettings.startFixedDate));
             this.testGapCheckbox.prop('checked', this.widgetSettings.showTestGapBadge);
             this.separateTgaServerCheckbox.prop('checked', this.widgetSettings.useSeparateTgaServer);
-            this.zipTgaConfiguration();
         }
+        this.zipTgaConfiguration();
         $('#teamscale-project-select').chosen({width: '100%'}).on('change',
             () => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange));
         $('#teamscale-tga-project-select').chosen({width: '100%'}).on('change', notifyWidgetChange);
@@ -137,7 +137,7 @@ export class Configuration {
     }
 
     private async fillDropdownsWithProjects() {
-        if (!this.widgetSettings.useSeparateTgaServer) {
+        if (!this.widgetSettings || !this.widgetSettings.useSeparateTgaServer) {
             return this.fillTqeDropdownWithProjects();
         }
 

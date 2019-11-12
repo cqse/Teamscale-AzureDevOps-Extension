@@ -133,6 +133,7 @@ export class Configuration {
         this.teamscaleTgaProjectSelect.appendChild(element);
         $('#' + this.teamscaleTgaProjectSelect.id).prop('disabled', true);
         $('#' + this.teamscaleTgaProjectSelect.id).trigger('chosen:updated');
+        return Promise.resolve();
     }
 
     private async fillDropdownsWithProjects() {
@@ -154,10 +155,13 @@ export class Configuration {
      * Loads a list of accessible projects from the Teamscale server and appends them to the TGA dropdown menu.
      */
     private async fillTgaDropdownWithProjects() {
-        const tgaUrl = await this.projectSettings.get(Settings.TGA_TEAMSCALE_URL_KEY);
-        if (!tgaUrl){
-            this.handleMissingTgaServerConfig();
-            return Promise.resolve();
+        let tgaUrl: string;
+        if (this.projectSettings) {
+            tgaUrl = await this.projectSettings.get(Settings.TGA_TEAMSCALE_URL_KEY);
+            if (!tgaUrl){
+                return this.handleMissingTgaServerConfig();
+            }
+            this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
         }
         return this.fillDropdownWithProjects(this.tgaTeamscaleClient, this.teamscaleTgaProjectSelect, '#teamscale-tga-project-select');
     }
@@ -268,7 +272,7 @@ export class Configuration {
         this.teamscaleClient = new TeamscaleClient(url);
         this.tgaTeamscaleClient = this.teamscaleClient;
 
-        if (!this.widgetSettings.useSeparateTgaServer) {
+        if (!this.widgetSettings || !this.widgetSettings.useSeparateTgaServer) {
             return Promise.resolve();
         }
 

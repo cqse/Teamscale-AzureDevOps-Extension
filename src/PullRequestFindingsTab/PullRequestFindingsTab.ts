@@ -58,8 +58,9 @@ async function showTeamscaleIframe(gitClient) {
         const teamscaleProject: string = await getFirstProjectHavingGivenBranches(getTeamscaleClient(teamscaleUrl),
             await projectSettings.getProjectsList(Settings.TEAMSCALE_PROJECTS_KEY), [sourceBranch, targetBranch]);
 
-        const deltaPerspectiveUrl = teamscaleUrl + '/delta.html#findings/' + teamscaleProject + '/?from=' + sourceBranch +
-            ':HEAD&to=' + targetBranch + ':HEAD&showMergeFindings=true&kioskViewMode=true';
+        const deltaPerspectiveUrl = teamscaleUrl + '/delta.html#findings/' + teamscaleProject + '/?from=' +
+            encodeURIComponent(sourceBranch) + ':HEAD&to=' + encodeURIComponent(targetBranch) +
+            ':HEAD&showMergeFindings=true&kioskViewMode=true';
 
         if (isHostedAzureDevOpsService()) {
             appendIframe(deltaPerspectiveUrl);
@@ -111,8 +112,8 @@ async function openFindingsKioskAsDialog(pullRequestId: number, teamscaleUrl: st
             protocol: teamscaleProtocolAndHost[0],
             teamscaleServer: teamscaleProtocolAndHost[1],
             teamscaleProject: teamscaleProject,
-            sourceBranch: sourceBranch,
-            targetBranch: targetBranch,
+            sourceBranch: encodeURIComponent(sourceBranch),
+            targetBranch: encodeURIComponent(targetBranch),
         },
     } as IHostDialogOptions;
 

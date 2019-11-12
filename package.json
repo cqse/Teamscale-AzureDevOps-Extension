@@ -1,6 +1,6 @@
 {
   "name": "Teamscale-AzureDevOps-Extension",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Teamscale integration into Azure DevOps",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,7 @@
     "restore": "npm ci && cd reportUploadTask && npm run restore",
     "build": "npm run restore && npm run replace && npm run compileTypeScript",
     "package": "npm run build && $(npm bin)/tfx extension create --output-path ./deployment/",
-    "publish": "npm run build && $(npm bin)/tfx extension publish --rev-version --output-path deployment --token $(node scripts/cat.js token)",
+    "publish": "npm run build && $(npm bin)/tfx extension publish --output-path deployment --token $(node scripts/cat.js token)",
     "test": "cd reportUploadTask && npm run test"
   },
   "keywords": [],

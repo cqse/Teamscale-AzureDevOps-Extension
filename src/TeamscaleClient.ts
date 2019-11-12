@@ -20,6 +20,7 @@ export default class TeamscaleClient {
      * @returns {PromiseLike} which resolves to a SVG represented as string
      */
     public queryIssueTestGapBadge(project: string, issueId: number): PromiseLike<string> {
+        project = encodeURIComponent(project);
         return this.retrieveBadgeForIssue('tga-badge.svg?issueId=', project, issueId);
     }
 
@@ -31,6 +32,7 @@ export default class TeamscaleClient {
      * @returns {PromiseLike} which resolves to a SVG represented as string
      */
     public queryFindingsChurnBadge(project: string, issueId: number): PromiseLike<string> {
+        project = encodeURIComponent(project);
         return this.retrieveBadgeForIssue('issue-finding-badge.svg/', project, issueId);
     }
 
@@ -38,6 +40,7 @@ export default class TeamscaleClient {
      * Retrieves a test gap badge using data on the default branch since the specified start timestamp until HEAD.
      */
     public retrieveTestGapDeltaBadge(project: string, startTimestamp: number): PromiseLike<string> {
+        project = encodeURIComponent(project);
         const xhr = this.generateRequest(
             'GET', `/p/${project}/tga-badge.svg/?baseline=${startTimestamp}&end=HEAD`);
         const promise = this.generatePromise<string>(xhr).then(badge => {
@@ -52,6 +55,7 @@ export default class TeamscaleClient {
      * Retrieves a findings churn badge using data on the default branch since the specified start timestamp until HEAD.
      */
     public retrieveFindingsDeltaBadge(project: string, startTimestamp: number): PromiseLike<string> {
+        project = encodeURIComponent(project);
         const xhr = this.generateRequest(
             'GET', `/p/${project}/finding-badge.svg/?t1=${startTimestamp}&t2=HEAD`);
         const promise = this.generatePromise<string>(xhr).then(badge => {
@@ -66,6 +70,8 @@ export default class TeamscaleClient {
      * Retrieves the findings churn for a single issue.
      */
     public retrieveFindingsChurnListForIssue(project: string, issueId: string): PromiseLike<IFindingsChurnList> {
+        project = encodeURIComponent(project);
+        issueId = encodeURIComponent(issueId);
         const xhr = this.generateRequest(
             'GET', `/p/${project}/issue-finding-churn/${issueId}`);
         const promise = this.generatePromise<string>(xhr).then(findingsChurnList => JSON.parse(findingsChurnList));
@@ -88,6 +94,8 @@ export default class TeamscaleClient {
      * Retrieves the an TGA issue percentage object for a single issue.
      */
     public retrieveTgaPercentagesForIssue(project: string, issueId: string): PromiseLike<ITgaIssueQueryPercentage> {
+        project = encodeURIComponent(project);
+        issueId = encodeURIComponent(issueId);
         const xhr = this.generateRequest(
             'GET', `/p/${project}/tga-issue-query-percentage/?query=` + encodeURI('id=' + issueId));
         const promise = this.generatePromise<string>(xhr).then(tgaPercentages => JSON.parse(tgaPercentages));
@@ -111,6 +119,7 @@ export default class TeamscaleClient {
      * Retrieves the list of baselines configured for a project from the Teamscale server.
      */
     public retrieveBaselinesForProject(teamscaleProject: string): PromiseLike<ITeamscaleBaseline[]> {
+        teamscaleProject = encodeURIComponent(teamscaleProject);
         const xhr = this.generateRequest('GET', '/p/' + teamscaleProject + '/baselines/?detail=true');
         const promise = this.generatePromise<string>(xhr).then(result => {
             return JSON.parse(result) as ITeamscaleBaseline[];
@@ -123,6 +132,7 @@ export default class TeamscaleClient {
      * Retrieves the list of branches of a project from the Teamscale server.
      */
     public retrieveBranchesForProject(teamscaleProject: string): PromiseLike<string[]> {
+        teamscaleProject = encodeURIComponent(teamscaleProject);
         const xhr = this.generateRequest('GET', '/p/' + teamscaleProject + '/branches');
         const promise = this.generatePromise<string>(xhr).then(result => {
             const branchesInfo = JSON.parse(result) as ITeamscaleBranchesInfo;

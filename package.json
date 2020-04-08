@@ -16,13 +16,13 @@
   "author": "",
   "license": "Apache-2.0",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/cqse/Teamscale-AzureDevOps-Extension.git"
+    "type": "git",
+    "url": "https://github.com/cqse/Teamscale-AzureDevOps-Extension.git"
   },
   "devDependencies": {
-    "replace": "^1.1.1",
+    "replace": "^1.1.5",
     "tfx-cli": "^0.6.4",
-    "typescript": "^3.6.3"
+    "typescript": "^3.8.3"
   },
   "dependencies": {
     "@types/chosen-js": "^1.8.1",

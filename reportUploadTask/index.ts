@@ -100,10 +100,8 @@ async function runUnsafe() {
 
 function createCurlRunner(username: string, accessKey: string, filesToUpload: string[], uploadUrl: string) {
     const curlRunner: toolRunner.ToolRunner = task.tool(curlPath);
-    // we use the ca bundle provided with the Windows binary also under
-    // Linux as on AzureDevOps the curl binary can't locate the system certs
-    curlRunner.arg('--cacert');
-    curlRunner.arg(path.join(__dirname, `curl/windows/curl-ca-bundle.crt`));
+    // we don't validate SSL certificates to allow for self-signed certs
+    curlRunner.arg('--insecure');
 
     curlRunner.arg('-X');
     curlRunner.arg('POST');

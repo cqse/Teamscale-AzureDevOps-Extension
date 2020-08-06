@@ -102,6 +102,7 @@ function createCurlRunner(username: string, accessKey: string, filesToUpload: st
     const curlRunner: toolRunner.ToolRunner = task.tool(curlPath);
     // we don't validate SSL certificates to allow for self-signed certs
     curlRunner.arg('--insecure');
+    curlRunner.arg('-v');
 
     curlRunner.arg('-X');
     curlRunner.arg('POST');

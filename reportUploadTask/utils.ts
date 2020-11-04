@@ -27,7 +27,7 @@ export function resolveFiles(filesPattern: string): string[] {
     return [filesPattern];
   }
 
-  const findPathRoot = path.dirname(filesPattern.slice(0, idx));
+  const findPathRoot = filesPattern.slice(0, idx);
   task.debug("find root dir: " + findPathRoot);
 
   const allFiles = task.find(findPathRoot, { followSymbolicLinks: false });

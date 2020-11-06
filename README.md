@@ -42,7 +42,7 @@ To publish to our Azure DevOps space for testing:
 Create a file called `token` containing an access token with Marketplace publishing rights for our space.
 
 ```bash
-npm run test-publish
+npm run publish
 ```
 
 # Distributed Binaries

@@ -30,7 +30,11 @@ export function resolveFiles(filesPattern: string): string[] {
   const findPathRoot = filesPattern.slice(0, idx);
   task.debug("find root dir: " + findPathRoot);
 
-  const allFiles = task.find(findPathRoot, { followSymbolicLinks: false });
+  const allFiles = task.find(findPathRoot, {
+    followSymbolicLinks: false,
+    allowBrokenSymbolicLinks: true,
+    followSpecifiedSymbolicLink: true,
+  });
   const uploadFilesList = task.match(allFiles, filesPattern, undefined, {
     matchBase: true,
   });

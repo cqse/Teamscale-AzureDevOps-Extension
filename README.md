@@ -39,7 +39,9 @@ You can test the pipeline task against <https://cqse.visualstudio.com/AzureDevOp
 
 To publish to our Azure DevOps space for testing:
 
-Create a file called `token` containing an access token with Marketplace publishing rights for our space.
+Create a file called `token` containing an access token with Marketplace publishing rights (Organization: *All 
+accessible organizations*, all permissions for Marketplace) for our 
+space.
 
 ```bash
 npm run test-publish

@@ -44,7 +44,7 @@ accessible organizations*, all permissions for Marketplace) for our
 space.
 
 ```bash
-npm run test-publish
+npm run publish
 ```
 
 # Distributed Binaries

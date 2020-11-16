@@ -22,12 +22,12 @@
   "devDependencies": {
     "replace": "^1.2.0",
     "tfx-cli": "^0.6.4",
-    "typescript": "^3.8.3"
+    "typescript": "^3.9.7"
   },
   "dependencies": {
     "@types/chosen-js": "^1.8.1",
     "chosen-js": "^1.8.7",
-    "jquery": "^3.5.0",
+    "jquery": "^3.5.1",
     "jquery-ui-dist": "^1.12.1",
     "vss-web-extension-sdk": "^5.141.0"
   }

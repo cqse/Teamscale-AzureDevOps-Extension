@@ -1,6 +1,6 @@
 {
   "name": "Teamscale-AzureDevOps-Extension",
-  "version": "1.2.4",
+  "version": "1.2.7",
   "description": "Teamscale integration into Azure DevOps",
   "main": "index.js",
   "scripts": {
@@ -8,8 +8,9 @@
     "compileTypeScript": "$(npm bin)/tsc && cd reportUploadTask && npm run compile",
     "restore": "npm ci && cd reportUploadTask && npm run restore",
     "build": "npm run restore && npm run replace && npm run compileTypeScript",
-    "package": "npm run build && $(npm bin)/tfx extension create --output-path ./deployment/",
-    "publish": "npm run build && $(npm bin)/tfx extension publish --output-path deployment --token $(node scripts/cat.js token)",
+    "pruneDepsUploadTask": "cd reportUploadTask && npm prune --production && cd ..",
+    "package": "npm run build && npm run pruneDepsUploadTask && $(npm bin)/tfx extension create --output-path ./deployment/",
+    "publish": "npm run build && npm run pruneDepsUploadTask && $(npm bin)/tfx extension publish --output-path deployment --token $(node scripts/cat.js token)",
     "test": "cd reportUploadTask && npm run test"
   },
   "keywords": [],
@@ -21,8 +22,8 @@
   },
   "devDependencies": {
     "replace": "^1.2.0",
-    "typescript": "^3.9.7",
-    "tfx-cli": "^0.8.3"
+    "tfx-cli": "^0.8.3",
+    "typescript": "^3.9.7"
   },
   "dependencies": {
     "@types/chosen-js": "^1.8.1",

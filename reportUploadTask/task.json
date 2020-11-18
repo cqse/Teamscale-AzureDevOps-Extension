@@ -23,7 +23,7 @@
             "name": "files",
             "type": "filePath",
             "label": "Files",
-            "defaultValue": "",
+            "defaultValue": "$(Agent.TempDirectory)/**/*.coverage",
             "required": true,
             "helpMarkDown": "File(s) to be uploaded. Wildcards can be used. For example, `**/*.coverage` for all .coverage files in all subfolders."
         },

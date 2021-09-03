@@ -1,7 +1,7 @@
 Plugin for Azure DevOps that provides
 
-- Extension for the WorkItems pages to show a TestGap badge
-- Pipeline Task to upload coverage, findings, and other reports to Teamscale
+- Extension for the WorkItems pages to show a TestGap badge (targets JS in the browser)
+- Pipeline Task to upload coverage, findings, and other reports to Teamscale (located in [reportUploadTask](./reportUploadTask), targets NodeJS)
 
 # Building
 
@@ -21,14 +21,20 @@ npm run package
 
 # Testing
 
-To run the unit tests:
+## Unit Tests
+
+To run all unit tests:
 
 ```bash
 npm test
 ```
 
-You can test the pipeline task against <https://cqse.visualstudio.com/AzureDevOps-Plugin-Test> which is also hosted on
-[our demo instance](https://demo.teamscale.com). This project also contains a pipeline with our build task.
+## Manual Tests
+
+You can also manually test the pipeline task by using the Azure DevOps project <https://cqse.visualstudio.com/AzureDevOps-Plugin-Test> which is also included in
+[our demo instance](https://demo.teamscale.com).
+This project contains a pipeline with our build task.
+Configure this task for your manual test and run it.
 
 - Run `npm run package` to create a .vsix package
 - Go to <https://cqse.visualstudio.com>
@@ -37,7 +43,15 @@ You can test the pipeline task against <https://cqse.visualstudio.com/AzureDevOp
 
 # Publishing
 
-To publish the extension publicly, create a file called `token` containing an access token with Marketplace publishing rights (Organization: *All accessible organizations*, all permissions for Marketplace) for our space.
+To publish the extension publicly, first obtain an access token for our Azure DevOps space.
+Log into <https://cqse.visualstudio.com>, then click _User settings_ (icon in the navigation bar) > _Personal access tokens_.
+Create a token with these settings:
+
+- Organization: *All accessible organizations*
+- all permissions for Marketplace (you need to click _show all scopes_ for this to show up)
+
+Then, create a file called `token` containing this access token.
+
 
 ```bash
 npm run publish
@@ -50,4 +64,6 @@ dependencies.
 
 For curl under Linux, we use the Ermine build which should work under all modern distributions.
 For Windows, we use the 32bit variant which works on both 32 and 64bit machines.
+
+Use [fetch_dependencies.sh](./reportUploadTask/fetch_dependencies.sh) to update the CodeCoverage.exe in the repo.
 

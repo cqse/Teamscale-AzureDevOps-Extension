@@ -53,14 +53,18 @@ Create a token with these settings:
 Then, create a file called `token` containing this access token.
 
 
+Before publishing, please update the CHANGELOG.md file and choose a proper version number based on semantic versioning.
+Then, enter that number in both package.json and vss-extension.json in the corresponding `version` fields.
+
 ```bash
 npm run publish
 ```
 
+This will make the built package publicly available on the marketplace.
+
 # Distributed Binaries
 
-We distribute both curl and CodeCoverage.exe with this extension to make it work "out of the box" without additional
-dependencies.
+We distribute both curl and CodeCoverage.exe with this extension to make it work "out of the box" without additional dependencies.
 
 For curl under Linux, we use the Ermine build which should work under all modern distributions.
 For Windows, we use the 32bit variant which works on both 32 and 64bit machines.

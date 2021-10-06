@@ -50,6 +50,6 @@ export class ProjectSettings extends Settings {
     }
 
     private getProjectSpecificKey(key: string): string {
-        return `${this.project}-${key}`;
+        return `${this.project.substr(0, 30)}-${key}`;
     }
 }

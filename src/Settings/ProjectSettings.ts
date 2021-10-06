@@ -50,6 +50,7 @@ export class ProjectSettings extends Settings {
     }
 
     private getProjectSpecificKey(key: string): string {
+        // storing too long key does currently not work in ADOS so truncating here
         return `${this.project.substr(0, 30)}-${key}`;
     }
 }

@@ -56,8 +56,8 @@
             "type": "string",
             "label": "IDE Access Key",
             "defaultValue": "",
-            "required": true,
-            "helpMarkDown": "The IDE access key of the Teamscale user used to perform the upload. You can generate one for the user in Teamscale under Admin > Users"
+            "required": false,
+            "helpMarkDown": "The IDE access key of the Teamscale user used to perform the upload. You can generate one for the user in Teamscale under Admin > Users. Alternatively, you can specify the (secret) variable `teamscale.accessKey` in the pipeline settings or the environment variable `$TEAMSCALE_ACCESS_KEY`."
         },
         {
             "name": "project",
@@ -76,6 +76,38 @@
             "helpMarkDown": "An identifier under which the uploaded coverage/findings/... will be grouped. Data uploaded into a partition will replace all previous data uploaded to that partition. If you'd e.g. like to upload multiple coverage reports for multiple test stages that all should be merged in Teamscale to calculate the line coverage metric, use different partitions for each upload."
         },
         {
+            "name": "insecure",
+            "type": "boolean",
+            "label": "Skip certificate validation",
+            "defaultValue": "true",
+            "required": false,
+            "helpMarkDown": "Causes SSL certificates to be accepted without validation."
+        },
+        {
+            "name": "trustedKeystore",
+            "type": "string",
+            "label": "Path to custom trusted keystore",
+            "defaultValue": "",
+            "required": false,
+            "helpMarkDown": "Per default, this plugin uses an embedded Java keystore to validate certificates. If you want to use a custom Java keystore, e.g. for self-signed certificates, you can specify the path to it here. The path must not contain a semicolon. When this option is used, certificates are always validated, even if 'Skip certificate validation' is enabled."
+        },
+        {
+            "name": "keystorePassword",
+            "type": "string",
+            "label": "Password of the custom trusted keystore",
+            "defaultValue": "",
+            "required": false,
+            "helpMarkDown": "The password for the specified custom Java keystore. Alternatively, you can specify the (secret) variable `teamscale.keystorePassword` in the pipeline settings."
+        },
+        {
+            "name": "stacktrace",
+            "type": "boolean",
+            "label": "Print stack trace",
+            "defaultValue": "false",
+            "required": false,
+            "helpMarkDown": "Enables printing stack traces in all cases where errors occur."
+        },
+        {
             "name": "codeCoverageExePath",
             "type": "string",
             "label": "Path to CodeCoverage.exe",
@@ -92,11 +124,8 @@
         }
     },
     "messages": {
-        "CurlReturnCode": "curl exited with return code: %d",
-        "CurlFailed": "curl failed with error: %s",
         "NoMatchingFilesFound": "No matching files were found with search pattern: %s",
         "UploadingFiles": "Uploading file(s): %s",
-        "CurlNotFound": "curl was not found in the PATH.",
         "NotAllFilesUploaded": "Not all files were uploaded; Uploaded: %d; Total: %d",
         "IncompleteEndpoint": "The service connection does not contain all required fields."
     }

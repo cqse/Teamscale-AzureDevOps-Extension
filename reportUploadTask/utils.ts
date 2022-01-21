@@ -1,6 +1,5 @@
 import * as path from 'path';
 import * as task from 'azure-pipelines-task-lib/task';
-import * as urlLib from 'url';
 
 export function firstWildcardIndex(str: string): number | null {
 	const starIndex = str.indexOf('*');
@@ -49,22 +48,6 @@ export function isCoverageFile(file: string): boolean {
 	return path.extname(file).toLowerCase() === '.coverage';
 }
 
-export function createUploadUrl(
-	teamscaleUrl: string,
-	project: string,
-	format: string,
-	partition: string,
-	message: string,
-	revision: string
-): string {
-	if (!teamscaleUrl.endsWith('/')) {
-		teamscaleUrl += '/';
-	}
-
-	const url = urlLib.parse(`${teamscaleUrl}p/${project}/external-report`, true);
-	url.query['format'] = format;
-	url.query['revision'] = revision;
-	url.query['partition'] = partition;
-	url.query['message'] = message;
-	return urlLib.format(url);
+export function isNullOrEmpty(s: string) {
+	return s == null || s === '';
 }

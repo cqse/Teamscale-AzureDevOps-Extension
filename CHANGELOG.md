@@ -8,6 +8,10 @@ We use [semantic versioning](http://semver.org/):
 
 - [feature] upload task: set sensible default file pattern that works for the `DotNetCoreCLI` pipeline task
 
+# 1.3.0
+
+- [feature] upload task: use the [teamscale-upload](https://github.com/cqse/teamscale-upload) tool instead of curl for better certificate and error handling
+
 # 1.2.7
 
 This and previous versions had no CHANGELOG yet.

@@ -1,6 +1,6 @@
 {
   "name": "Teamscale-AzureDevOps-Extension",
-  "version": "1.2.9",
+  "version": "1.2.10",
   "description": "Teamscale integration into Azure DevOps",
   "main": "index.js",
   "scripts": {
@@ -31,5 +31,9 @@
     "jquery": "^3.5.1",
     "jquery-ui-dist": "^1.12.1",
     "vss-web-extension-sdk": "^5.141.0"
+  },
+  "overrides": {
+    "shelljs": "^0.8.5",
+    "validator": "^13.7.0"
   }
 }

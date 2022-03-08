@@ -36,10 +36,3 @@ describe('resolveFiles', function() {
                 [`${fixturePath}/coverage.simple`, `${fixturePath}/coverage2.simple`]);
     });
 });
-
-describe('createUploadUrl', function() {
-    it('should encode characters that are not allowed in URLs', function() {
-        assert.strictEqual(utils.createUploadUrl('http://localhost', 'proj', 'SIMPLE', 'Partition with Spaces', 'encoded message?', 'revision'),
-                'http://localhost/p/proj/external-report?format=SIMPLE&revision=revision&partition=Partition%20with%20Spaces&message=encoded%20message%3F');
-    });
-});

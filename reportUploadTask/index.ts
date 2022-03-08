@@ -16,7 +16,7 @@ type TaskParameters = {
 	partition: string,
 	insecure: Boolean,
 	stacktrace: Boolean,
-	trustedKeystoreWithPassword: string
+	trustedKeystoreWithPassword: string | null
 }
 
 // this variable is undocumented, unfortunately, c.f. https://github.com/MicrosoftDocs/azure-devops-docs/issues/4588
@@ -78,7 +78,7 @@ async function convertCoverageFiles(coverageFiles: string[], codeCoverageExePath
 
 function readValuesFromTask(): TaskParameters {
 	let codeCoverageExePath: string = task.getInput('codeCoverageExePath');
-	if (utils.isNullOrEmpty(codeCoverageExePath)) {
+	if (utils.isEmpty(codeCoverageExePath)) {
 		codeCoverageExePath = path.join(__dirname, 'CodeCoverage/CodeCoverage.exe');
 	}
 
@@ -100,18 +100,18 @@ function readValuesFromTask(): TaskParameters {
 /** Returns the user defined keystore and its password in the format <keystore path>;<password>
  * or null if no custom keystore is defined.
  */
-function readKeyStoreAndPasswordFromTask(): string {
+function readKeyStoreAndPasswordFromTask(): string | null {
 	const trustedKeystore: string = task.getInput('trustedKeystore', false);
-	if (utils.isNullOrEmpty(trustedKeystore)) {
+	if (utils.isEmpty(trustedKeystore)) {
 		return null;
 	}
 	task.checkPath(trustedKeystore, 'custom-keystore-path');
 	let keystorePassword = task.getInput('keystorePassword', false);
-	if (utils.isNullOrEmpty(keystorePassword)) {
+	if (utils.isEmpty(keystorePassword)) {
 		keystorePassword = task.getVariable('teamscale.keystorePassword');
 	}
 	// Don't reveal secrets in the logs
-	if (!utils.isNullOrEmpty(keystorePassword)) {
+	if (!utils.isEmpty(keystorePassword)) {
 		task.setSecret(keystorePassword);
 	}
 	return `${trustedKeystore};${keystorePassword}`;
@@ -119,12 +119,12 @@ function readKeyStoreAndPasswordFromTask(): string {
 
 function readAccessKeyFromTask(): string {
 	let accessKey: string = task.getInput('accessKey', false);
-	if (utils.isNullOrEmpty(accessKey)) {
+	if (utils.isEmpty(accessKey)) {
 		accessKey = task.getVariable('teamscale.accessKey');
 	}
 
 	// Don't reveal secrets in the logs
-	if (!utils.isNullOrEmpty(accessKey)) {
+	if (!utils.isEmpty(accessKey)) {
 		task.setSecret(accessKey);
 	}
 	return accessKey;
@@ -174,9 +174,9 @@ function createTeamscaleUploadRunner(taskParameters: TaskParameters, message, fi
     teamscaleUploadRunner.arg(['--format', taskParameters.format]);
     teamscaleUploadRunner.arg(['--commit', revision]);
     teamscaleUploadRunner.arg(['--append-to-message', message]);
-	teamscaleUploadRunner.argIf(!utils.isNullOrEmpty(taskParameters.accessKey), ['--accesskey', taskParameters.accessKey]);
+	teamscaleUploadRunner.argIf(!utils.isEmpty(taskParameters.accessKey), ['--accesskey', taskParameters.accessKey]);
 	teamscaleUploadRunner.argIf(taskParameters.insecure, '--insecure');
-	teamscaleUploadRunner.argIf(!utils.isNullOrEmpty(taskParameters.trustedKeystoreWithPassword), ['--trusted-keystore', taskParameters.trustedKeystoreWithPassword]);
+	teamscaleUploadRunner.argIf(!utils.isEmpty(taskParameters.trustedKeystoreWithPassword), ['--trusted-keystore', taskParameters.trustedKeystoreWithPassword]);
 	teamscaleUploadRunner.argIf(taskParameters.stacktrace, '--stacktrace');
     for (const file of filesToUpload) {
         teamscaleUploadRunner.arg(file);

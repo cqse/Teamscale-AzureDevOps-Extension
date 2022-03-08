@@ -52,6 +52,6 @@ export function isCoverageFile(file: string): boolean {
 }
 
 /** Returns whether the given string is null, undefined or empty. */
-export function isNullOrEmpty(s: string) {
-	return s == null || s === '';
+export function isEmpty(s: string): boolean {
+	return !s || s === '';
 }

@@ -36,10 +36,15 @@ You can also manually test the pipeline task by using the Azure DevOps project <
 This project contains a pipeline with our build task.
 Configure this task for your manual test and run it.
 
-- Run `npm run package` to create a .vsix package
-- Go to <https://cqse.visualstudio.com>
-- Go to _Organization Settings > Extensions_
-- Uninstall the extension and then install your package
+- Change the name of the extension in ./vss-extension.json to `teamscale-azure-devops-plugin-test`.
+- Change the ID of the pipeline task in ./reportUploadTask/task.json to `8e8b64dc-cc55-4bd1-85da-7b5fde8efea2`.
+- Run `npm run package` to create a .vsix package.
+- Go to <https://marketplace.visualstudio.com/manage/publishers/cqsegmbh>.
+- Right-click the **private** version of the Teamscale DevOps extension.
+- Select _update_.
+- Upload your .vsix package.
+- Right-click the private version of the Teamscale DevOps extension and go to the market place and install it.
+- **Unpublish the private version of the extension again right away!** We don't want customers finding it by accident. It will remain installed in our organization.
 
 # Publishing
 

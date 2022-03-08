@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as task from 'azure-pipelines-task-lib/task';
 
+/** Returns the index of the first occurence of a wildcard (* or ?) in the given string. */
 export function firstWildcardIndex(str: string): number | null {
 	const starIndex = str.indexOf('*');
 	const questionMarkIndex = str.indexOf('?');
@@ -16,6 +17,7 @@ export function firstWildcardIndex(str: string): number | null {
 	return Math.min(starIndex, questionMarkIndex);
 }
 
+/** Returns the files that match the given pattern. */
 export function resolveFiles(filesPattern: string): string[] {
 	task.debug('Matching glob pattern: ' + filesPattern);
 
@@ -38,16 +40,18 @@ export function resolveFiles(filesPattern: string): string[] {
 		matchBase: true
 	});
 
-	if (!uploadFilesList || uploadFilesList.length == 0) {
+	if (!uploadFilesList || uploadFilesList.length === 0) {
 		throw new Error(`Did not find any files matching '${filesPattern}'`);
 	}
 	return uploadFilesList;
 }
 
+/** Returns whether the given file is a coverage file based on its file extension. */
 export function isCoverageFile(file: string): boolean {
 	return path.extname(file).toLowerCase() === '.coverage';
 }
 
+/** Returns whether the given string is null, undefined or empty. */
 export function isNullOrEmpty(s: string) {
 	return s == null || s === '';
 }

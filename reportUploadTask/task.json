@@ -57,7 +57,7 @@
             "label": "IDE Access Key",
             "defaultValue": "",
             "required": false,
-            "helpMarkDown": "The IDE access key of the Teamscale user used to perform the upload. You can generate one for the user in Teamscale under Admin > Users. Alternatively, you can specify the (secret) variable `teamscale.accessKey` in the pipeline settings or the environment variable `$TEAMSCALE_ACCESS_KEY`."
+            "helpMarkDown": "The IDE access key of the Teamscale user used to perform the upload. You can generate one for the user in Teamscale under Admin > Users. Alternatively, you can specify the (secret) variable `teamscale.accessKey` in the pipeline settings or the environment variable `TEAMSCALE_ACCESS_KEY`."
         },
         {
             "name": "project",
@@ -89,7 +89,7 @@
             "label": "Path to custom trusted keystore",
             "defaultValue": "",
             "required": false,
-            "helpMarkDown": "Per default, this plugin uses an embedded Java keystore to validate certificates. If you want to use a custom Java keystore, e.g. for self-signed certificates, you can specify the path to it here. The path must not contain a semicolon. When this option is used, certificates are always validated, even if 'Skip certificate validation' is enabled."
+            "helpMarkDown": "Per default, this plugin uses an embedded Java keystore to validate certificates. If you want to use a custom Java keystore, e.g. for self-signed certificates, you can specify the path to it here. You can find instructions how to create such a keystore [here](https://docs.teamscale.com/howto/connecting-via-https/#using-self-signed-certificates)."
         },
         {
             "name": "keystorePassword",
@@ -105,7 +105,7 @@
             "label": "Print stack trace",
             "defaultValue": "false",
             "required": false,
-            "helpMarkDown": "Enables printing stack traces in all cases where errors occur."
+            "helpMarkDown": "Enables printing stack traces in all cases where errors occur. Used for debugging."
         },
         {
             "name": "codeCoverageExePath",

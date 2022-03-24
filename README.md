@@ -64,10 +64,7 @@ This will make the built package publicly available on the marketplace.
 
 # Distributed Binaries
 
-We distribute both curl and CodeCoverage.exe with this extension to make it work "out of the box" without additional dependencies.
-
-For curl under Linux, we use the Ermine build which should work under all modern distributions.
-For Windows, we use the 32bit variant which works on both 32 and 64bit machines.
+We distribute both [teamscale-upload](https://github.com/cqse/teamscale-upload) and CodeCoverage.exe with this extension to make it work "out of the box" without additional dependencies.
 
 Use [fetch_dependencies.sh](./reportUploadTask/fetch_dependencies.sh) to update the CodeCoverage.exe in the repo.
 

@@ -21,7 +21,7 @@ export default class TeamscaleClient {
      */
     public queryIssueTestGapBadge(project: string, issueId: number): PromiseLike<string> {
         project = encodeURIComponent(project);
-        return this.retrieveBadgeForIssue('tga-badge.svg?issueId=', project, issueId);
+        return this.retrieveBadgeForIssue('tga-badge.svg?all-partitions=true&issueId=', project, issueId);
     }
 
     /**

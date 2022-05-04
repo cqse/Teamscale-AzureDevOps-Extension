@@ -45,6 +45,8 @@ Configure this task for your manual test and run it.
 - Right-click the **private** version of the Teamscale DevOps extension.
 - Select _update_.
 - Upload your .vsix package.
+- Right-click the **private** version of the Teamscale DevOps extension again.
+- Select _share_ and enter `cqse` as the organization name to share the extension with.
 - Right-click the private version of the Teamscale DevOps extension and go to the Marketplace and install it.
 - **Make sure not to commit the changes you made to ./vss-extension.json and ./reportUploadTask/task.json**
 

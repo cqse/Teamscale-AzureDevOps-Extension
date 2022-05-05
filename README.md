@@ -36,10 +36,19 @@ You can also manually test the pipeline task by using the Azure DevOps project <
 This project contains a pipeline with our build task.
 Configure this task for your manual test and run it.
 
-- Run `npm run package` to create a .vsix package
-- Go to <https://cqse.visualstudio.com>
-- Go to _Organization Settings > Extensions_
-- Uninstall the extension and then install your package
+- Change the name of the extension in ./vss-extension.json to `teamscale-azure-devops-plugin-test`.
+- Change the `public` to `false` in ./vss-extension.json.
+- Make sure that the version number in ./vss-extension.json is larger than the one used on the Marketplace
+- Change the ID of the pipeline task in ./reportUploadTask/task.json to `8e8b64dc-cc55-4bd1-85da-7b5fde8efea2`.
+- Run `npm run package` to create a .vsix package.
+- Go to <https://marketplace.visualstudio.com/manage/publishers/cqsegmbh>.
+- Right-click the **private** version of the Teamscale DevOps extension.
+- Select _update_.
+- Upload your .vsix package.
+- Right-click the **private** version of the Teamscale DevOps extension again.
+- Select _share_ and enter `cqse` as the organization name to share the extension with.
+- Right-click the private version of the Teamscale DevOps extension and go to the Marketplace and install it.
+- **Make sure not to commit the changes you made to ./vss-extension.json and ./reportUploadTask/task.json**
 
 # Publishing
 
@@ -60,7 +69,7 @@ Then, enter that number in both package.json and vss-extension.json in the corre
 npm run publish
 ```
 
-This will make the built package publicly available on the marketplace.
+This will make the built package publicly available on the Marketplace.
 
 # Distributed Binaries
 

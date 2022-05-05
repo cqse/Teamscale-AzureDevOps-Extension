@@ -10,7 +10,7 @@
     "version": {
         "Major": 1,
         "Minor": 3,
-        "Patch": 1
+        "Patch": 3
     },
     "runsOn": [
         "Agent",
@@ -79,7 +79,7 @@
             "name": "insecure",
             "type": "boolean",
             "label": "Skip certificate validation",
-            "defaultValue": "true",
+            "defaultValue": "false",
             "required": false,
             "helpMarkDown": "Causes SSL certificates to be accepted without validation."
         },

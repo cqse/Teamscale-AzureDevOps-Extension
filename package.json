@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "replace": "^1.2.0",
-    "tfx-cli": "^0.10.0",
+    "tfx-cli": "^0.11.0",
     "typescript": "^3.9.7",
     "shelljs": "^0.8.5"
   },
@@ -34,7 +34,6 @@
     "vss-web-extension-sdk": "^5.141.0"
   },
   "overrides": {
-    "shelljs": "^0.8.5",
-    "validator": "^13.7.0"
+    "async": "^2.6.4"
   }
 }

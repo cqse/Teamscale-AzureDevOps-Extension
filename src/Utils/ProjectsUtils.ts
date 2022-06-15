@@ -93,6 +93,8 @@ export async function getFirstProjectHavingGivenBranches(teamscaleClient: Teamsc
     }
 
     let errorMessages: string = '';
+    let authError: Error = null;
+    let numAuthErrors: number = 0;
     for (const projectCandidate of projectCandidates) {
         try {
             const existingProjectBranches: string[] = await teamscaleClient.retrieveBranchesForProject(projectCandidate);
@@ -106,11 +108,6 @@ export async function getFirstProjectHavingGivenBranches(teamscaleClient: Teamsc
                 throw new Error('Failed to connect to the Teamscale server.');
             }
 
-            if (error && error.status && (error.status === 401 || error.status === 403)) {
-                // redirect to login, can not resolve right project
-                throw error;
-            }
-
             if (error && error.message) {
                 if (errorMessages.length === 0) {
                     errorMessages = 'Logged error messages per project: ';
@@ -118,8 +115,19 @@ export async function getFirstProjectHavingGivenBranches(teamscaleClient: Teamsc
 
                 errorMessages += `'${projectCandidate}' → '${error.message}'. `;
             }
+
+            if (error && error.status && (error.status === 401 || error.status === 403)) {
+                // don't stop immediately but try the other projects first before redirecting to the login page
+                authError = error;
+                numAuthErrors += 1;
+            }
             // try next (e.g. 404: project not defined on server)
         }
+    }
+
+    if (authError && numAuthErrors === projectCandidates.length) {
+        // redirect to login as the user could not be authenticated for any of the project candidates
+        throw authError;
     }
 
     throw new Error('None of the Teamscale Projects configured in the Azure DevOps Extension has the branches' +

@@ -58,7 +58,10 @@ async function showTeamscaleIframe(gitClient) {
         const teamscaleProject: string = await getFirstProjectHavingGivenBranches(getTeamscaleClient(teamscaleUrl),
             await projectSettings.getProjectsList(Settings.TEAMSCALE_PROJECTS_KEY), [sourceBranch, targetBranch]);
 
-        const deltaPerspectiveUrl = teamscaleUrl + '/delta.html#findings/' + encodeURIComponent(teamscaleProject)
+        // Load repository identifier to handle multi-repo setups in a single Teamscale project.
+        const repositoryIdentifier = await getTeamscaleClient(teamscaleUrl).retrievePrependedRepositoryIdentifier(teamscaleProject, VSS.getWebContext().project.name, pullRequest.repository.name);
+
+        const deltaPerspectiveUrl = teamscaleUrl + '/delta.html#findings/' + encodeURIComponent(teamscaleProject) + repositoryIdentifier
             + '/?from=' + encodeURIComponent(sourceBranch) + ':HEAD&to=' + encodeURIComponent(targetBranch) +
             ':HEAD&showMergeFindings=true&kioskViewMode=true';
 

@@ -7,6 +7,7 @@ import { ITeamscaleBaseline } from './ITeamscaleBaseline';
 import { ITeamscaleBranchesInfo } from './ITeamscaleBranchesInfo';
 import { ITgaIssueQueryPercentage } from './ITgaIssueQueryPercentage';
 import { ITgaSummary } from './ITgaSummary';
+import {ITeamscaleProjectConfiguration} from "./ITeamscaleProjectConfiguration";
 
 export default class TeamscaleClient {
     constructor(public readonly url: string) {
@@ -154,6 +155,26 @@ export default class TeamscaleClient {
             return `<a href="${issueUrl}" target="_top">${badge}</a>`;
         });
         xhr.send();
+        return promise;
+    }
+
+    /**
+     * Retrieves the prepended repository identifier for this repository. Returns the empty string, if no repository identifier is prepended.
+     */
+    public retrievePrependedRepositoryIdentifier(project: string, adosProjectName: string, repositoryName: string): PromiseLike<string> {
+        const projectConfigXhr = this.generateRequest('GET', `/api/projects/${project}/configuration`);
+        const promise = this.generatePromise<string>(projectConfigXhr).then(result => {
+            const projectConfiguration = JSON.parse(result) as ITeamscaleProjectConfiguration;
+            for (let connector of projectConfiguration.connectors) {
+                if (connector.options["Repository name"] === adosProjectName + '/' + repositoryName) {
+                    if (connector.options['Prepend repository identifier'] === 'true') {
+                        return "/" + connector.options["Repository identifier"] + "/";
+                    }
+                }
+            }
+            return '';
+        })
+        projectConfigXhr.send();
         return promise;
     }
 

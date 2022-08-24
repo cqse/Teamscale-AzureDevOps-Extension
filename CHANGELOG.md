@@ -8,6 +8,9 @@ We use [semantic versioning](http://semver.org/):
 
 - [feature] upload task: set sensible default file pattern that works for the `DotNetCoreCLI` pipeline task
 
+# 1.3.4
+- [fix] pull request integration: only show relevant findings in a project setup with multiple git repositories.
+
 # 1.3.3
 - [fix] pull request integration: missing permissions for a project could lead to findings not being displayed for pull requests of another project
 

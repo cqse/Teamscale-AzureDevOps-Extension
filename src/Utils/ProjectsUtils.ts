@@ -7,7 +7,7 @@ import { ITgaSummary } from '../ITgaSummary';
 import TeamscaleClient from '../TeamscaleClient';
 import NotificationUtils from './NotificationUtils';
 
-export enum BadgeType { TestGap, FindingsChurn }
+export enum BadgeType { TestGap, FindingsChurn, TestSmell }
 
 export const NOT_AUTHORIZED_ERROR = 'Not authorized for Teamscale usage. Please log in.';
 
@@ -24,6 +24,7 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
     let errorCodeSum: number = 0;
 
     for (const projectCandidate of projectCandidates) {
+        console.log("Project Candidate: " + projectCandidate);
         try {
             if (badgeType === BadgeType.TestGap) {
                 const testGapSummary: ITgaSummary = await getTestGapSummary(teamscaleClient, projectCandidate, issueId);
@@ -31,7 +32,18 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
                 if (testGapSummary && testGapSummary.numberOfChangedMethods > 0) {
                     return projectCandidate;
                 }
-            } else {
+            }
+            else if (badgeType === BadgeType.TestSmell) {
+                console.log("resolveProjectNameByIssueIdBefore");
+                const testSmellSummary = await teamscaleClient.retrieveFindingsChurnListForSpecItem(projectCandidate, issueId.toString());
+                console.log("resolveProjectNameByIssueIdAfter");
+                if (testSmellSummary.addedFindings && testSmellSummary.addedFindings.length > 0 ||
+                    testSmellSummary.findingsInChangedCode && testSmellSummary.findingsInChangedCode.length > 0 ||
+                    testSmellSummary.removedFindings && testSmellSummary.removedFindings.length > 0) {
+                    return projectCandidate;
+                }
+            }
+            else {
                 const findingsChurnList = await teamscaleClient.retrieveFindingsChurnListForIssue(projectCandidate, issueId.toString());
 
                 if (findingsChurnList.addedFindings && findingsChurnList.addedFindings.length > 0 ||

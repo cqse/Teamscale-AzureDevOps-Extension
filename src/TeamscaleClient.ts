@@ -25,6 +25,18 @@ export default class TeamscaleClient {
     }
 
     /**
+     * Gets the test smell badge for a spec item from Teamscale.
+     *
+     * @param project The project in which to search for the issue
+     * @param specItemId The id of the spec item for which to return the test smell badge
+     * @returns {PromiseLike} which resolves to a SVG represented as string
+     */
+    public queryIssueTestSmellBadge(project: string, specItemId: number): PromiseLike<string> {
+        project = encodeURIComponent(project);
+        return this.retrieveBadgeForSpecItem('findings-delta-badge.svg?t1=1677676020000&t2=1683720420000&only-spec-item-findings=true&uniform-path=-spec-item-/tests/', project, specItemId);
+    }
+
+    /**
      * Gets the badge for the findings churn of an issue from Teamscale.
      *
      * @param project The project in which to search for the issue
@@ -74,6 +86,21 @@ export default class TeamscaleClient {
         issueId = encodeURIComponent(issueId);
         const xhr = this.generateRequest(
             'GET', `/p/${project}/issue-finding-churn/${issueId}`);
+        const promise = this.generatePromise<string>(xhr).then(findingsChurnList => JSON.parse(findingsChurnList));
+        xhr.send();
+        return promise;
+    }
+
+    /**
+     * Retrieves the findings churn for a single spec item.
+     */
+    public retrieveFindingsChurnListForSpecItem(project: string, specItemId: string): PromiseLike<IFindingsChurnList> {
+        console.log("Project:" + project + " specItemId: " + specItemId);
+        project = encodeURIComponent(project);
+        specItemId = encodeURIComponent(specItemId);
+        const xhr = this.generateRequest(
+            'GET', `/api/projects/${project}/findings/delta/?t1=1677676020000&t2=1683720420000&uniform-path=-spec-item-/tests/${specItemId}&only-spec-item-findings=true`);
+        console.log("Project: " + project + " specItemId: " + specItemId + " XHR: " + xhr);
         const promise = this.generatePromise<string>(xhr).then(findingsChurnList => JSON.parse(findingsChurnList));
         xhr.send();
         return promise;
@@ -152,6 +179,24 @@ export default class TeamscaleClient {
             // Wrap the svg in a link element pointing to the issue perspective on Teamscale
             const issueUrl = `${this.url}/issues.html#/${project}/${issueId}`;
             return `<a href="${issueUrl}" target="_top">${badge}</a>`;
+        });
+        xhr.send();
+        return promise;
+    }
+
+    /**
+     * Retrieves a spec item specific badge from the Teamscale server.
+     */
+    private retrieveBadgeForSpecItem(requestPrefix: string, project: string, specItemId: number): PromiseLike<string> {
+        console.log("Retrive Badge for Spec Item: " + requestPrefix );
+        const xhr = this.generateRequest(
+            'GET', `/api/projects/${project}/findings/delta/badge?t1=1677676020000&t2=1683720420000&uniform-path=-spec-item-/tests/${specItemId}&only-spec-item-findings=true`);
+        xhr.setRequestHeader('content-type', 'image/svg+xml');
+        xhr.setRequestHeader('Accept', 'image/svg+xml');
+        const promise = this.generatePromise<string>(xhr).then(badge => {
+            // Wrap the svg in a link element pointing to the spec item perspective on Teamscale 
+            const specItemUrl = `${this.url}/requirements-tracing.html#details/${project}/?id=tests%7C${specItemId}&t=default%3AHEAD`;
+            return `<a href="${specItemUrl}" target="_top">${badge}</a>`;
         });
         xhr.send();
         return promise;

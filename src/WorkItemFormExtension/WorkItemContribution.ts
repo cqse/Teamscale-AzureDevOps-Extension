@@ -1,6 +1,6 @@
 /**
- * Contribution for the work item UI. It shows a test gap badge when Teamscale URL and project are properly set up via
- * the project settings contribution
+ * Contribution for the work item UI. It shows a test gap, test smell, and findings churn badges when Teamscale URL and project are properly set up via
+ * the project settings contribution.
  */
 import { ProjectSettings } from '../Settings/ProjectSettings';
 import { Scope } from '../Settings/Scope';
@@ -99,7 +99,7 @@ async function loadAndCheckConfiguration() {
     organizationSettings = new Settings(Scope.ProjectCollection);
 
     emailContact = await organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
-    return Promise.all([initializeTeamscaleClient(), resolveIssueId(), initializeNotificationUtils()]).then(() =>
+    return Promise.all([initializeTeamscaleClients(), resolveIssueId(), initializeNotificationUtils()]).then(() =>
         resolveProjectNames());
 }
 
@@ -123,36 +123,29 @@ async function initializeNotificationUtils() {
  * Fetches issue specific badges as SVG from the Teamscale server and places them in the work item form.
  */
 async function loadBadges() {
-    let tgaBadge: string = '';
     let findingsChurnBadge: string = '';
-    let tsaBadge: string = '';
 
     if (!showTestGapBadge && !showFindingsBadge && !showTestSmellBadge) {
         notificationUtils.showInfoBanner('Please activate at least one Badge to show in the Project settings' +
             ' (Extensions → Teamscale).');
     }
 
-    if (showTestGapBadge && tgaTeamscaleProject) {
-        try {
-            tgaBadge = await tgaTeamscaleClient.queryIssueTestGapBadge(tgaTeamscaleProject, issueId);
-            tgaBadge = '<div id="tga-badge">' + titleTestGapBadge + '<br>' + tgaBadge + '</div>';
-        } catch (error) {
-            notificationUtils.handleErrorInTeamscaleCommunication(error, tgaTeamscaleClient.url, tgaTeamscaleProject,
-                'loading Test Gap Badge');
-        }
-    }
+    let tgaBadge = await loadTgaBadge();
+    let tsaBadge = await loadTsaBadge();
+    findingsChurnBadge = await loadFindingsChurnBadge(findingsChurnBadge);
 
-    if (showTestSmellBadge && tsaTeamscaleProject) {
-        try {
-            console.log("loadBadgesTSA");
-            tsaBadge = await tsaTeamscaleClient.queryIssueTestSmellBadge(tsaTeamscaleProject, issueId);
-            tsaBadge = '<div id="tsa-badge">' + titleTestSmellBadge + '<br>' + tsaBadge + '</div>';
-        } catch (error) {
-            notificationUtils.handleErrorInTeamscaleCommunication(error, tsaTeamscaleClient.url, tsaTeamscaleProject,
-                'loading Test Smell Badge');
-        }
-    }
+    findingsChurnBadge = UiUtils.replaceClipPathId(findingsChurnBadge, 'findingsChurnBadge');
+    tgaBadge = UiUtils.replaceClipPathId(tgaBadge, 'tgaBadge');
+    tsaBadge = UiUtils.replaceClipPathId(tsaBadge, 'tsaBadge');
+    
+    const badgesElement = $('#badges');
+    badgesElement.html(tsaBadge.concat(tgaBadge, findingsChurnBadge));
 
+    UiUtils.resizeHost();
+    VSS.notifyLoadSucceeded();
+}
+
+async function loadFindingsChurnBadge(findingsChurnBadge: string) {
     if (showFindingsBadge && teamscaleProject) {
         try {
             findingsChurnBadge = await teamscaleClient.queryFindingsChurnBadge(teamscaleProject, issueId);
@@ -162,44 +155,88 @@ async function loadBadges() {
                 'loading Findings Churn Badge');
         }
     }
-
-    tgaBadge = UiUtils.replaceClipPathId(tgaBadge, 'tgaBadge');
-    findingsChurnBadge = UiUtils.replaceClipPathId(findingsChurnBadge, 'findingsChurnBadge');
-    tsaBadge = UiUtils.replaceClipPathId(tsaBadge, 'tsaBadge');
-    const badgesElement = $('#badges');
-    badgesElement.html(tsaBadge.concat(tgaBadge, findingsChurnBadge));
-    console.log("loadBadgesConcat");
-
-    UiUtils.resizeHost();
-    VSS.notifyLoadSucceeded();
+    return findingsChurnBadge;
 }
 
 /**
- * Initializes the Teamscale Client with the url configured in the project settings.
+ * Returns the Tsa Badge with the url configured in the project settings.
  */
-async function initializeTeamscaleClient() {
+async function loadTsaBadge() {
+    let tsaBadge: string = '';
+    if (showTestSmellBadge && tsaTeamscaleProject) {
+        try {
+            const connectorID: string = await ProjectUtils.retrieveRequirementsConnectorID(teamscaleClient, tsaTeamscaleProject);
+            tsaBadge = await tsaTeamscaleClient.queryIssueTestSmellBadge(tsaTeamscaleProject, connectorID, issueId);
+            tsaBadge = '<div id="tsa-badge">' + titleTestSmellBadge + '<br>' + tsaBadge + '</div>';
+        } catch (error) {
+            notificationUtils.handleErrorInTeamscaleCommunication(error, tsaTeamscaleClient.url, tsaTeamscaleProject,
+                'loading Test Smell Badge');
+        }
+    }
+    return tsaBadge;
+}
+
+/**
+ * Returns the Tga Badge with the url configured in the project settings.
+ */
+async function loadTgaBadge() {
+    let tgaBadge: string = '';
+    if (showTestGapBadge && tgaTeamscaleProject) {
+        try {
+            tgaBadge = await tgaTeamscaleClient.queryIssueTestGapBadge(tgaTeamscaleProject, issueId);
+            tgaBadge = '<div id="tga-badge">' + titleTestGapBadge + '<br>' + tgaBadge + '</div>';
+        } catch (error) {
+            notificationUtils.handleErrorInTeamscaleCommunication(error, tgaTeamscaleClient.url, tgaTeamscaleProject,
+                'loading Test Gap Badge');
+        }
+    }
+    return tgaBadge;
+}
+
+/**
+ * Initializes the Teamscale Clients with the url configured in the project settings.
+ */
+async function initializeTeamscaleClients() {
     showFindingsBadge = UiUtils.convertToBoolean(await projectSettings.get(Settings.SHOW_FINDINGS_BADGE_KEY));
     showTestGapBadge = UiUtils.convertToBoolean(await projectSettings.get(Settings.SHOW_TEST_GAP_BADGE_KEY));
     showTestSmellBadge = UiUtils.convertToBoolean(await projectSettings.get(Settings.SHOW_TEST_SMELL_BADGE_KEY));
 
     const url = await projectSettings.get(Settings.TEAMSCALE_URL_KEY);
-    console.log("showTestSmellBadge:" + showTestSmellBadge + " url: " + url);
-    console.log("FIRST: " + showFindingsBadge);
-    console.log("SECOND: " + (!useExtraTgaConfiguration && showTestGapBadge));
-    console.log("THIRD: " + (!useExtraTsaConfiguration && showTestSmellBadge));
-    console.log("FINAL: " + (!url && (showFindingsBadge || (!useExtraTgaConfiguration && showTestGapBadge) || (!useExtraTsaConfiguration && showTestSmellBadge))));
     if (!url && (showFindingsBadge || (!useExtraTgaConfiguration && showTestGapBadge) || (!useExtraTsaConfiguration && showTestSmellBadge))) {
         throw new Error('Teamscale is not configured for this project.' + notificationUtils.generateContactText());
     }
     teamscaleClient = new TeamscaleClient(url);
     useExtraTgaConfiguration = UiUtils.convertToBoolean(await projectSettings.get(Settings.USE_SEPARATE_TEST_GAP_SERVER));
     useExtraTsaConfiguration = UiUtils.convertToBoolean(await projectSettings.get(Settings.USE_SEPARATE_TEST_SMELL_SERVER));
-    console.log("use extra TSA configuration: " + useExtraTsaConfiguration);
+
     if (!showTestGapBadge && !showTestSmellBadge) {
         return;
     }
     
-    console.log("CHECK 1");
+    await initializeTgaTeamscaleClient();
+    await initializeTsaTeamscaleClient();
+}
+
+/**
+ * Initializes the Teamscale TSA Client with the url configured in the project settings.
+ */
+async function initializeTsaTeamscaleClient() {
+    if (!useExtraTsaConfiguration) {
+        tsaTeamscaleClient = teamscaleClient;
+    } else {
+        const tsaUrl = await projectSettings.get(Settings.TSA_TEAMSCALE_URL_KEY);
+        if (!tsaUrl) {
+            throw new Error('No Teamscale for Test Smell Analysis is correctly configured for this project.' +
+                notificationUtils.generateContactText());
+        }
+        tsaTeamscaleClient = new TeamscaleClient(tsaUrl);
+    }
+}
+
+/**
+ * Initializes the Teamscale TGA Client with the url configured in the project settings.
+ */
+async function initializeTgaTeamscaleClient() {
     if (!useExtraTgaConfiguration) {
         tgaTeamscaleClient = teamscaleClient;
     } else {
@@ -211,32 +248,46 @@ async function initializeTeamscaleClient() {
         }
         tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
     }
-
-   
-    console.log("CHECK 2");
-    if (!useExtraTsaConfiguration) {
-        tsaTeamscaleClient = teamscaleClient;
-    } else {
-        const tsaUrl = await projectSettings.get(Settings.TSA_TEAMSCALE_URL_KEY);
-        if (!tsaUrl) {
-            throw new Error('No Teamscale for Test Smell Analysis is correctly configured for this project.' +
-                notificationUtils.generateContactText());
-        }
-        tsaTeamscaleClient = new TeamscaleClient(tsaUrl);
-    }
-
-    console.log("tsaTeamscaleClient: " + tsaTeamscaleClient);
 }
 
 /**
  * Sets the Teamscale project names for Test Gap, Findings Churn, and Test Smell badges.
  */
 async function resolveProjectNames() {
+    await resolveFindingsChurnProjectName();
+    await resolveTgaProjectName();
+    await resolveTsaProjectName();
+}
+
+/**
+ * Sets the Teamscale project names for Findings Churn badge.
+ */
+async function resolveFindingsChurnProjectName() {
     if (showFindingsBadge) {
         teamscaleProject = await resolveProjectName(teamscaleClient, Settings.TEAMSCALE_PROJECTS_KEY,
             ProjectUtils.BadgeType.FindingsChurn, 'Findings Churn');
     }
+}
 
+/**
+ * Sets the Teamscale project names for Test Smell badge.
+ */
+async function resolveTsaProjectName() {
+    let tsaProjectsSettingsKey = Settings.TSA_TEAMSCALE_PROJECTS_KEY;
+    if (!useExtraTsaConfiguration) {
+        tsaProjectsSettingsKey = Settings.TEAMSCALE_PROJECTS_KEY;
+    }
+
+    if (showTestSmellBadge) {
+        tsaTeamscaleProject = await resolveProjectName(tsaTeamscaleClient, tsaProjectsSettingsKey,
+            ProjectUtils.BadgeType.TestSmell, 'Test Smell');
+    }
+}
+
+/**
+ * Sets the Teamscale project names for Test Gap badge.
+ */
+async function resolveTgaProjectName() {
     let tgaProjectsSettingsKey = Settings.TGA_TEAMSCALE_PROJECTS_KEY;
     if (!useExtraTgaConfiguration) {
         tgaProjectsSettingsKey = Settings.TEAMSCALE_PROJECTS_KEY;
@@ -245,18 +296,6 @@ async function resolveProjectNames() {
     if (showTestGapBadge) {
         tgaTeamscaleProject = await resolveProjectName(tgaTeamscaleClient, tgaProjectsSettingsKey,
             ProjectUtils.BadgeType.TestGap, 'Test Gap');
-    }
-
-
-    let tsaProjectsSettingsKey = Settings.TSA_TEAMSCALE_PROJECTS_KEY;
-    if (!useExtraTsaConfiguration) {
-        tsaProjectsSettingsKey = Settings.TEAMSCALE_PROJECTS_KEY;
-    }
-
-    if (showTestSmellBadge) {
-        console.log("showTestSmellBadge: " + tsaTeamscaleClient);
-        tsaTeamscaleProject = await resolveProjectName(tsaTeamscaleClient, tsaProjectsSettingsKey,
-            ProjectUtils.BadgeType.TestSmell, 'Test Smell');
     }
 }
 
@@ -283,7 +322,6 @@ async function resolveProjectName(teamscaleClient, storageProjectsKey, badgeType
         notificationUtils.showInfoBanner('Please make sure that Teamscale project option is properly set for ' +
             readableBadgeType + ' Badges in the Azure DevOps Project settings.');
     }
-    console.log("Teamscale Project:" + teamscaleProject);
     return teamscaleProject;
 }
 

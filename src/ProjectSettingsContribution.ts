@@ -35,7 +35,7 @@ VSS.init({
 VSS.ready(() => {
     const azureProjectName = VSS.getWebContext().project.name;
     settings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
-    console.log("VSS.Ready");
+    
     saveButtonElement.onclick = () => saveFormValues();
     useSeparateTestGapServerInput.onchange = () => zipTgaConfiguration();
     useSeparateTestSmellServerInput.onchange = () => zipTsaConfiguration();
@@ -125,8 +125,6 @@ function saveUrlAndProject(teamscaleUrlFormInput: string, teamscaleProjectsFormI
     settings.saveProjectsList(projectNameKey, teamscaleProjects)
         .then(projects => createSuccessfulLog('Teamscale Projects', projects),
                 e => createFailedLog('Teamscale Projects', e));
-
-    console.log("saveUrlAndProject");
 }
 
 function createSuccessfulLog(valueDescription: string, value: string) {

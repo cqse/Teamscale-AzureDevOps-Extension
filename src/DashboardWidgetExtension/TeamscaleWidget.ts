@@ -15,7 +15,6 @@ import UiUtils = require('../Utils/UiUtils');
 export class TeamscaleWidget {
     private teamscaleClient: TeamscaleClient = null;
     private tgaTeamscaleClient: TeamscaleClient = null;
-    private tsaTeamscaleClient: TeamscaleClient = null;
     private notificationUtils: NotificationUtils = null;
     private emailContact: string = '';
     private projectSettings: Settings = null;
@@ -149,7 +148,6 @@ export class TeamscaleWidget {
      */
     private async loadAndRenderBadges() {
         let tgaBadge: string = '';
-        let tsaBadge: string = '';
         let findingsChurnBadge: string = '';
 
         let startTimestamp: number;
@@ -181,22 +179,6 @@ export class TeamscaleWidget {
             }
         }
 
-        if (this.currentSettings.showTestSmellBadge === true) {
-            let tsaTeamscaleProject = this.currentSettings.teamscaleProject;
-            if (this.currentSettings.useSeparateTsaServer === true) {
-                tsaTeamscaleProject = this.currentSettings.tsaTeamscaleProject;
-            }
-
-            try {
-                tsaBadge = await this.tsaTeamscaleClient.retrieveTestGapDeltaBadge(tsaTeamscaleProject, startTimestamp);
-                tsaBadge = '<div id="tsa-badge">' + tsaBadge + '</div>';
-            } catch (error) {
-                this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.tsaTeamscaleClient.url,
-                    this.currentSettings.tsaTeamscaleProject, 'loading Test Smell Badge');
-            }
-            console.log("loadAndRenderBadges");
-        }
-
         try {
             findingsChurnBadge = await this.teamscaleClient.retrieveFindingsDeltaBadge(this.currentSettings.teamscaleProject,
                 startTimestamp);
@@ -207,18 +189,16 @@ export class TeamscaleWidget {
             return Promise.resolve();
         }
 
-        this.insertBadges(tgaBadge, findingsChurnBadge, tsaBadge);
+        this.insertBadges(tgaBadge, findingsChurnBadge);
     }
 
     /**
      * Puts badges (SVGs returned from Teamscale server) in the respective containers.
      */
-    private insertBadges(tgaBadge: string, findingsChurnBadge: string, tsaBadge: string) {
+    private insertBadges(tgaBadge: string, findingsChurnBadge: string) {
         tgaBadge = UiUtils.replaceClipPathId(tgaBadge, 'tgaBadge');
-        tsaBadge = UiUtils.replaceClipPathId(tsaBadge, 'tsaBadge');
         const badgesElement = $('#badges');
         badgesElement.html(tgaBadge.concat(findingsChurnBadge));
-        badgesElement.html(tsaBadge.concat(tgaBadge));
 
         const infoElement = $('#teamscale-info');
         if (this.currentSettings) {
@@ -226,7 +206,7 @@ export class TeamscaleWidget {
         } else {
             infoElement.html('Please configure TS project and analysis timespan.');
         }
-        console.log("insertBadges");
+
         UiUtils.resizeHost();
     }
 
@@ -256,20 +236,6 @@ export class TeamscaleWidget {
             return Promise.reject();
         }
         this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
-
-
-        if (!this.currentSettings.useSeparateTsaServer) {
-            this.tsaTeamscaleClient = this.teamscaleClient;
-            return;
-        }
-        const tsaUrl = await this.projectSettings.get(Settings.TSA_TEAMSCALE_URL_KEY);
-
-        if (!tsaUrl) {
-            this.notificationUtils.showErrorBanner('No Teamscale for Test Smell Analysis is correctly configured for this project.' +
-                this.notificationUtils.generateContactText());
-            return Promise.reject();
-        }
-        this.tsaTeamscaleClient = new TeamscaleClient(tsaUrl);
     }
 
     /**

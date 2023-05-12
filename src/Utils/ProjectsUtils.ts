@@ -24,7 +24,6 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
     let errorCodeSum: number = 0;
 
     for (const projectCandidate of projectCandidates) {
-        console.log("Project Candidate: " + projectCandidate);
         try {
             if (badgeType === BadgeType.TestGap) {
                 const testGapSummary: ITgaSummary = await getTestGapSummary(teamscaleClient, projectCandidate, issueId);
@@ -34,9 +33,9 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
                 }
             }
             else if (badgeType === BadgeType.TestSmell) {
-                console.log("resolveProjectNameByIssueIdBefore");
-                const testSmellSummary = await teamscaleClient.retrieveFindingsChurnListForSpecItem(projectCandidate, issueId.toString());
-                console.log("resolveProjectNameByIssueIdAfter");
+                let connectorID: string = await retrieveRequirementsConnectorID(teamscaleClient, projectCandidate);
+                
+                const testSmellSummary = await teamscaleClient.queryIssueTestSmellFindingsChurn(projectCandidate, connectorID, issueId);
                 if (testSmellSummary.addedFindings && testSmellSummary.addedFindings.length > 0 ||
                     testSmellSummary.findingsInChangedCode && testSmellSummary.findingsInChangedCode.length > 0 ||
                     testSmellSummary.removedFindings && testSmellSummary.removedFindings.length > 0) {
@@ -75,6 +74,23 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
     }
 
     return validProjects[0];
+}
+
+/**
+ * Returns the connector ID of the given project.
+ */
+export async function retrieveRequirementsConnectorID(teamscaleClient: TeamscaleClient, projectCandidate: string) {
+    let connectorID: string = '';
+    const projectConnectorList = await teamscaleClient.retrieveProjectConnectorList();
+    if (projectConnectorList.hasOwnProperty(projectCandidate)) {
+        for (const projectConnector of projectConnectorList[projectCandidate]) {
+            if (projectConnector.type !== 'Azure DevOps Boards as Requirement Management Tool') {
+                continue;
+            }
+            connectorID = projectConnector.options['Requirements Connector identifier'];
+        }
+    }
+    return connectorID;
 }
 
 /**

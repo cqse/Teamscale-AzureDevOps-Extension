@@ -185,7 +185,6 @@ export class Configuration {
         if (!this.widgetSettings || !this.widgetSettings.useSeparateTgaServer || !this.widgetSettings.useSeparateTsaServer) {
             return this.fillTqeDropdownWithProjects();
         }
-        console.log("fillDropdownsWithProject");
         return Promise.all([this.fillTqeDropdownWithProjects(), this.fillTgaDropdownWithProjects(), this.fillTsaDropdownWithProjects()]);
     }
 
@@ -399,7 +398,6 @@ export class Configuration {
             showTestGapBadge,
             showTestSmellBadge,
         } as ITeamscaleWidgetSettings;
-        console.log("getAndUpdateCustomSettings");
         return this.widgetSettings;
     }
 }

@@ -7,6 +7,7 @@ import { ITeamscaleBaseline } from './ITeamscaleBaseline';
 import { ITeamscaleBranchesInfo } from './ITeamscaleBranchesInfo';
 import { ITgaIssueQueryPercentage } from './ITgaIssueQueryPercentage';
 import { ITgaSummary } from './ITgaSummary';
+import { IProjectConnectorList } from './IProjectConnectorList';
 
 export default class TeamscaleClient {
     constructor(public readonly url: string) {
@@ -29,12 +30,29 @@ export default class TeamscaleClient {
      *
      * @param project The project in which to search for the issue
      * @param specItemId The id of the spec item for which to return the test smell badge
+     * @param connectorId The id of the requirements connector
      * @returns {PromiseLike} which resolves to a SVG represented as string
      */
-    public queryIssueTestSmellBadge(project: string, specItemId: number): PromiseLike<string> {
+    public queryIssueTestSmellBadge(project: string, connectorId: string, specItemId: number): PromiseLike<string> {
         project = encodeURIComponent(project);
-        return this.retrieveBadgeForSpecItem('findings-delta-badge.svg?t1=1677676020000&t2=1683720420000&only-spec-item-findings=true&uniform-path=-spec-item-/tests/', project, specItemId);
+        connectorId = encodeURIComponent(connectorId);
+        return this.retrieveBadgeForSpecItem('findings/delta/badge/?t1=1&t2=HEAD&only-spec-item-findings=true&uniform-path=-spec-item-/', project, connectorId, specItemId.toString());
     }
+
+    /**
+     * Gets the test smell badge for a spec item from Teamscale.
+     *
+     * @param project The project in which to search for the issue
+     * @param connectorId The id of the requirements connector
+     * @param specItemId The id of the spec item for which to return the test smell badge
+     * @returns {PromiseLike} which resolves to a SVG represented as string
+     */
+    public queryIssueTestSmellFindingsChurn(project: string, connectorId: string, specItemId: number): PromiseLike<IFindingsChurnList> {
+        project = encodeURIComponent(project);
+        connectorId = encodeURIComponent(connectorId);
+        return this.retrieveFindingsChurnListForSpecItem('findings/delta/?t1=1&t2=HEAD&only-spec-item-findings=true&uniform-path=-spec-item-/', project, connectorId, specItemId.toString());
+    }
+    
 
     /**
      * Gets the badge for the findings churn of an issue from Teamscale.
@@ -94,14 +112,23 @@ export default class TeamscaleClient {
     /**
      * Retrieves the findings churn for a single spec item.
      */
-    public retrieveFindingsChurnListForSpecItem(project: string, specItemId: string): PromiseLike<IFindingsChurnList> {
-        console.log("Project:" + project + " specItemId: " + specItemId);
-        project = encodeURIComponent(project);
+    public retrieveFindingsChurnListForSpecItem(prefix: string, project: string, connectorID: string, specItemId: string): 
+    PromiseLike<IFindingsChurnList> {
         specItemId = encodeURIComponent(specItemId);
         const xhr = this.generateRequest(
-            'GET', `/api/projects/${project}/findings/delta/?t1=1677676020000&t2=1683720420000&uniform-path=-spec-item-/tests/${specItemId}&only-spec-item-findings=true`);
-        console.log("Project: " + project + " specItemId: " + specItemId + " XHR: " + xhr);
+            'GET', `/api/projects/${project}/${prefix}/${connectorID}/${specItemId}&only-spec-item-findings=true`);
         const promise = this.generatePromise<string>(xhr).then(findingsChurnList => JSON.parse(findingsChurnList));
+        xhr.send();
+        return promise;
+    }
+
+    /**
+     * Retrieves the project connector list.
+     */
+    public retrieveProjectConnectorList(): PromiseLike<IProjectConnectorList> { 
+        const xhr = this.generateRequest(
+            'GET', `/api/project-connectors`);
+        const promise = this.generatePromise<string>(xhr).then(projectConnectorList => JSON.parse(projectConnectorList));
         xhr.send();
         return promise;
     }
@@ -187,15 +214,14 @@ export default class TeamscaleClient {
     /**
      * Retrieves a spec item specific badge from the Teamscale server.
      */
-    private retrieveBadgeForSpecItem(requestPrefix: string, project: string, specItemId: number): PromiseLike<string> {
-        console.log("Retrive Badge for Spec Item: " + requestPrefix );
+    private retrieveBadgeForSpecItem(requestPrefix: string, project: string, connectorId: string, specItemId: string): PromiseLike<string> {
+        specItemId = encodeURIComponent(specItemId);
         const xhr = this.generateRequest(
-            'GET', `/api/projects/${project}/findings/delta/badge?t1=1677676020000&t2=1683720420000&uniform-path=-spec-item-/tests/${specItemId}&only-spec-item-findings=true`);
-        xhr.setRequestHeader('content-type', 'image/svg+xml');
+            'GET', `/api/projects/${project}/${requestPrefix}/${connectorId}/${specItemId}`);
         xhr.setRequestHeader('Accept', 'image/svg+xml');
         const promise = this.generatePromise<string>(xhr).then(badge => {
             // Wrap the svg in a link element pointing to the spec item perspective on Teamscale 
-            const specItemUrl = `${this.url}/requirements-tracing.html#details/${project}/?id=tests%7C${specItemId}&t=default%3AHEAD`;
+            const specItemUrl = `${this.url}/requirements-tracing.html#details/${project}/?id=${connectorId}|${specItemId}&t=AHEAD`;
             return `<a href="${specItemUrl}" target="_top">${badge}</a>`;
         });
         xhr.send();

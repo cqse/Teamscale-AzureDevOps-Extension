@@ -35,7 +35,7 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
             else if (badgeType === BadgeType.TestSmell) {
                 let connectorID: string = await retrieveRequirementsConnectorID(teamscaleClient, projectCandidate);
                 
-                const testSmellSummary = await teamscaleClient.queryIssueTestSmellFindingsChurn(projectCandidate, connectorID, issueId);
+                const testSmellSummary = await teamscaleClient.retrieveFindingsChurnListForSpecItem(projectCandidate, connectorID, issueId.toString());
                 if (testSmellSummary.addedFindings && testSmellSummary.addedFindings.length > 0 ||
                     testSmellSummary.findingsInChangedCode && testSmellSummary.findingsInChangedCode.length > 0 ||
                     testSmellSummary.removedFindings && testSmellSummary.removedFindings.length > 0) {

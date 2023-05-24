@@ -17,13 +17,13 @@ const useSeparateTestGapServerInput = document.getElementById('use-extra-tga-ser
 const tgaConfigurationDiv = document.getElementById('extra-tga-configuration') as HTMLDivElement;
 const tgaTeamscaleUrlInput = document.getElementById('tga-teamscale-url') as HTMLInputElement;
 const tgaTeamscaleProjectInput = document.getElementById('tga-teamscale-project') as HTMLInputElement;
-const tsaConfigurationDiv = document.getElementById('extra-tsa-configuration') as HTMLDivElement;
-const tsaTeamscaleUrlInput = document.getElementById('tsa-teamscale-url') as HTMLInputElement;
-const useSeparateTestSmellServerInput = document.getElementById('use-extra-tsa-server') as HTMLInputElement;
-const tsaTeamscaleProjectInput = document.getElementById('tsa-teamscale-project') as HTMLInputElement;
+const TsaConfigurationDiv = document.getElementById('extra-tsa-configuration') as HTMLDivElement;
+const TsaTeamscaleUrlInput = document.getElementById('tsa-teamscale-url') as HTMLInputElement;
+const UseSeparateTestSmellServerInput = document.getElementById('use-extra-tsa-server') as HTMLInputElement;
+const TsaTeamscaleProjectInput = document.getElementById('tsa-teamscale-project') as HTMLInputElement;
 const showTestGapBadgeInput = document.getElementById('show-work-item-tga-badge') as HTMLInputElement;
 const showFindingsBadgeInput = document.getElementById('show-work-item-tqe-badge') as HTMLInputElement;
-const showTestSmellBadgeInput = document.getElementById('show-work-item-tsa-badge') as HTMLInputElement;
+const ShowTestSmellBadgeInput = document.getElementById('show-work-item-tsa-badge') as HTMLInputElement;
 
 const projectSeparator: string = ',';
 
@@ -38,7 +38,7 @@ VSS.ready(() => {
     
     saveButtonElement.onclick = () => saveFormValues();
     useSeparateTestGapServerInput.onchange = () => zipTgaConfiguration();
-    useSeparateTestSmellServerInput.onchange = () => zipTsaConfiguration();
+    UseSeparateTestSmellServerInput.onchange = () => zipTsaConfiguration();
 
     try {
         loadCurrentSettings();
@@ -58,16 +58,16 @@ async function loadCurrentSettings() {
 
     showFindingsBadgeInput.checked = UiUtils.convertToBoolean(await settings.get(Settings.SHOW_FINDINGS_BADGE_KEY));
     
-    tsaTeamscaleUrlInput.value = await getTeamscaleUrlForKey(Settings.TSA_TEAMSCALE_URL_KEY);
-    useSeparateTestSmellServerInput.checked = UiUtils.convertToBoolean(await settings.get(Settings.USE_SEPARATE_TEST_SMELL_SERVER));
-    showTestSmellBadgeInput.checked = UiUtils.convertToBoolean(await settings.get(Settings.SHOW_TEST_SMELL_BADGE_KEY));
+    TsaTeamscaleUrlInput.value = await getTeamscaleUrlForKey(Settings.TSA_TEAMSCALE_URL_KEY);
+    UseSeparateTestSmellServerInput.checked = UiUtils.convertToBoolean(await settings.get(Settings.USE_SEPARATE_TEST_SMELL_SERVER));
+    ShowTestSmellBadgeInput.checked = UiUtils.convertToBoolean(await settings.get(Settings.SHOW_TEST_SMELL_BADGE_KEY));
 
     const projects = await settings.getProjectsList(Settings.TEAMSCALE_PROJECTS_KEY);
     const tgaProjects = await settings.getProjectsList(Settings.TGA_TEAMSCALE_PROJECTS_KEY);
     const tsaProjects = await settings.getProjectsList(Settings.TSA_TEAMSCALE_PROJECTS_KEY);
     teamscaleProjectInput.value = projects.join(projectSeparator);
     tgaTeamscaleProjectInput.value = tgaProjects.join(projectSeparator);
-    tsaTeamscaleProjectInput.value = tsaProjects.join(projectSeparator);
+    TsaTeamscaleProjectInput.value = tsaProjects.join(projectSeparator);
 
     zipTgaConfiguration();
     zipTsaConfiguration();
@@ -100,11 +100,11 @@ function zipTgaConfiguration() {
  * Hides and shows the tsa configuration items, depending on whether a separate TSA server should be used.
  */
 function zipTsaConfiguration() {
-    if (useSeparateTestSmellServerInput.checked) {
-        tsaConfigurationDiv.style.display = 'block';
+    if (UseSeparateTestSmellServerInput.checked) {
+        TsaConfigurationDiv.style.display = 'block';
         return;
     }
-    tsaConfigurationDiv.style.display = 'none';
+    TsaConfigurationDiv.style.display = 'none';
 }
 
 function saveUrlAndProject(teamscaleUrlFormInput: string, teamscaleProjectsFormInput: string, serverUrlKey: string, projectNameKey: string) {
@@ -148,7 +148,7 @@ function saveFormValues() {
         Settings.TEAMSCALE_PROJECTS_KEY);
     saveUrlAndProject(tgaTeamscaleUrlInput.value, tgaTeamscaleProjectInput.value, Settings.TGA_TEAMSCALE_URL_KEY,
         Settings.TGA_TEAMSCALE_PROJECTS_KEY);
-    saveUrlAndProject(tsaTeamscaleUrlInput.value, tsaTeamscaleProjectInput.value, Settings.TSA_TEAMSCALE_URL_KEY,
+    saveUrlAndProject(TsaTeamscaleUrlInput.value, TsaTeamscaleProjectInput.value, Settings.TSA_TEAMSCALE_URL_KEY,
             Settings.TSA_TEAMSCALE_PROJECTS_KEY);
 
     settings.save(Settings.SHOW_TEST_GAP_BADGE_KEY, String(showTestGapBadgeInput.checked))
@@ -159,7 +159,7 @@ function saveFormValues() {
         .then(showFindingsBadge => createSuccessfulLog('Show Findings Churn Badge Option', showFindingsBadge),
             e => createFailedLog('Show Findings Churn Badge Option', e));
 
-    settings.save(Settings.SHOW_TEST_SMELL_BADGE_KEY, String(showTestSmellBadgeInput.checked))
+    settings.save(Settings.SHOW_TEST_SMELL_BADGE_KEY, String(ShowTestSmellBadgeInput.checked))
         .then(showTestSmellBadge => createSuccessfulLog('Show Test Smell Badge Option', showTestSmellBadge),
             e => createFailedLog('Show Test Smell Badge Option', e));        
 
@@ -167,7 +167,7 @@ function saveFormValues() {
         .then(extraTgaServer => createSuccessfulLog('Use Extra Test Gap Server Option', extraTgaServer),
             e => createFailedLog('Use Extra Test Gap Option', e));
 
-    settings.save(Settings.USE_SEPARATE_TEST_SMELL_SERVER, String(useSeparateTestSmellServerInput.checked))
+    settings.save(Settings.USE_SEPARATE_TEST_SMELL_SERVER, String(UseSeparateTestSmellServerInput.checked))
         .then(extraTsaServer => createSuccessfulLog('Use Extra Test Smell Server Option', extraTsaServer),
             e => createFailedLog('Use Extra Test Smell Option', e));
     

@@ -8,6 +8,9 @@ We use [semantic versioning](http://semver.org/):
 
 - [feature] upload task: set sensible default file pattern that works for the `DotNetCoreCLI` pipeline task
 
+# 1.3.5
+- [fix] updated third-party dependencies to recent versions
+
 # 1.3.4
 - [fix] updated third-party dependencies to recent versions
 

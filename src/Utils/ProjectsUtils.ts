@@ -33,9 +33,9 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
                 }
             }
             else if (badgeType === BadgeType.TestSmell) {
-                let connectorID: string = await retrieveRequirementsConnectorID(teamscaleClient, projectCandidate);
+                let connectorId: string = await retrieveRequirementsConnectorId(teamscaleClient, projectCandidate);
                 
-                const testSmellSummary = await teamscaleClient.retrieveFindingsChurnListForSpecItem(projectCandidate, connectorID, issueId.toString());
+                const testSmellSummary = await teamscaleClient.retrieveFindingsChurnListForSpecItem(projectCandidate, connectorId, issueId.toString());
                 if (testSmellSummary.addedFindings && testSmellSummary.addedFindings.length > 0 ||
                     testSmellSummary.findingsInChangedCode && testSmellSummary.findingsInChangedCode.length > 0 ||
                     testSmellSummary.removedFindings && testSmellSummary.removedFindings.length > 0) {
@@ -77,20 +77,20 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
 }
 
 /**
- * Returns the connector ID of the given project.
+ * Returns the connector Id of the given project.
  */
-export async function retrieveRequirementsConnectorID(teamscaleClient: TeamscaleClient, projectCandidate: string) {
-    let connectorID: string = '';
+export async function retrieveRequirementsConnectorId(teamscaleClient: TeamscaleClient, projectCandidate: string) {
+    let connectorId: string = '';
     const projectConnectorList = await teamscaleClient.retrieveProjectConnectorList();
     if (projectConnectorList.hasOwnProperty(projectCandidate)) {
         for (const projectConnector of projectConnectorList[projectCandidate]) {
             if (projectConnector.type !== 'Azure DevOps Boards as Requirement Management Tool') {
                 continue;
             }
-            connectorID = projectConnector.options['Requirements Connector identifier'];
+            connectorId = projectConnector.options['Requirements Connector identifier'];
         }
     }
-    return connectorID;
+    return connectorId;
 }
 
 /**

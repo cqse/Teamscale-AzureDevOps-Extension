@@ -12,7 +12,7 @@ import ProjectUtils = require('../Utils/ProjectsUtils');
 import UiUtils = require('../Utils/UiUtils');
 
 const titleTestGapBadge: string = 'Tests';
-const TitleTestSmellBadge: string = 'Test Smell Findings Churn';
+const TITLE_TEST_SMELL_BADGE: string = 'Test Smell Findings Churn';
 const titleFindingsChurnBadge: string = 'Findings Churn';
 
 let notificationUtils: NotificationUtils = null;
@@ -167,7 +167,7 @@ async function loadTsaBadge() {
         try {
             const connectorId: string = await ProjectUtils.retrieveRequirementsConnectorId(tsaTeamscaleClient, tsaTeamscaleProject);
             tsaBadge = await tsaTeamscaleClient.retrieveBadgeForSpecItem(tsaTeamscaleProject, connectorId, issueId.toString());
-            tsaBadge = '<div id="tsa-badge">' + TitleTestSmellBadge + '<br>' + tsaBadge + '</div>';
+            tsaBadge = '<div id="tsa-badge">' + TITLE_TEST_SMELL_BADGE + '<br>' + tsaBadge + '</div>';
         } catch (error) {
             notificationUtils.handleErrorInTeamscaleCommunication(error, tsaTeamscaleClient.url, tsaTeamscaleProject,
                 'loading Test Smell Badge');

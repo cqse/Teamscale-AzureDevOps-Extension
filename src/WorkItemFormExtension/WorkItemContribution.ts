@@ -165,7 +165,7 @@ async function loadTsaBadge() {
     let tsaBadge: string = '';
     if (showTestSmellBadge && tsaTeamscaleProject) {
         try {
-            const connectorID: string = await ProjectUtils.retrieveRequirementsConnectorID(teamscaleClient, tsaTeamscaleProject);
+            const connectorID: string = await ProjectUtils.retrieveRequirementsConnectorID(tsaTeamscaleClient, tsaTeamscaleProject);
             tsaBadge = await tsaTeamscaleClient.retrieveBadgeForSpecItem(tsaTeamscaleProject, connectorID, issueId.toString());
             tsaBadge = '<div id="tsa-badge">' + TitleTestSmellBadge + '<br>' + tsaBadge + '</div>';
         } catch (error) {

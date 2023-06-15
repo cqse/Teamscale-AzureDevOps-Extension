@@ -24,34 +24,22 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
     let errorCodeSum: number = 0;
 
     for (const projectCandidate of projectCandidates) {
+        let hasFindings: boolean = false;
         try {
             if (badgeType === BadgeType.TestGap) {
-                const testGapSummary: ITgaSummary = await getTestGapSummary(teamscaleClient, projectCandidate, issueId);
-
-                if (testGapSummary && testGapSummary.numberOfChangedMethods > 0) {
-                    return projectCandidate;
-                }
+                hasFindings = await hasTestGapFindings(teamscaleClient, projectCandidate, issueId);
             }
             else if (badgeType === BadgeType.TestSmell) {
-                let connectorId: string = await retrieveRequirementsConnectorId(teamscaleClient, projectCandidate);
-                
-                const testSmellSummary = await teamscaleClient.retrieveFindingsChurnListForSpecItem(projectCandidate, connectorId, issueId.toString());
-                if (testSmellSummary.addedFindings && testSmellSummary.addedFindings.length > 0 ||
-                    testSmellSummary.findingsInChangedCode && testSmellSummary.findingsInChangedCode.length > 0 ||
-                    testSmellSummary.removedFindings && testSmellSummary.removedFindings.length > 0) {
-                    return projectCandidate;
-                }
-            }
+                hasFindings = await hasTestSmellFindings(teamscaleClient, projectCandidate, issueId);
+            } 
             else {
-                const findingsChurnList = await teamscaleClient.retrieveFindingsChurnListForIssue(projectCandidate, issueId.toString());
-
-                if (findingsChurnList.addedFindings && findingsChurnList.addedFindings.length > 0 ||
-                    findingsChurnList.findingsInChangedCode && findingsChurnList.findingsInChangedCode.length > 0 ||
-                    findingsChurnList.removedFindings && findingsChurnList.removedFindings.length > 0) {
-                    return projectCandidate;
-                }
+                hasFindings = await hasFindingsChurn(teamscaleClient, projectCandidate, issueId);  
             }
-
+            
+            if (hasFindings) {
+                return projectCandidate;
+            }
+            
             validProjects.push(projectCandidate);
         } catch (reason) {
             if (reason && reason.status) {
@@ -76,6 +64,51 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
     return validProjects[0];
 }
 
+/**
+ * Returns true if the client returns test gap for the given project candidate and issue id.
+ */
+async function hasTestGapFindings(teamscaleClient: TeamscaleClient, projectCandidate: string, issueId: number): Promise<boolean> {
+    const testGapSummary: ITgaSummary = await getTestGapSummary(teamscaleClient, projectCandidate, issueId);
+
+    if (testGapSummary && testGapSummary.numberOfChangedMethods > 0) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Returns true if the client returns test smell findings for the given project candidate and issue id.
+ */
+async function hasTestSmellFindings(teamscaleClient: TeamscaleClient, projectCandidate: string, issueId: number): Promise<boolean> {
+    let connectorId: string = await retrieveRequirementsConnectorId(teamscaleClient, projectCandidate);
+    
+    const testSmellSummary = await teamscaleClient.retrieveFindingsChurnListForSpecItem(projectCandidate, connectorId, issueId.toString());
+    
+    if (testSmellSummary.addedFindings && testSmellSummary.addedFindings.length > 0 ||
+        testSmellSummary.findingsInChangedCode && testSmellSummary.findingsInChangedCode.length > 0 ||
+        testSmellSummary.removedFindings && testSmellSummary.removedFindings.length > 0) {
+            return true;
+        }
+
+    return false;
+}
+
+
+/**
+ * Returns true if the client returns findings churn for the given project candidate and issue id.
+ */
+async function hasFindingsChurn(teamscaleClient: TeamscaleClient, projectCandidate: string, issueId: number): Promise<boolean> {
+    const findingsChurnList = await teamscaleClient.retrieveFindingsChurnListForIssue(projectCandidate, issueId.toString());
+    
+    if (findingsChurnList.addedFindings && findingsChurnList.addedFindings.length > 0 ||
+        findingsChurnList.findingsInChangedCode && findingsChurnList.findingsInChangedCode.length > 0 ||
+        findingsChurnList.removedFindings && findingsChurnList.removedFindings.length > 0) {
+            return true;
+        }
+
+    return false;
+}
 /**
  * Returns the connector Id of the given project.
  */

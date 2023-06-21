@@ -70,11 +70,7 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
 async function hasTestGapFindings(teamscaleClient: TeamscaleClient, projectCandidate: string, issueId: number): Promise<boolean> {
     const testGapSummary: ITgaSummary = await getTestGapSummary(teamscaleClient, projectCandidate, issueId);
 
-    if (testGapSummary && testGapSummary.numberOfChangedMethods > 0) {
-        return true;
-    }
-
-    return false;
+    return testGapSummary && testGapSummary.numberOfChangedMethods > 0;
 }
 
 /**
@@ -85,13 +81,9 @@ async function hasTestSmellFindings(teamscaleClient: TeamscaleClient, projectCan
     
     const testSmellSummary = await teamscaleClient.retrieveFindingsChurnListForSpecItem(projectCandidate, connectorId, issueId.toString());
     
-    if (testSmellSummary.addedFindings && testSmellSummary.addedFindings.length > 0 ||
+    return testSmellSummary.addedFindings && testSmellSummary.addedFindings.length > 0 ||
         testSmellSummary.findingsInChangedCode && testSmellSummary.findingsInChangedCode.length > 0 ||
-        testSmellSummary.removedFindings && testSmellSummary.removedFindings.length > 0) {
-            return true;
-        }
-
-    return false;
+        testSmellSummary.removedFindings && testSmellSummary.removedFindings.length > 0;
 }
 
 
@@ -101,13 +93,9 @@ async function hasTestSmellFindings(teamscaleClient: TeamscaleClient, projectCan
 async function hasFindingsChurn(teamscaleClient: TeamscaleClient, projectCandidate: string, issueId: number): Promise<boolean> {
     const findingsChurnList = await teamscaleClient.retrieveFindingsChurnListForIssue(projectCandidate, issueId.toString());
     
-    if (findingsChurnList.addedFindings && findingsChurnList.addedFindings.length > 0 ||
+    return findingsChurnList.addedFindings && findingsChurnList.addedFindings.length > 0 ||
         findingsChurnList.findingsInChangedCode && findingsChurnList.findingsInChangedCode.length > 0 ||
-        findingsChurnList.removedFindings && findingsChurnList.removedFindings.length > 0) {
-            return true;
-        }
-
-    return false;
+        findingsChurnList.removedFindings && findingsChurnList.removedFindings.length > 0;
 }
 /**
  * Returns the connector Id of the given project.

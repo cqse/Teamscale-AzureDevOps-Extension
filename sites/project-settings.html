@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Teamscale Settings</title>
@@ -7,54 +8,80 @@
     <script src="../scripts/require.js" data-main="../dist/ProjectSettingsContribution"></script>
     <link rel="stylesheet" type="text/css" href="../styles/settings.css">
 </head>
+
 <body>
-<h2 class="title-l">Teamscale Server Settings</h2>
+    <h2 class="title-l">Teamscale Server Settings</h2>
 
-<h3 class="overview-heading ts-option-header">Teamscale URL</h3>
-<div>
-    <input id="teamscale-url" class="text-input">
-</div>
-<h3 class="overview-heading ts-option-header">
-    <abbr title="Comma separated list of Teamscale Project IDs. Issue specific badges will be created for the first Project that has Findings Churn resp. Test Gaps for the corresponding issue.">
-            Teamscale Project(s)
-    </abbr>
-</h3>
-<div>
-    <input id="teamscale-project" class="text-input">
-</div>
-
-
-<div style="margin-top: 2em;">
-    <label><input id="use-extra-tga-server" type="checkbox"> Use different Teamscale Server and configuration for Test
-        Gap Analysis</label>
-</div>
-
-<div id="extra-tga-configuration">
-    <h3 class="overview-heading ts-option-header">Test Gap: Teamscale URL</h3>
+    <h3 class="overview-heading ts-option-header">Teamscale URL</h3>
     <div>
-        <input id="tga-teamscale-url" class="text-input">
+        <input id="teamscale-url" class="text-input">
     </div>
     <h3 class="overview-heading ts-option-header">
-        <abbr title="Comma separated list of Teamscale Project IDs. Issue specific badges will be created for the first Project that has Test Gaps for the corresponding issue.">
-            Test Gap: Teamscale Project(s)
-        </abbr>
+        <abbr title="Comma separated list of Teamscale Project IDs. Issue specific badges will be created for the first Project that has Findings Churn resp. Test Gaps for the corresponding issue.">
+            Teamscale Project(s)
+    </abbr>
     </h3>
     <div>
-        <input id="tga-teamscale-project" class="text-input">
+        <input id="teamscale-project" class="text-input">
     </div>
-</div>
 
-<h2 class="title-l">Work Item View: Badge Settings</h2>
 
-<div>
-    <label><input id="show-work-item-tqe-badge" type="checkbox">Show Findings Churn Badge in Work Item View</label>
-</div>
+    <div style="margin-top: 2em;">
+        <label><input id="use-extra-tga-server" type="checkbox"> Use different Teamscale Server and configuration for Test
+        Gap Analysis</label>
+    </div>
 
-<div>
-    <label><input id="show-work-item-tga-badge" type="checkbox">Show Test Gap Badge in Work Item View</label>
-</div>
+    <div id="extra-tga-configuration">
+        <h3 class="overview-heading ts-option-header">Test Gap: Teamscale URL</h3>
+        <div>
+            <input id="tga-teamscale-url" class="text-input">
+        </div>
+        <h3 class="overview-heading ts-option-header">
+            <abbr title="Comma separated list of Teamscale Project IDs. Issue specific badges will be created for the first Project that has Test Gaps for the corresponding issue.">
+            Test Gap: Teamscale Project(s)
+        </abbr>
+        </h3>
+        <div>
+            <input id="tga-teamscale-project" class="text-input">
+        </div>
+    </div>
 
-<button id="save-button">Save</button>
-<div id="log"></div>
+    <div style="margin-top: 2em;">
+        <label><input id="use-extra-tsa-server" type="checkbox"> Use different Teamscale Server and configuration for Test
+        Smell Analysis</label>
+    </div>
+
+    <div id="extra-tsa-configuration">
+        <h3 class="overview-heading ts-option-header">Test Smell: Teamscale URL</h3>
+        <div>
+            <input id="tsa-teamscale-url" class="text-input">
+        </div>
+        <h3 class="overview-heading ts-option-header">
+            <abbr title="Comma separated list of Teamscale Project IDs. Issue specific badges will be created for the first Project that has Test Smells for the corresponding spec items.">
+            Test Smell: Teamscale Project(s)
+        </abbr>
+        </h3>
+        <div>
+            <input id="tsa-teamscale-project" class="text-input">
+        </div>
+    </div>
+
+    <h2 class="title-l">Work Item View: Badge Settings</h2>
+
+    <div>
+        <label><input id="show-work-item-tqe-badge" type="checkbox">Show Findings Churn Badge in Work Item View</label>
+    </div>
+
+    <div>
+        <label><input id="show-work-item-tga-badge" type="checkbox">Show Test Gap Badge in Work Item View</label>
+    </div>
+
+    <div>
+        <label><input id="show-work-item-tsa-badge" type="checkbox">Show Test Smell Badge in Work Item View</label>
+    </div>
+
+    <button id="save-button">Save</button>
+    <div id="log"></div>
 </body>
+
 </html>

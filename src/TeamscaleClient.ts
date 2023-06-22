@@ -7,6 +7,7 @@ import { ITeamscaleBaseline } from './ITeamscaleBaseline';
 import { ITeamscaleBranchesInfo } from './ITeamscaleBranchesInfo';
 import { ITgaIssueQueryPercentage } from './ITgaIssueQueryPercentage';
 import { ITgaSummary } from './ITgaSummary';
+import { IProjectConnectorList } from './IProjectConnectorList';
 
 export default class TeamscaleClient {
     constructor(public readonly url: string) {
@@ -23,7 +24,7 @@ export default class TeamscaleClient {
         project = encodeURIComponent(project);
         return this.retrieveBadgeForIssue('tga-badge.svg?all-partitions=true&issueId=', project, issueId);
     }
-
+    
     /**
      * Gets the badge for the findings churn of an issue from Teamscale.
      *
@@ -75,6 +76,61 @@ export default class TeamscaleClient {
         const xhr = this.generateRequest(
             'GET', `/p/${project}/issue-finding-churn/${issueId}`);
         const promise = this.generatePromise<string>(xhr).then(findingsChurnList => JSON.parse(findingsChurnList));
+        xhr.send();
+        return promise;
+    }
+
+    /**
+     * Gets the test smell badge for a spec item from Teamscale.
+     *
+     * @param project The project in which to search for the issue
+     * @param connectorId The id of the requirements connector
+     * @param specItemId The id of the spec item for which to return the test smell badge
+     * @returns {PromiseLike} which resolves to a SVG represented as string
+     */
+    public retrieveFindingsChurnListForSpecItem(project: string, connectorId: string, specItemId: string): 
+    PromiseLike<IFindingsChurnList> {
+        project = encodeURIComponent(project);
+        connectorId = encodeURIComponent(connectorId);
+        specItemId = encodeURIComponent(specItemId);
+        const xhr = this.generateRequest(
+            'GET', `/api/projects/${project}/findings/delta/?t1=1&t2=HEAD&only-spec-item-findings=true&uniform-path=-spec-item-/${connectorId}/${specItemId}`);
+        const promise = this.generatePromise<string>(xhr).then(findingsChurnList => JSON.parse(findingsChurnList));
+        xhr.send();
+        return promise;
+    }
+
+     /**
+     * Gets the test smell badge for a spec item from Teamscale.
+     *
+     * @param project The project in which to search for the issue
+     * @param specItemId The id of the spec item for which to return the test smell badge
+     * @param connectorId The id of the requirements connector
+     * @returns {PromiseLike} which resolves to a SVG represented as string
+     */
+    public retrieveBadgeForSpecItem(project: string, connectorId: string, specItemId: string): PromiseLike<string> {
+        project = encodeURIComponent(project);
+        connectorId = encodeURIComponent(connectorId);
+        specItemId = encodeURIComponent(specItemId);
+        const xhr = this.generateRequest(
+            'GET', `/api/projects/${project}/findings/delta/badge/?t1=1&t2=HEAD&only-spec-item-findings=true&uniform-path=-spec-item-/${connectorId}/${specItemId}`);
+        xhr.setRequestHeader('Accept', 'image/svg+xml');
+        const promise = this.generatePromise<string>(xhr).then(badge => {
+            // Wrap the svg in a link element pointing to the spec item perspective on Teamscale 
+            const specItemUrl = `${this.url}/requirements-tracing.html#details/${project}/?id=${connectorId}|${specItemId}&t=AHEAD`;
+            return `<a href="${specItemUrl}" target="_top">${badge}</a>`;
+        });
+        xhr.send();
+        return promise;
+    }
+
+    /**
+     * Retrieves the project connector list.
+     */
+    public retrieveProjectConnectorList(): PromiseLike<IProjectConnectorList> { 
+        const xhr = this.generateRequest(
+            'GET', `/api/project-connectors`);
+        const promise = this.generatePromise<string>(xhr).then(projectConnectorList => JSON.parse(projectConnectorList));
         xhr.send();
         return promise;
     }

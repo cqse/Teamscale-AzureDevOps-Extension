@@ -61,7 +61,7 @@ Create a token with these settings:
 - Organization: *All accessible organizations*
 - all permissions for Marketplace (you need to click _show all scopes_ for this to show up)
 
-Then, create a file called `token` containing this access token.
+Then, create a file called `token` containing this access token in the root directory of the repository.
 
 
 Before publishing, please update the CHANGELOG.md file and choose a proper version number based on semantic versioning.
@@ -70,6 +70,10 @@ Then, enter that number in both package.json and vss-extension.json in the corre
 ```bash
 npm run publish
 ```
+
+On linux you might have to replace every occurrence of `$(npm bin)/tsc` and `$(npm bin)/tfx` in package.json as well as
+reportUploadTask/package.json with the local location of `tsc` and `tfx`. If the location is part of your `PATH`
+removing `$(npbm bin)/` should suffice.
 
 This will make the built package publicly available on the Marketplace.
 

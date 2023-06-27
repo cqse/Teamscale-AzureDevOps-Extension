@@ -4,8 +4,9 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
-# Next Release
+# 1.3.6
 
+- [feature] support spec-item findings badge
 - [feature] upload task: set sensible default file pattern that works for the `DotNetCoreCLI` pipeline task
 
 # 1.3.5

@@ -26,7 +26,7 @@
     "contributions": [
         {
             "id": "teamscale-test-gap-group",
-            "type": "ms.vss-work-web.work-item-form-group",
+            "type": "ms.vss-work-web.work-item-form-control",
             "targets": [
                 "ms.vss-work-web.work-item-form"
             ],

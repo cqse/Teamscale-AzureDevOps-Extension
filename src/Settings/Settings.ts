@@ -39,6 +39,8 @@ export class Settings {
     /** Key that is used to store whether a Findings Badge should be shown in the Work Item View. */
     public static readonly SHOW_FINDINGS_BADGE_KEY = 'show-findings-badge-for-work-item';
 
+    public static readonly MINIMIZE_WARNINGS_KEY = 'minimize-warnings';
+
     /** Key that is used to store whether a Test Gap Badge should be shown in the Work Item View. */
     public static readonly SHOW_TEST_GAP_BADGE_KEY = 'show-test-gap-badge-for-work-item';
 

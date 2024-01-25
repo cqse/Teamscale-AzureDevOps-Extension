@@ -10,6 +10,7 @@ import NotificationUtils from '../Utils/NotificationUtils';
 import { NOT_AUTHORIZED_ERROR } from '../Utils/ProjectsUtils';
 import ProjectUtils = require('../Utils/ProjectsUtils');
 import UiUtils = require('../Utils/UiUtils');
+import {convertToBoolean} from "../Utils/UiUtils";
 
 const titleTestGapBadge: string = 'Tests';
 const TITLE_TEST_SMELL_BADGE: string = 'Test Smell Findings Churn';
@@ -30,7 +31,9 @@ let showTestSmellBadge: boolean = false;
 let emailContact: string = '';
 let issueId: number = 0;
 let projectSettings: ProjectSettings = null;
-let organizationSettings: Settings = null;
+const organizationSettings: Settings = new Settings(Scope.ProjectCollection);
+let minimizeWarnings = true;
+organizationSettings.get(Settings.MINIMIZE_WARNINGS_KEY).then(minimize => minimizeWarnings = convertToBoolean(minimize))
 
 // VSS services
 let controlService = null;
@@ -55,6 +58,7 @@ VSS.init({
  */
 VSS.require(['TFS/WorkItemTracking/Services', 'VSS/Controls', 'VSS/Controls/Notifications'],
     (workItemServices, controls, notifications) => {
+
         controlService = controls;
         notificationService = notifications;
         workItemService = workItemServices;
@@ -96,7 +100,6 @@ VSS.require(['TFS/WorkItemTracking/Services', 'VSS/Controls', 'VSS/Controls/Noti
 async function loadAndCheckConfiguration() {
     const azureProjectName = VSS.getWebContext().project.name;
     projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
-    organizationSettings = new Settings(Scope.ProjectCollection);
 
     emailContact = await organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
     return Promise.all([initializeTeamscaleClients(), resolveIssueId(), initializeNotificationUtils()]).then(() =>
@@ -126,8 +129,13 @@ async function loadBadges() {
     let findingsChurnBadge: string = '';
 
     if (!showTestGapBadge && !showFindingsBadge && !showTestSmellBadge) {
-        notificationUtils.showInfoBanner('Please activate at least one Badge to show in the Project settings' +
-            ' (Extensions → Teamscale).');
+        if(!minimizeWarnings){
+            notificationUtils.showInfoBanner('Please activate at least one Badge to show in the Project settings' +
+                ' (Extensions → Teamscale).');
+        }
+        UiUtils.resizeHost();
+        VSS.notifyLoadSucceeded();
+        return;
     }
 
     let tgaBadge = await loadTgaBadge();

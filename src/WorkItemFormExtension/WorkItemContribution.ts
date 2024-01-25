@@ -31,9 +31,7 @@ let showTestSmellBadge: boolean = false;
 let emailContact: string = '';
 let issueId: number = 0;
 let projectSettings: ProjectSettings = null;
-const organizationSettings: Settings = new Settings(Scope.ProjectCollection);
-let minimizeWarnings = true;
-organizationSettings.get(Settings.MINIMIZE_WARNINGS_KEY).then(minimize => minimizeWarnings = convertToBoolean(minimize))
+let minimizeWarnings = false;
 
 // VSS services
 let controlService = null;
@@ -100,6 +98,8 @@ VSS.require(['TFS/WorkItemTracking/Services', 'VSS/Controls', 'VSS/Controls/Noti
 async function loadAndCheckConfiguration() {
     const azureProjectName = VSS.getWebContext().project.name;
     projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
+    const organizationSettings: Settings = new Settings(Scope.ProjectCollection);
+    minimizeWarnings = convertToBoolean(await organizationSettings.get(Settings.MINIMIZE_WARNINGS_KEY));
 
     emailContact = await organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
     return Promise.all([initializeTeamscaleClients(), resolveIssueId(), initializeNotificationUtils()]).then(() =>

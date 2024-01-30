@@ -1,10 +1,11 @@
 import { Scope } from './Settings/Scope';
 import { Settings } from './Settings/Settings';
 import UiUtils = require('./Utils/UiUtils');
-import { getCurrentTimestamp } from './Utils/UiUtils';
+import {convertToBoolean, getCurrentTimestamp} from './Utils/UiUtils';
 
 const settings: Settings = new Settings(Scope.ProjectCollection);
 let mailContactInput: HTMLInputElement = null;
+let minimizeWarningsInput: HTMLInputElement = null;
 let logDiv: HTMLDivElement = null;
 
 VSS.init({
@@ -14,6 +15,8 @@ VSS.init({
 
 VSS.ready(() => {
     mailContactInput = document.getElementById('email-contact') as HTMLInputElement;
+    minimizeWarningsInput = document.getElementById('minimize-warnings') as HTMLInputElement;
+
     logDiv = document.getElementById('log') as HTMLInputElement;
 
     assignOnClickSave();
@@ -23,6 +26,9 @@ VSS.ready(() => {
         if (email) {
             mailContactInput.value = email;
         }
+    });
+    settings.get(Settings.MINIMIZE_WARNINGS_KEY).then(minimize => {
+        minimizeWarningsInput.checked = convertToBoolean(minimize);
         VSS.notifyLoadSucceeded();
     }, () => {
         VSS.notifyLoadFailed('');
@@ -36,7 +42,7 @@ VSS.ready(() => {
 function assignOnClickSave() {
     document.getElementById('save-button').onclick = () => {
         const mailContact = mailContactInput.value;
-
+        const minimizeWarnings = minimizeWarningsInput.checked;
         // Log success/error events to have some feedback
         logDiv.innerHTML = '';
         const timestamp = getCurrentTimestamp();
@@ -44,5 +50,9 @@ function assignOnClickSave() {
             .save(Settings.EMAIL_CONTACT_KEY, mailContact)
             .then(email => UiUtils.logToDiv(logDiv, `${timestamp} Saving Email address "${email ? email : ''}" successful.`),
                 () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving Email address.`));
+        settings
+            .save(Settings.MINIMIZE_WARNINGS_KEY, String(minimizeWarnings))
+            .then(() => UiUtils.logToDiv(logDiv, `${timestamp} Saving minimize warnings preference successful.`),
+                () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving minimize preferences.`));
     };
 }

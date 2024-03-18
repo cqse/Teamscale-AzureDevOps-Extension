@@ -7,6 +7,8 @@ We use [semantic versioning](http://semver.org/):
 # 1.3.7
 
 - [fix] update third party dependencies
+- [fix] updated third party dependencies to recent versions
+- [fix] replaced binaries for teamscale-upload with an up-to-date version (9.2.1) 
 
 # 1.3.6
 

@@ -36,14 +36,9 @@ export function resolveFiles(filesPattern: string): string[] {
 		allowBrokenSymbolicLinks: true,
 		followSpecifiedSymbolicLink: true
 	});
-	const uploadFilesList = task.match(allFiles, filesPattern, undefined, {
+	return task.match(allFiles, filesPattern, undefined, {
 		matchBase: true
 	});
-
-	if (!uploadFilesList || uploadFilesList.length === 0) {
-		throw new Error(`Did not find any files matching '${filesPattern}'`);
-	}
-	return uploadFilesList;
 }
 
 /** Returns whether the given file is a coverage file based on its file extension. */

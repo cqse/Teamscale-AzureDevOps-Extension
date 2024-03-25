@@ -4,6 +4,10 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
+# 1.3.8
+
+- [fix] upload task: Does not fail anymore if no files to upload are found
+
 # 1.3.7
 
 - [fix] update third party dependencies

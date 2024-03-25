@@ -136,6 +136,11 @@ async function runUnsafe() {
 	const taskParameters = readValuesFromTask();
 	const message = `Build ${buildId}`;
 	let filesToUpload = utils.resolveFiles(taskParameters.filesPattern);
+	if (!filesToUpload || filesToUpload.length === 0) {
+		task.debug(`Did not find any files matching '${taskParameters.filesPattern}'. Skipping upload.`);
+		task.setResult(task.TaskResult.Succeeded, 'Task finished successfully. No files to upload.');
+		return;
+	}
 	task.debug(`Uploading ${filesToUpload}`);
 	const coverageFiles = filesToUpload.filter(utils.isCoverageFile);
 	task.debug(`Coverage files: ${coverageFiles}`);

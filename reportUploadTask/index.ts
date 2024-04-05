@@ -134,14 +134,18 @@ async function runUnsafe() {
 	task.setResourcePath(path.join(__dirname, 'task.json'));
 
 	const taskParameters = readValuesFromTask();
-	const message = `Build ${buildId}`;
-	let filesToUpload = utils.resolveFiles(taskParameters.filesPattern);
+
+	let filesToUpload: string[] = utils.resolveFiles(taskParameters.filesPattern);
 	if (!filesToUpload || filesToUpload.length === 0) {
-		task.debug(`Did not find any files matching '${taskParameters.filesPattern}'. Skipping upload.`);
+		task.logIssue(task.IssueType.Warning, `Did not find any files matching '${taskParameters.filesPattern}'. Skipping upload.`)
 		task.setResult(task.TaskResult.Succeeded, 'Task finished successfully. No files to upload.');
 		return;
 	}
 	task.debug(`Uploading ${filesToUpload}`);
+	await uploadFiles(taskParameters, await prepareFilesToUpload(taskParameters, filesToUpload));
+}
+
+async function prepareFilesToUpload(taskParameters: TaskParameters, filesToUpload: string[]): Promise<string[]> {
 	const coverageFiles = filesToUpload.filter(utils.isCoverageFile);
 	task.debug(`Coverage files: ${coverageFiles}`);
 	if (coverageFiles.length > 0) {
@@ -149,7 +153,11 @@ async function runUnsafe() {
 		filesToUpload = filesToUpload.filter(file => !utils.isCoverageFile(file)).concat(convertedCoverageFile);
 		task.debug(`Now uploading ${filesToUpload}`);
 	}
+	return filesToUpload;
+}
 
+async function uploadFiles(taskParameters: TaskParameters, filesToUpload: string[]) {
+	const message = `Build ${buildId}`;
 	const teamscaleUploadRunner: toolRunner.ToolRunner = createTeamscaleUploadRunner(taskParameters, message, filesToUpload);
 
 	let output: string = '';
@@ -170,7 +178,7 @@ async function runUnsafe() {
 	}
 }
 
-function createTeamscaleUploadRunner(taskParameters: TaskParameters, message, filesToUpload) {
+function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: string, filesToUpload: string[]) {
     const teamscaleUploadRunner = task.tool(teamscaleUploadPath);
     teamscaleUploadRunner.arg(['--server', taskParameters.teamscaleUrl]);
     teamscaleUploadRunner.arg(['--project', taskParameters.project]);
@@ -183,9 +191,7 @@ function createTeamscaleUploadRunner(taskParameters: TaskParameters, message, fi
 	teamscaleUploadRunner.argIf(taskParameters.insecure, '--insecure');
 	teamscaleUploadRunner.argIf(!utils.isEmpty(taskParameters.trustedKeystoreWithPassword), ['--trusted-keystore', taskParameters.trustedKeystoreWithPassword]);
 	teamscaleUploadRunner.argIf(taskParameters.stacktrace, '--stacktrace');
-    for (const file of filesToUpload) {
-        teamscaleUploadRunner.arg(file);
-    }
+	teamscaleUploadRunner.arg(filesToUpload);
     return teamscaleUploadRunner;
 }
 

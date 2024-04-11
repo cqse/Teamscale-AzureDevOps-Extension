@@ -7,6 +7,7 @@ We use [semantic versioning](http://semver.org/):
 # 1.3.8
 
 - [fix] upload task: Does not fail anymore if no files to upload are found
+- [fix] updated third party dependencies to recent versions
 
 # 1.3.7
 

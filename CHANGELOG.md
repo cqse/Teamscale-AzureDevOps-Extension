@@ -4,6 +4,9 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
+# 1.3.10
+- [fix] upload task was not updated to most recent version
+
 # 1.3.8
 
 - [fix] upload task: Does not fail anymore if no files to upload are found
@@ -11,7 +14,6 @@ We use [semantic versioning](http://semver.org/):
 
 # 1.3.7
 
-- [fix] update third party dependencies
 - [fix] updated third party dependencies to recent versions
 - [fix] replaced binaries for teamscale-upload with an up-to-date version (9.2.1) 
 

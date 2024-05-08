@@ -1,6 +1,6 @@
 {
   "name": "teamscale-azure-devops-tasks",
-  "version": "1.3.3",
+  "version": "1.3.10",
   "description": "",
   "main": "index.js",
   "scripts": {

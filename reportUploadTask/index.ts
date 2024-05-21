@@ -8,6 +8,7 @@ import * as utils from './utils';
 type TaskParameters = {
 	filesPattern: string,
 	codeCoverageExePath: string,
+	codeCoverageConversionBatchSize: number,
 	teamscaleUrl: string,
 	format: string,
 	username: string,
@@ -30,15 +31,6 @@ if (pullRequestRevision && pullRequestRevision !== '') {
 }
 const buildId = task.getVariable('Build.BuildNumber');
 
-const isWindows = os.type().match(/^Win/);
-let teamscaleUploadPath = path.join(__dirname, 'teamscaleUpload/teamscale-upload.exe');
-if (!isWindows) {
-	teamscaleUploadPath = path.join(__dirname, 'teamscaleUpload/teamscale-upload');
-	// the vsix is a zip which does not preserve permissions
-	// so our teamscale-upload binary is not executable by default
-	fs.chmodSync(teamscaleUploadPath, '777');
-}
-
 async function run() {
 	try {
 		return runUnsafe();
@@ -48,11 +40,35 @@ async function run() {
 	}
 }
 
-async function convertCoverageFiles(coverageFiles: string[], codeCoverageExePath: string): Promise<string> {
-	const outputXmlFile = path.join(path.dirname(coverageFiles[0]), 'coverage.xml');
+/** Converts the given binary .coverage files into .xml files readable by Teamscale and stores them in the given tmp directory. */
+async function convertCoverageFiles(coverageFiles: string[], tmpUploadDir: string, codeCoverageExePath: string, batchSize: number): Promise<void> {
+	if(coverageFiles.length === 0) {
+		task.debug('No coverage files found that need conversion.');
+		return;
+	}
+	task.debug(`Found the following coverage files that need conversion: ${coverageFiles}`);
 
-	task.checkPath(codeCoverageExePath, 'code-coverage-exe-path')
+	task.checkPath(codeCoverageExePath, 'code-coverage-exe-path');
 
+	if(batchSize <= 0) {
+		task.debug('Batch conversion of coverage files disabled, will process all files at once. If a "spawn ENAMETOOLONG" error occurs, please enable batch conversion in the task settings.');
+		return runCodeCoverageExeForFiles(codeCoverageExePath, coverageFiles, path.join(tmpUploadDir, 'coverage.xml'));
+	}
+
+	const batchCount = Math.ceil(coverageFiles.length * 1.0 / batchSize);
+	task.debug(`Will convert coverage files in ${batchCount} batches containing ${batchSize} files each.`);
+
+	for(let i = 0; i < batchCount; i++) {
+		const startIndex = i * batchSize;
+		const endIndex = Math.min((i+1) * batchSize, coverageFiles.length);
+		const coverageFileBatch = coverageFiles.slice(startIndex, endIndex);
+		const outputXmlFile = path.join(tmpUploadDir, `coverage-${i+1}.xml`);
+		await runCodeCoverageExeForFiles(codeCoverageExePath, coverageFileBatch, outputXmlFile);
+	}
+}
+
+/** Runs the given CodeCoverage.exe for the given files to convert them to an xml file. */
+async function runCodeCoverageExeForFiles(codeCoverageExePath: string, coverageFiles: string[], outputXmlFile: string): Promise<void> {
 	const codeCoverageRunner: toolRunner.ToolRunner = task.tool(codeCoverageExePath);
 	codeCoverageRunner.arg('analyze');
 	codeCoverageRunner.arg(`/output:${outputXmlFile}`);
@@ -72,8 +88,6 @@ async function convertCoverageFiles(coverageFiles: string[], codeCoverageExePath
 	if (exitCode !== 0) {
 		throw new Error(`CodeCoverage.exe failed with exit code ${exitCode}`);
 	}
-
-	return outputXmlFile;
 }
 
 function readValuesFromTask(): TaskParameters {
@@ -81,10 +95,15 @@ function readValuesFromTask(): TaskParameters {
 	if (utils.isEmpty(codeCoverageExePath)) {
 		codeCoverageExePath = path.join(__dirname, 'CodeCoverage/CodeCoverage.exe');
 	}
+	let codeCoverageConversionBatchSize: string = task.getInput('codeCoverageConversionBatchSize')
+	if(utils.isEmpty(codeCoverageConversionBatchSize)) {
+		codeCoverageConversionBatchSize = '1000';
+	}
 
 	return {
 		filesPattern: task.getInput('files', true),
 		codeCoverageExePath: codeCoverageExePath,
+		codeCoverageConversionBatchSize: parseInt(codeCoverageConversionBatchSize),
 		teamscaleUrl: task.getInput('url', true).trim(),
 		format: task.getInput('format', true),
 		username: task.getInput('username', true),
@@ -141,22 +160,55 @@ async function runUnsafe() {
 		task.setResult(task.TaskResult.Succeeded, 'Task finished successfully. No files to upload.');
 		return;
 	}
-	task.debug(`Uploading ${filesToUpload}`);
-	await uploadFiles(taskParameters, await prepareFilesToUpload(taskParameters, filesToUpload));
+	task.debug(`Found the following files to upload: ${filesToUpload}`);
+	// we store the files in a tmp directory to pass a file pattern to teamscale-upload instead of a potentially large number of individual files.
+	const tmpUploadDir = createTmpUploadDir();
+	await prepareFilesToUpload(taskParameters, filesToUpload, tmpUploadDir);
+	task.debug(`Collected the following files in upload dir (first item): ${task.find(tmpUploadDir)}`);
+	await uploadFiles(taskParameters, path.join(tmpUploadDir, '*'));
 }
 
-async function prepareFilesToUpload(taskParameters: TaskParameters, filesToUpload: string[]): Promise<string[]> {
-	const coverageFiles = filesToUpload.filter(utils.isCoverageFile);
-	task.debug(`Coverage files: ${coverageFiles}`);
-	if (coverageFiles.length > 0) {
-		const convertedCoverageFile = await convertCoverageFiles(coverageFiles, taskParameters.codeCoverageExePath);
-		filesToUpload = filesToUpload.filter(file => !utils.isCoverageFile(file)).concat(convertedCoverageFile);
-		task.debug(`Now uploading ${filesToUpload}`);
+/** Creates a new directory for the upload files in the agent's tmp directory and returns its path. */
+function createTmpUploadDir(): string {
+	const tmpDir = task.getVariable('Agent.TempDirectory');
+	const uploadDirBaseName = 'teamscale-upload';
+	// make sure to use a use a new and unique directory
+	const tmpUploadDir = createUniquePath(path.join(tmpDir, uploadDirBaseName));
+	task.debug(`Creating temporary directory for upload files: ${tmpUploadDir}`);
+	task.mkdirP(tmpUploadDir);
+	return tmpUploadDir;
+}
+
+function createUniquePath(originalPath: string) {
+	if(!task.exist(originalPath)) {
+		return originalPath;
 	}
-	return filesToUpload;
+	const fileExtension = path.extname(originalPath);
+	const pathWithoutFileExtension = originalPath.substring(0, originalPath.length - fileExtension.length);
+	let counter = 1;
+	let currentPath: string;
+	do {
+		currentPath = `${pathWithoutFileExtension}-${counter}${fileExtension}`;
+		counter++;
+	}
+	while(task.exist(currentPath));
+	return currentPath;
 }
 
-async function uploadFiles(taskParameters: TaskParameters, filesToUpload: string[]) {
+/** Converts binary .coverage files to .xml files and collects all files to be uploaded in the temporary upload directory.  */
+async function prepareFilesToUpload(taskParameters: TaskParameters, filesToUpload: string[], tmpUploadDir: string): Promise<void> {
+	await convertCoverageFiles(filesToUpload.filter(utils.isCoverageFile), tmpUploadDir, taskParameters.codeCoverageExePath, taskParameters.codeCoverageConversionBatchSize);
+	
+	task.debug(`Copying files to ${tmpUploadDir}`);
+	filesToUpload.filter(file => !utils.isCoverageFile(file)).forEach(file => {
+		// make sure to not overwrite files with the same name from different directories
+		const target = createUniquePath(path.join(tmpUploadDir, path.basename(file)));
+		task.cp(file, target);
+	});
+}
+
+/** Uploads the specified files to Teamscale. */
+async function uploadFiles(taskParameters: TaskParameters, filesToUpload: string) {
 	const message = `Build ${buildId}`;
 	const teamscaleUploadRunner: toolRunner.ToolRunner = createTeamscaleUploadRunner(taskParameters, message, filesToUpload);
 
@@ -178,7 +230,16 @@ async function uploadFiles(taskParameters: TaskParameters, filesToUpload: string
 	}
 }
 
-function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: string, filesToUpload: string[]) {
+function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: string, filesToUpload: string) {
+	const isWindows = os.type().match(/^Win/);
+	let teamscaleUploadPath = path.join(__dirname, 'teamscaleUpload/teamscale-upload.exe');
+	if (!isWindows) {
+		teamscaleUploadPath = path.join(__dirname, 'teamscaleUpload/teamscale-upload');
+		// the vsix is a zip which does not preserve permissions
+		// so our teamscale-upload binary is not executable by default
+		fs.chmodSync(teamscaleUploadPath, '777');
+	}
+
     const teamscaleUploadRunner = task.tool(teamscaleUploadPath);
     teamscaleUploadRunner.arg(['--server', taskParameters.teamscaleUrl]);
     teamscaleUploadRunner.arg(['--project', taskParameters.project]);

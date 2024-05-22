@@ -10,7 +10,7 @@
     "version": {
         "Major": 1,
         "Minor": 3,
-        "Patch": 10
+        "Patch": 11
     },
     "runsOn": [
         "Agent",
@@ -114,6 +114,14 @@
             "defaultValue": "",
             "required": false,
             "helpMarkDown": "If you'd like to upload Visual Studio .coverage files to Teamscale, you must provide the path to CodeCoverage.exe. This file is used to convert the binary .coverage files to .xml files suitable for uploading to Teamscale. This plugin ships with a version of CodeCoverage.exe. If you prefer to use a different version, you'll have to configure the correct path to it here."
+        },
+        {
+            "name": "codeCoverageConversionBatchSize",
+            "type": "int",
+            "label": "Batch size for coverage conversion",
+            "defaultValue": "1000",
+            "required": false,
+            "helpMarkDown": "The number of .coverage files to convert in one step using CodeCoverage.exe. Defaults to 1000. Values <= 0 disable batch processing and all available files are converted at once. For very large numbers of files or very long file paths, this may result in \"spawn ENAMETOOLONG\" errors - in that case please configure a smaller batch size."
         }
     ],
     "instanceNameFormat": "Upload $(files) to Teamscale $(url)",

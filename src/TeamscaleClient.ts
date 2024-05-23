@@ -1,15 +1,19 @@
-/**
- * Encapsulates calls to Teamscale
- */
-
 import { IFindingsChurnList } from './IFindingsChurnList';
 import { ITeamscaleBaseline } from './ITeamscaleBaseline';
 import { ITeamscaleBranchesInfo } from './ITeamscaleBranchesInfo';
-import { ITgaIssueQueryPercentage } from './ITgaIssueQueryPercentage';
 import { ITgaSummary } from './ITgaSummary';
 import { IProjectConnectorList } from './IProjectConnectorList';
 
+/**
+ * Media type to use when requesting a badge.
+ */
+const IMAGE_SVG = "image/svg+xml";
+
+/**
+ * Encapsulates calls to Teamscale
+ */
 export default class TeamscaleClient {
+
     constructor(public readonly url: string) {
     }
 
@@ -22,9 +26,11 @@ export default class TeamscaleClient {
      */
     public queryIssueTestGapBadge(project: string, issueId: number): PromiseLike<string> {
         project = encodeURIComponent(project);
-        return this.retrieveBadgeForIssue('tga-badge.svg?all-partitions=true&issueId=', project, issueId);
+        const xhr = this.generateRequest(
+            'GET', `/api/projects/${project}/test-gaps/badge?all-partitions=true&issue-id=${issueId}`, IMAGE_SVG);
+        return this.wrapWithIssueIdLink(xhr, project, issueId);
     }
-    
+
     /**
      * Gets the badge for the findings churn of an issue from Teamscale.
      *
@@ -34,7 +40,9 @@ export default class TeamscaleClient {
      */
     public queryFindingsChurnBadge(project: string, issueId: number): PromiseLike<string> {
         project = encodeURIComponent(project);
-        return this.retrieveBadgeForIssue('issue-finding-badge.svg/', project, issueId);
+        const xhr = this.generateRequest(
+            'GET', `api/v5.9/projects/${project}/issues/${issueId}/findings-badge`, IMAGE_SVG);
+        return this.wrapWithIssueIdLink(xhr, project, issueId);
     }
 
     /**
@@ -43,7 +51,7 @@ export default class TeamscaleClient {
     public retrieveTestGapDeltaBadge(project: string, startTimestamp: number): PromiseLike<string> {
         project = encodeURIComponent(project);
         const xhr = this.generateRequest(
-            'GET', `/p/${project}/tga-badge.svg/?baseline=${startTimestamp}&end=HEAD`);
+            'GET', `/api/projects/${project}/test-gaps/badge?baseline=${startTimestamp}&end=HEAD`, IMAGE_SVG);
         const promise = this.generatePromise<string>(xhr).then(badge => {
             const testGapDeltaLink = `${this.url}/delta.html#test-gap/${project}/?from=${startTimestamp}&to=HEAD`;
             return `<a href="${testGapDeltaLink}" target="_top">${badge}</a>`;
@@ -58,7 +66,7 @@ export default class TeamscaleClient {
     public retrieveFindingsDeltaBadge(project: string, startTimestamp: number): PromiseLike<string> {
         project = encodeURIComponent(project);
         const xhr = this.generateRequest(
-            'GET', `/p/${project}/finding-badge.svg/?t1=${startTimestamp}&t2=HEAD`);
+            'GET', `api/v5.9/projects/${project}/findings/delta/badge?t1=${startTimestamp}&t2=HEAD`, IMAGE_SVG);
         const promise = this.generatePromise<string>(xhr).then(badge => {
             const findingsDeltaLink = `${this.url}/delta.html#findings/${project}/?from=${startTimestamp}&to=HEAD`;
             return `<a href="${findingsDeltaLink}" target="_top">${badge}</a>`;
@@ -70,11 +78,10 @@ export default class TeamscaleClient {
     /**
      * Retrieves the findings churn for a single issue.
      */
-    public retrieveFindingsChurnListForIssue(project: string, issueId: string): PromiseLike<IFindingsChurnList> {
+    public retrieveFindingsChurnListForIssue(project: string, issueId: number): PromiseLike<IFindingsChurnList> {
         project = encodeURIComponent(project);
-        issueId = encodeURIComponent(issueId);
         const xhr = this.generateRequest(
-            'GET', `/p/${project}/issue-finding-churn/${issueId}`);
+            'GET', `/api/v5.9/projects/${project}/issues/${issueId}/finding-churn`);
         const promise = this.generatePromise<string>(xhr).then(findingsChurnList => JSON.parse(findingsChurnList));
         xhr.send();
         return promise;
@@ -88,8 +95,8 @@ export default class TeamscaleClient {
      * @param specItemId The id of the spec item for which to return the test smell badge
      * @returns {PromiseLike} which resolves to a SVG represented as string
      */
-    public retrieveFindingsChurnListForSpecItem(project: string, connectorId: string, specItemId: string): 
-    PromiseLike<IFindingsChurnList> {
+    public retrieveFindingsChurnListForSpecItem(project: string, connectorId: string, specItemId: string):
+        PromiseLike<IFindingsChurnList> {
         project = encodeURIComponent(project);
         connectorId = encodeURIComponent(connectorId);
         specItemId = encodeURIComponent(specItemId);
@@ -100,7 +107,7 @@ export default class TeamscaleClient {
         return promise;
     }
 
-     /**
+    /**
      * Gets the test smell badge for a spec item from Teamscale.
      *
      * @param project The project in which to search for the issue
@@ -127,7 +134,7 @@ export default class TeamscaleClient {
     /**
      * Retrieves the project connector list.
      */
-    public retrieveProjectConnectorList(): PromiseLike<IProjectConnectorList> { 
+    public retrieveProjectConnectorList(): PromiseLike<IProjectConnectorList> {
         const xhr = this.generateRequest(
             'GET', `/api/project-connectors`);
         const promise = this.generatePromise<string>(xhr).then(projectConnectorList => JSON.parse(projectConnectorList));
@@ -138,23 +145,10 @@ export default class TeamscaleClient {
     /**
      * Retrieves the an TGA issue percentage object for a single issue.
      */
-    public retrieveTgaSummaryForIssue(project: string, issueId: string): PromiseLike<ITgaSummary> {
+    public retrieveTgaSummaryForIssue(project: string, issueId: number): PromiseLike<ITgaSummary> {
         const xhr = this.generateRequest(
-            'GET', `/api/projects/${project}/issues/${encodeURIComponent(issueId)}/tga-summary`);
+            'GET', `/api/projects/${project}/issues/${issueId}/tga-summary`);
         const promise = this.generatePromise<string>(xhr).then(tgaSummary => JSON.parse(tgaSummary));
-        xhr.send();
-        return promise;
-    }
-
-    /**
-     * Retrieves the an TGA issue percentage object for a single issue.
-     */
-    public retrieveTgaPercentagesForIssue(project: string, issueId: string): PromiseLike<ITgaIssueQueryPercentage> {
-        project = encodeURIComponent(project);
-        issueId = encodeURIComponent(issueId);
-        const xhr = this.generateRequest(
-            'GET', `/p/${project}/tga-issue-query-percentage/?query=` + encodeURI('id=' + issueId));
-        const promise = this.generatePromise<string>(xhr).then(tgaPercentages => JSON.parse(tgaPercentages));
         xhr.send();
         return promise;
     }
@@ -163,7 +157,7 @@ export default class TeamscaleClient {
      * Retrieves a list of accessible Teamscale projects from the Teamscale server.
      */
     public retrieveTeamscaleProjects(): PromiseLike<string[]> {
-        const xhr = this.generateRequest('GET', '/projects');
+        const xhr = this.generateRequest('GET', '/api/v7.1/projects/ids');
         const promise = this.generatePromise<string>(xhr).then(result => {
             return JSON.parse(result);
         });
@@ -174,9 +168,9 @@ export default class TeamscaleClient {
     /**
      * Retrieves the list of baselines configured for a project from the Teamscale server.
      */
-    public retrieveBaselinesForProject(teamscaleProject: string): PromiseLike<ITeamscaleBaseline[]> {
-        teamscaleProject = encodeURIComponent(teamscaleProject);
-        const xhr = this.generateRequest('GET', '/p/' + teamscaleProject + '/baselines/?detail=true');
+    public retrieveBaselinesForProject(project: string): PromiseLike<ITeamscaleBaseline[]> {
+        project = encodeURIComponent(project);
+        const xhr = this.generateRequest('GET', `/api/v5.2/projects/${project}/baselines`);
         const promise = this.generatePromise<string>(xhr).then(result => {
             return JSON.parse(result) as ITeamscaleBaseline[];
         });
@@ -187,23 +181,21 @@ export default class TeamscaleClient {
     /**
      * Retrieves the list of branches of a project from the Teamscale server.
      */
-    public retrieveBranchesForProject(teamscaleProject: string): PromiseLike<string[]> {
-        teamscaleProject = encodeURIComponent(teamscaleProject);
-        const xhr = this.generateRequest('GET', '/p/' + teamscaleProject + '/branches');
+    public retrieveBranchesForProject(project: string): PromiseLike<string[]> {
+        project = encodeURIComponent(project);
+        const xhr = this.generateRequest('GET', `/api/v6.5/projects/${project}/branches`);
         const promise = this.generatePromise<string>(xhr).then(result => {
             const branchesInfo = JSON.parse(result) as ITeamscaleBranchesInfo;
-            return branchesInfo.branchNames;
+            return branchesInfo.liveBranches;
         });
         xhr.send();
         return promise;
     }
 
     /**
-     * Retrieves an issue specific badge from the Teamscale server.
+     * Wraps the response of a badge request with a link to the issue perspective.
      */
-    private retrieveBadgeForIssue(requestPrefix: string, project: string, issueId: number): PromiseLike<string> {
-        const xhr = this.generateRequest(
-            'GET', `/p/${project}/` + requestPrefix + issueId);
+    private wrapWithIssueIdLink(xhr: XMLHttpRequest, project: string, issueId: number) {
         const promise = this.generatePromise<string>(xhr).then(badge => {
             // Wrap the svg in a link element pointing to the issue perspective on Teamscale
             const issueUrl = `${this.url}/issues.html#/${project}/${issueId}`;
@@ -244,11 +236,11 @@ export default class TeamscaleClient {
      * Generates a XMLHttpRequest for a given HTTP verb and a Teamscale path.
      * The appropriate headers are set automatically.
      */
-    private generateRequest(httpVerb: string, path: string) {
+    private generateRequest(httpVerb: string, path: string, acceptMediaType: string = "application/json") {
         const xhr = new XMLHttpRequest();
         xhr.open(httpVerb, `${this.url}${path}`);
         xhr.withCredentials = true;
-        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('Accept', acceptMediaType);
         xhr.setRequestHeader('Cache-Control', 'no-cache');
         return xhr;
     }

@@ -3,10 +3,9 @@
  */
 
 export interface ITeamscaleBranchesInfo {
-    mainBranchName: string;
-    branchNames: string[];
+    liveBranches: string[];
     deletedBranches: string[];
     anonymousBranches: string[];
-    aliases: any;
-
+    virtualBranches: string[];
+    currentBranchesCount: number;
 }

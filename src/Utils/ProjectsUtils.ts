@@ -68,7 +68,7 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
  * Returns true if the client returns test gap for the given project candidate and issue id.
  */
 async function hasTestGapFindings(teamscaleClient: TeamscaleClient, projectCandidate: string, issueId: number): Promise<boolean> {
-    const testGapSummary: ITgaSummary = await getTestGapSummary(teamscaleClient, projectCandidate, issueId);
+    const testGapSummary: ITgaSummary = await teamscaleClient.retrieveTgaSummaryForIssue(projectCandidate, issueId);
 
     return testGapSummary && testGapSummary.numberOfChangedMethods > 0;
 }
@@ -91,7 +91,7 @@ async function hasTestSmellFindings(teamscaleClient: TeamscaleClient, projectCan
  * Returns true if the client returns findings churn for the given project candidate and issue id.
  */
 async function hasFindingsChurn(teamscaleClient: TeamscaleClient, projectCandidate: string, issueId: number): Promise<boolean> {
-    const findingsChurnList = await teamscaleClient.retrieveFindingsChurnListForIssue(projectCandidate, issueId.toString());
+    const findingsChurnList = await teamscaleClient.retrieveFindingsChurnListForIssue(projectCandidate, issueId);
     
     return findingsChurnList.addedFindings && findingsChurnList.addedFindings.length > 0 ||
         findingsChurnList.findingsInChangedCode && findingsChurnList.findingsInChangedCode.length > 0 ||
@@ -112,22 +112,6 @@ export async function retrieveRequirementsConnectorId(teamscaleClient: Teamscale
         }
     }
     return connectorId;
-}
-
-/**
- * Wrapper (needed since API changed with TS 5.5) method to get the Test Gap summary for an issue; tries both API calls.
- */
-async function getTestGapSummary(teamscaleClient: TeamscaleClient, projectCandidate, issueId: number): Promise<ITgaSummary> {
-    try {
-        return await teamscaleClient.retrieveTgaSummaryForIssue(projectCandidate, issueId.toString());
-    } catch (reason) {
-        if (reason && reason.status && reason.status === 404) {
-            // reason for 404 can be a non-existing project or Teamscale API with version < 5.5
-            return (await teamscaleClient.retrieveTgaPercentagesForIssue(projectCandidate, issueId.toString())).summary;
-        }
-
-        throw reason;
-    }
 }
 
 /**

@@ -42,29 +42,38 @@ async function run() {
 
 /** Converts the given binary .coverage files into .xml files readable by Teamscale and stores them in the given tmp directory. */
 async function convertCoverageFiles(coverageFiles: string[], tmpUploadDir: string, codeCoverageExePath: string, batchSize: number): Promise<void> {
-	if(coverageFiles.length === 0) {
-		task.debug('No coverage files found that need conversion.');
+	const fileCount = coverageFiles.length;
+	if(fileCount === 0) {
+		logInfo('No files have to be converted before the upload.');
 		return;
 	}
-	task.debug(`Found the following coverage files that need conversion: ${coverageFiles}`);
+	
+	logInfo(`Found ${getFileCountString(fileCount, '.coverage')} that ${fileCount > 1 ? 'have': 'has'} to be converted to XML.`);
+	task.debug(`Found the following .coverage files: ${coverageFiles}`);
 
 	task.checkPath(codeCoverageExePath, 'code-coverage-exe-path');
 
 	if(batchSize <= 0) {
-		task.debug('Batch conversion of coverage files disabled, will process all files at once. If a "spawn ENAMETOOLONG" error occurs, please enable batch conversion in the task settings.');
-		return runCodeCoverageExeForFiles(codeCoverageExePath, coverageFiles, path.join(tmpUploadDir, 'coverage.xml'));
+		logInfo('Batch conversion is disabled. Converting all files at once to a single XML file. If a "spawn ENAMETOOLONG" error occurs, please enable batch conversion in the task settings.');
+		await runCodeCoverageExeForFiles(codeCoverageExePath, coverageFiles, path.join(tmpUploadDir, 'coverage.xml'));
+		logInfo('Completed conversion.');
+		return;
 	}
 
 	const batchCount = Math.ceil(coverageFiles.length * 1.0 / batchSize);
-	task.debug(`Will convert coverage files in ${batchCount} batches containing ${batchSize} files each.`);
 
+	logGroupStart(`Converting .coverage files in batches of ${getFileCountString(batchSize)}, resulting in ${getFileCountString(batchCount, 'XML')}.`);
 	for(let i = 0; i < batchCount; i++) {
+		logInfo(`Starting conversion ${i+1}/${batchCount}.`);
 		const startIndex = i * batchSize;
 		const endIndex = Math.min((i+1) * batchSize, coverageFiles.length);
 		const coverageFileBatch = coverageFiles.slice(startIndex, endIndex);
 		const outputXmlFile = path.join(tmpUploadDir, `coverage-${i+1}.xml`);
 		await runCodeCoverageExeForFiles(codeCoverageExePath, coverageFileBatch, outputXmlFile);
+		logInfo(`Completed conversion ${i+1}/${batchCount}.`);
+		logInfo('----------------------------------');
 	}
+	logGroupEnd();
 }
 
 /** Runs the given CodeCoverage.exe for the given files to convert them to an xml file. */
@@ -76,14 +85,6 @@ async function runCodeCoverageExeForFiles(codeCoverageExePath: string, coverageF
 		codeCoverageRunner.arg(file);
 	}
 
-	codeCoverageRunner.on('stdout', (buffer: Buffer) => {
-		process.stdout.write(buffer);
-	});
-
-	codeCoverageRunner.on('stderr', (buffer: Buffer) => {
-		process.stdout.write(buffer);
-	});
-
 	const exitCode = await codeCoverageRunner.exec();
 	if (exitCode !== 0) {
 		throw new Error(`CodeCoverage.exe failed with exit code ${exitCode}`);
@@ -91,11 +92,12 @@ async function runCodeCoverageExeForFiles(codeCoverageExePath: string, coverageF
 }
 
 function readValuesFromTask(): TaskParameters {
+
 	let codeCoverageExePath: string = task.getInput('codeCoverageExePath');
 	if (utils.isEmpty(codeCoverageExePath)) {
 		codeCoverageExePath = path.join(__dirname, 'CodeCoverage/CodeCoverage.exe');
 	}
-	let codeCoverageConversionBatchSize: string = task.getInput('codeCoverageConversionBatchSize')
+	let codeCoverageConversionBatchSize: string = task.getInput('codeCoverageConversionBatchSize');
 	if(utils.isEmpty(codeCoverageConversionBatchSize)) {
 		codeCoverageConversionBatchSize = '1000';
 	}
@@ -160,11 +162,14 @@ async function runUnsafe() {
 		task.setResult(task.TaskResult.Succeeded, 'Task finished successfully. No files to upload.');
 		return;
 	}
+	logInfo(`Found ${getFileCountString(filesToUpload.length)} to upload.`)
 	task.debug(`Found the following files to upload: ${filesToUpload}`);
 	// we store the files in a tmp directory to pass a file pattern to teamscale-upload instead of a potentially large number of individual files.
 	const tmpUploadDir = createTmpUploadDir();
 	await prepareFilesToUpload(taskParameters, filesToUpload, tmpUploadDir);
-	task.debug(`Collected the following files in upload dir (first item): ${task.find(tmpUploadDir)}`);
+	const files = task.find(tmpUploadDir);
+	task.debug(`Collected the following files in upload dir (first item): ${files}`);
+	logSection(`Uploading ${files.length - 1} files to Teamscale`);
 	await uploadFiles(taskParameters, path.join(tmpUploadDir, '*'));
 }
 
@@ -197,12 +202,13 @@ function createUniquePath(originalPath: string) {
 
 /** Converts binary .coverage files to .xml files and collects all files to be uploaded in the temporary upload directory.  */
 async function prepareFilesToUpload(taskParameters: TaskParameters, filesToUpload: string[], tmpUploadDir: string): Promise<void> {
+	logSection('Preparing files for upload');
 	await convertCoverageFiles(filesToUpload.filter(utils.isCoverageFile), tmpUploadDir, taskParameters.codeCoverageExePath, taskParameters.codeCoverageConversionBatchSize);
-	
-	task.debug(`Copying files to ${tmpUploadDir}`);
+	logInfo('Collecting files for upload.');
 	filesToUpload.filter(file => !utils.isCoverageFile(file)).forEach(file => {
 		// make sure to not overwrite files with the same name from different directories
 		const target = createUniquePath(path.join(tmpUploadDir, path.basename(file)));
+		task.debug(`Copying ${file} to ${target}`);
 		task.cp(file, target);
 	});
 }
@@ -211,14 +217,6 @@ async function prepareFilesToUpload(taskParameters: TaskParameters, filesToUploa
 async function uploadFiles(taskParameters: TaskParameters, filesToUpload: string) {
 	const message = `Build ${buildId}`;
 	const teamscaleUploadRunner: toolRunner.ToolRunner = createTeamscaleUploadRunner(taskParameters, message, filesToUpload);
-
-	let output: string = '';
-	teamscaleUploadRunner.on('stdout', (buffer: Buffer) => {
-		process.stdout.write(buffer);
-		if (buffer) {
-			output = output.concat(buffer.toString());
-		}
-	});
 
 	const exitCode: number = await teamscaleUploadRunner.exec({
 		silent: false
@@ -230,7 +228,7 @@ async function uploadFiles(taskParameters: TaskParameters, filesToUpload: string
 	}
 }
 
-function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: string, filesToUpload: string) {
+function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: string, filesToUpload: string): toolRunner.ToolRunner {
 	const isWindows = os.type().match(/^Win/);
 	let teamscaleUploadPath = path.join(__dirname, 'teamscaleUpload/teamscale-upload.exe');
 	if (!isWindows) {
@@ -238,6 +236,12 @@ function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: st
 		// the vsix is a zip which does not preserve permissions
 		// so our teamscale-upload binary is not executable by default
 		fs.chmodSync(teamscaleUploadPath, '777');
+	}
+
+	let enableDebugOutput = false;
+	const debug = task.getVariable('System.Debug');
+	if(debug != null && debug.toLowerCase() === 'true') {
+		enableDebugOutput = true;
 	}
 
     const teamscaleUploadRunner = task.tool(teamscaleUploadPath);
@@ -251,9 +255,33 @@ function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: st
 	teamscaleUploadRunner.argIf(!utils.isEmpty(taskParameters.accessKey), ['--accesskey', taskParameters.accessKey]);
 	teamscaleUploadRunner.argIf(taskParameters.insecure, '--insecure');
 	teamscaleUploadRunner.argIf(!utils.isEmpty(taskParameters.trustedKeystoreWithPassword), ['--trusted-keystore', taskParameters.trustedKeystoreWithPassword]);
-	teamscaleUploadRunner.argIf(taskParameters.stacktrace, '--stacktrace');
+	teamscaleUploadRunner.argIf(enableDebugOutput, '--debug');
+	// --debug automatically enables --stacktrace
+	teamscaleUploadRunner.argIf(!enableDebugOutput && taskParameters.stacktrace, '--stacktrace');
 	teamscaleUploadRunner.arg(filesToUpload);
     return teamscaleUploadRunner;
+}
+
+function getFileCountString(count: number, fileType?: string): string {
+	return `${count} ${fileType ? fileType + ' ' : ''}${utils.pluralize('file', count)}`;
+}
+
+
+function logInfo(message: string) {
+	// when using other methods, e.g. console.log or process.stdout.write, the text doesn't appear in ADOS...
+	console.info(message);
+}
+
+function logSection(sectionName: string) {
+	logInfo(`${os.EOL}##[section]${sectionName}`);
+}
+
+function logGroupStart(groupName: string) {
+	logInfo(`##[group]${groupName}`);
+}
+
+function logGroupEnd() {
+	logInfo('##[endgroup]');
 }
 
 process.on('unhandledRejection', (error: Error) => {

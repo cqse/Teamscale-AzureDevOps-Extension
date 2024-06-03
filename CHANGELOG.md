@@ -4,6 +4,9 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
+# 1.3.12
+- [fix] upload task: improved logging
+
 # 1.3.11
 - [fix] upload task failed when the number of reports was very large
 

@@ -14,10 +14,10 @@
     "azure-pipelines-task-lib": "^4.10.1"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.6",
+    "@types/mocha": "^10.0.7",
     "@types/node": "^20.12.7",
     "@types/q": "^1.5.8",
-    "mocha": "^10.4.0",
+    "mocha": "^10.5.2",
     "typescript": "^5.4.5"
   }
 }

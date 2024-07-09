@@ -56,7 +56,7 @@ export function isEmpty(s: string): boolean {
 * appended "s".
 */
 export function pluralize(str: string, count: number): string {
-	if (count == 1) {
+	if (count === 1) {
 		return str;
 	}
 	return str + "s";

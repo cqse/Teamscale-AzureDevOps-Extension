@@ -165,7 +165,7 @@ async function runUnsafe() {
 	const tmpUploadDir = createTmpUploadDir();
 	await prepareFilesToUpload(taskParameters, filesToUpload, tmpUploadDir);
 	task.debug(`Collected the following files in upload dir (first item): ${task.find(tmpUploadDir)}`);
-	await uploadFiles(taskParameters, path.join(tmpUploadDir, '*'));
+	await uploadFiles(taskParameters, path.join(tmpUploadDir, '?*'));
 }
 
 /** Creates a new directory for the upload files in the agent's tmp directory and returns its path. */
@@ -208,9 +208,9 @@ async function prepareFilesToUpload(taskParameters: TaskParameters, filesToUploa
 }
 
 /** Uploads the specified files to Teamscale. */
-async function uploadFiles(taskParameters: TaskParameters, filesToUpload: string) {
+async function uploadFiles(taskParameters: TaskParameters, dirPatternToUpload: string) {
 	const message = `Build ${buildId}`;
-	const teamscaleUploadRunner: toolRunner.ToolRunner = createTeamscaleUploadRunner(taskParameters, message, filesToUpload);
+	const teamscaleUploadRunner: toolRunner.ToolRunner = createTeamscaleUploadRunner(taskParameters, message, dirPatternToUpload);
 
 	let output: string = '';
 	teamscaleUploadRunner.on('stdout', (buffer: Buffer) => {
@@ -230,7 +230,7 @@ async function uploadFiles(taskParameters: TaskParameters, filesToUpload: string
 	}
 }
 
-function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: string, filesToUpload: string) {
+function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: string, dirPatternToUpload: string) {
 	const isWindows = os.type().match(/^Win/);
 	let teamscaleUploadPath = path.join(__dirname, 'teamscaleUpload/teamscale-upload.exe');
 	if (!isWindows) {
@@ -244,15 +244,15 @@ function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: st
     teamscaleUploadRunner.arg(['--server', taskParameters.teamscaleUrl]);
     teamscaleUploadRunner.arg(['--project', taskParameters.project]);
     teamscaleUploadRunner.arg(['--user', taskParameters.username]);
-    teamscaleUploadRunner.arg(['--partition', taskParameters.partition]);
+    teamscaleUploadRunner.arg(['--partition', "'"+taskParameters.partition]+"'");
     teamscaleUploadRunner.arg(['--format', taskParameters.format]);
     teamscaleUploadRunner.arg(['--commit', revision]);
-    teamscaleUploadRunner.arg(['--append-to-message', message]);
+    teamscaleUploadRunner.arg(['--append-to-message', "'"+message+"'"]);
 	teamscaleUploadRunner.argIf(!utils.isEmpty(taskParameters.accessKey), ['--accesskey', taskParameters.accessKey]);
 	teamscaleUploadRunner.argIf(taskParameters.insecure, '--insecure');
 	teamscaleUploadRunner.argIf(!utils.isEmpty(taskParameters.trustedKeystoreWithPassword), ['--trusted-keystore', taskParameters.trustedKeystoreWithPassword]);
 	teamscaleUploadRunner.argIf(taskParameters.stacktrace, '--stacktrace');
-	teamscaleUploadRunner.arg(filesToUpload);
+	teamscaleUploadRunner.arg(dirPatternToUpload);
     return teamscaleUploadRunner;
 }
 

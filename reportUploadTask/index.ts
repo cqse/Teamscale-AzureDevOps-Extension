@@ -165,7 +165,7 @@ async function runUnsafe() {
 	const tmpUploadDir = createTmpUploadDir();
 	await prepareFilesToUpload(taskParameters, filesToUpload, tmpUploadDir);
 	task.debug(`Collected the following files in upload dir (first item): ${task.find(tmpUploadDir)}`);
-	await uploadFiles(taskParameters, path.join(tmpUploadDir, '*'));
+	await uploadFiles(taskParameters, path.join(tmpUploadDir, '?*'));
 }
 
 /** Creates a new directory for the upload files in the agent's tmp directory and returns its path. */
@@ -232,22 +232,28 @@ async function uploadFiles(taskParameters: TaskParameters, filesToUpload: string
 
 function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: string, filesToUpload: string) {
 	const isWindows = os.type().match(/^Win/);
-	let teamscaleUploadPath = path.join(__dirname, 'teamscaleUpload/teamscale-upload.exe');
+	let teamscaleUploadBinDir = 'teamscale-upload-jlink-windows-x86_64/teamscale-upload/bin';
+	let teamscaleUploadPath = path.join(__dirname, teamscaleUploadBinDir, '/teamscale-upload.exe');
+
 	if (!isWindows) {
-		teamscaleUploadPath = path.join(__dirname, 'teamscaleUpload/teamscale-upload');
+		teamscaleUploadBinDir = 'teamscale-upload-jlink-linux-x86_64/teamscale-upload/bin';
+		teamscaleUploadPath = path.join(__dirname, teamscaleUploadBinDir, '/teamscale-upload');
 		// the vsix is a zip which does not preserve permissions
-		// so our teamscale-upload binary is not executable by default
+		// so our teamscale-upload and java binaries are not executable by default
 		fs.chmodSync(teamscaleUploadPath, '777');
+
+		let teamscaleUploadJavaPath = path.join(__dirname, teamscaleUploadBinDir, '/java')
+		fs.chmodSync(teamscaleUploadJavaPath, '777');
 	}
 
     const teamscaleUploadRunner = task.tool(teamscaleUploadPath);
     teamscaleUploadRunner.arg(['--server', taskParameters.teamscaleUrl]);
     teamscaleUploadRunner.arg(['--project', taskParameters.project]);
     teamscaleUploadRunner.arg(['--user', taskParameters.username]);
-    teamscaleUploadRunner.arg(['--partition', taskParameters.partition]);
+    teamscaleUploadRunner.arg(['--partition', "'"+taskParameters.partition+"'"]);
     teamscaleUploadRunner.arg(['--format', taskParameters.format]);
     teamscaleUploadRunner.arg(['--commit', revision]);
-    teamscaleUploadRunner.arg(['--append-to-message', message]);
+    teamscaleUploadRunner.arg(['--append-to-message', "'"+message+"'"]);
 	teamscaleUploadRunner.argIf(!utils.isEmpty(taskParameters.accessKey), ['--accesskey', taskParameters.accessKey]);
 	teamscaleUploadRunner.argIf(taskParameters.insecure, '--insecure');
 	teamscaleUploadRunner.argIf(!utils.isEmpty(taskParameters.trustedKeystoreWithPassword), ['--trusted-keystore', taskParameters.trustedKeystoreWithPassword]);

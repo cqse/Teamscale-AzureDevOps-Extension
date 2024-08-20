@@ -34,6 +34,6 @@
     "vss-web-extension-sdk": "^5.141.0"
   },
   "overrides": {
-    "async": "^3.2.5"
+    "async": "^3.2.6"
   }
 }

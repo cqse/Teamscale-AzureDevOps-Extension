@@ -41,7 +41,7 @@ export default class TeamscaleClient {
     public queryFindingsChurnBadge(project: string, issueId: number): PromiseLike<string> {
         project = encodeURIComponent(project);
         const xhr = this.generateRequest(
-            'GET', `api/v5.9/projects/${project}/issues/${issueId}/findings-badge`, IMAGE_SVG);
+            'GET', `/api/v5.9/projects/${project}/issues/${issueId}/findings-badge`, IMAGE_SVG);
         return this.wrapWithIssueIdLink(xhr, project, issueId);
     }
 
@@ -66,7 +66,7 @@ export default class TeamscaleClient {
     public retrieveFindingsDeltaBadge(project: string, startTimestamp: number): PromiseLike<string> {
         project = encodeURIComponent(project);
         const xhr = this.generateRequest(
-            'GET', `api/v5.9/projects/${project}/findings/delta/badge?t1=${startTimestamp}&t2=HEAD`, IMAGE_SVG);
+            'GET', `/api/v5.9/projects/${project}/findings/delta/badge?t1=${startTimestamp}&t2=HEAD`, IMAGE_SVG);
         const promise = this.generatePromise<string>(xhr).then(badge => {
             const findingsDeltaLink = `${this.url}/delta.html#findings/${project}/?from=${startTimestamp}&to=HEAD`;
             return `<a href="${findingsDeltaLink}" target="_top">${badge}</a>`;

@@ -165,6 +165,8 @@ async function runUnsafe() {
 	const tmpUploadDir = createTmpUploadDir();
 	await prepareFilesToUpload(taskParameters, filesToUpload, tmpUploadDir);
 	task.debug(`Collected the following files in upload dir (first item): ${task.find(tmpUploadDir)}`);
+	// We want to upload all files in the directory, but not the directory itself and this is an ant-pattern.
+	// "?" matches at least one arbitrary character, so this excludes the directory itself.
 	await uploadFiles(taskParameters, path.join(tmpUploadDir, '?*'));
 }
 

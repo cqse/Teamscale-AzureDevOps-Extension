@@ -49,7 +49,9 @@ Configure this task for your manual test and run it.
 - Select _share_ and enter `cqse` as the organization name to share the extension with.
 - Go to the <https://cqse.visualstudio.com/_settings/extensions?tab=installed/>
 - If there is no extension installed, click on the Marketplace button and install the private version of Teamscale DevOps extension.
-- If there is already the Teamscale DevOps extension, then click on it and verify that the installed version matches with the version number written in ./vss-extension.json
+- If there is already the Teamscale DevOps extension
+  - then click on it and verify that the installed version matches with the version number written in ./vss-extension.json
+  - if you are testing the report upload task you should deinstall and reinstall the extension to make sure the existing task in the pipeline are replaced with the new one. Alternatively increase the version of the report-upload task in task.json as well.
 - **Make sure not to commit the changes you made to ./vss-extension.json and ./reportUploadTask/task.json**
 
 # Publishing
@@ -64,8 +66,8 @@ Create a token with these settings:
 Then, create a file called `token` containing this access token in the root directory of the repository.
 
 
-Before publishing, please update the CHANGELOG.md file and choose a proper version number based on semantic versioning.
-Then, enter that number in both package.json and vss-extension.json in the corresponding `version` fields.
+Before publishing, please update the CHANGELOG.md file and choose a proper version number based on semantic versioning. 
+Then, enter that number in both package.json, vss-extension.json and task.json in the corresponding `version` fields.
 
 ```bash
 npm run publish

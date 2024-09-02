@@ -23,17 +23,17 @@
   "devDependencies": {
     "replace": "^1.2.2",
     "tfx-cli": "^0.17.0",
-    "typescript": "^5.4.5",
+    "typescript": "^5.5.4",
     "shelljs": "^0.8.5"
   },
   "dependencies": {
     "@types/chosen-js": "^1.8.6",
     "chosen-js": "^1.8.7",
     "jquery": "^3.7.1",
-    "jquery-ui-dist": "^1.13.2",
+    "jquery-ui-dist": "^1.13.3",
     "vss-web-extension-sdk": "^5.141.0"
   },
   "overrides": {
-    "async": "^3.2.5"
+    "async": "^3.2.6"
   }
 }

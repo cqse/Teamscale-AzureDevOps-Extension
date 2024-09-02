@@ -47,7 +47,7 @@ async function convertCoverageFiles(coverageFiles: string[], tmpUploadDir: strin
 		logInfo('No files have to be converted before the upload.');
 		return;
 	}
-	
+
 	logInfo(`Found ${getFileCountString(fileCount, '.coverage')} that ${fileCount > 1 ? 'have': 'has'} to be converted to XML.`);
 	task.debug(`Found the following .coverage files: ${coverageFiles}`);
 
@@ -170,7 +170,9 @@ async function runUnsafe() {
 	const files = task.find(tmpUploadDir);
 	task.debug(`Collected the following files in upload dir (first item): ${files}`);
 	logSection(`Uploading ${files.length - 1} files to Teamscale`);
-	await uploadFiles(taskParameters, path.join(tmpUploadDir, '*'));
+	// We want to upload all files in the directory, but not the directory itself and this is an ant-pattern.
+	// "?" matches at least one arbitrary character, so this excludes the directory itself.
+	await uploadFiles(taskParameters, path.join(tmpUploadDir, '?*'));
 }
 
 /** Creates a new directory for the upload files in the agent's tmp directory and returns its path. */
@@ -214,9 +216,9 @@ async function prepareFilesToUpload(taskParameters: TaskParameters, filesToUploa
 }
 
 /** Uploads the specified files to Teamscale. */
-async function uploadFiles(taskParameters: TaskParameters, filesToUpload: string) {
+async function uploadFiles(taskParameters: TaskParameters, dirPatternToUpload: string) {
 	const message = `Build ${buildId}`;
-	const teamscaleUploadRunner: toolRunner.ToolRunner = createTeamscaleUploadRunner(taskParameters, message, filesToUpload);
+	const teamscaleUploadRunner: toolRunner.ToolRunner = createTeamscaleUploadRunner(taskParameters, message, dirPatternToUpload);
 
 	const exitCode: number = await teamscaleUploadRunner.exec({
 		silent: false
@@ -228,7 +230,7 @@ async function uploadFiles(taskParameters: TaskParameters, filesToUpload: string
 	}
 }
 
-function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: string, filesToUpload: string): toolRunner.ToolRunner {
+function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: string, dirPatternToUpload: string): toolRunner.ToolRunner {
 	const isWindows = os.type().match(/^Win/);
 	let teamscaleUploadPath = path.join(__dirname, 'teamscaleUpload/teamscale-upload.exe');
 	if (!isWindows) {
@@ -248,17 +250,17 @@ function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: st
     teamscaleUploadRunner.arg(['--server', taskParameters.teamscaleUrl]);
     teamscaleUploadRunner.arg(['--project', taskParameters.project]);
     teamscaleUploadRunner.arg(['--user', taskParameters.username]);
-    teamscaleUploadRunner.arg(['--partition', taskParameters.partition]);
+    teamscaleUploadRunner.arg(['--partition', "'"+taskParameters.partition+"'"]);
     teamscaleUploadRunner.arg(['--format', taskParameters.format]);
     teamscaleUploadRunner.arg(['--commit', revision]);
-    teamscaleUploadRunner.arg(['--append-to-message', message]);
+    teamscaleUploadRunner.arg(['--append-to-message', "'"+message+"'"]);
 	teamscaleUploadRunner.argIf(!utils.isEmpty(taskParameters.accessKey), ['--accesskey', taskParameters.accessKey]);
 	teamscaleUploadRunner.argIf(taskParameters.insecure, '--insecure');
 	teamscaleUploadRunner.argIf(!utils.isEmpty(taskParameters.trustedKeystoreWithPassword), ['--trusted-keystore', taskParameters.trustedKeystoreWithPassword]);
 	teamscaleUploadRunner.argIf(enableDebugOutput, '--debug');
 	// --debug automatically enables --stacktrace
 	teamscaleUploadRunner.argIf(!enableDebugOutput && taskParameters.stacktrace, '--stacktrace');
-	teamscaleUploadRunner.arg(filesToUpload);
+	teamscaleUploadRunner.arg(dirPatternToUpload);
     return teamscaleUploadRunner;
 }
 

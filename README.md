@@ -67,7 +67,7 @@ Then, create a file called `token` containing this access token in the root dire
 
 
 Before publishing, please update the CHANGELOG.md file and choose a proper version number based on semantic versioning. 
-Then, enter that number in both package.json, vss-extension.json and task.json in the corresponding `version` fields.
+Then, enter that number in both `package.json`, `vss-extension.json`, `reportUploadTask/package.json` and `reportUploadTask/task.json` in the corresponding `version` fields.
 
 ```bash
 npm run publish

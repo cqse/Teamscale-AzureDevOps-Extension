@@ -250,7 +250,7 @@ function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: st
     teamscaleUploadRunner.arg(['--server', taskParameters.teamscaleUrl]);
     teamscaleUploadRunner.arg(['--project', taskParameters.project]);
     teamscaleUploadRunner.arg(['--user', taskParameters.username]);
-    teamscaleUploadRunner.arg(['--partition', "'"+taskParameters.partition+"'"]);
+    teamscaleUploadRunner.arg(['--partition', taskParameters.partition]);
     teamscaleUploadRunner.arg(['--format', taskParameters.format]);
     teamscaleUploadRunner.arg(['--commit', revision]);
     teamscaleUploadRunner.arg(['--append-to-message', "'"+message+"'"]);

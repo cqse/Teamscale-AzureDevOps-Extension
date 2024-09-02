@@ -50,3 +50,14 @@ export function isCoverageFile(file: string): boolean {
 export function isEmpty(s: string): boolean {
 	return !s || s === '';
 }
+
+/**
+* Returns the string itself, if count is 1. Otherwise, returns the string with
+* appended "s".
+*/
+export function pluralize(str: string, count: number): string {
+	if (count === 1) {
+		return str;
+	}
+	return str + "s";
+}

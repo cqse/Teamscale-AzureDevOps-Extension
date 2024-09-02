@@ -6,6 +6,9 @@ We use [semantic versioning](http://semver.org/):
 
 # 1.3.12
 - [fix] upload task: improved logging
+- [fix] upload task: ant pattern also matched the upload directory
+- [fix] updated third party dependencies to recent versions
+- [fix] replaced legacy Teamscale API calls with new ones
 
 # 1.3.11
 - [fix] upload task failed when the number of reports was very large

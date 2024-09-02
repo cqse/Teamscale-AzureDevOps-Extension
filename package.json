@@ -23,7 +23,7 @@
   "devDependencies": {
     "replace": "^1.2.2",
     "tfx-cli": "^0.17.0",
-    "typescript": "^5.4.5",
+    "typescript": "^5.5.4",
     "shelljs": "^0.8.5"
   },
   "dependencies": {

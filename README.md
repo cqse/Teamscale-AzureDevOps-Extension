@@ -31,28 +31,7 @@ npm test
 
 ## Manual Tests
 
-You can also manually test the pipeline task by using the Azure DevOps project <https://cqse.visualstudio.com/AzureDevOps-Plugin-Test> which is also included in
-[our demo instance](https://demo.teamscale.com).
-This project contains a pipeline with our build task.
-Configure this task for your manual test and run it.
-
-- Change the (id) of the extension in ./vss-extension.json to `teamscale-azure-devops-plugin-test3`.
-- Change the `public` to `false` in ./vss-extension.json.
-- Make sure that the version number in ./vss-extension.json is larger than the one used on the Marketplace, the active private extension
-- Change the ID of the pipeline task in ./reportUploadTask/task.json to `8e8b64dc-cc55-4bd1-85da-7b5fde8efea3`.
-- Run `npm run package` to create a .vsix package.
-- Go to <https://marketplace.visualstudio.com/manage/publishers/cqsegmbh>.
-- Right-click the **private** version of the Teamscale DevOps extension.
-- Select _update_.
-- Upload your .vsix package.
-- Right-click the **private** version of the Teamscale DevOps extension again.
-- Select _share_ and enter `cqse` as the organization name to share the extension with.
-- Go to the <https://cqse.visualstudio.com/_settings/extensions?tab=installed/>
-- If there is no extension installed, click on the Marketplace button and install the private version of Teamscale DevOps extension.
-- If there is already the Teamscale DevOps extension
-  - then click on it and verify that the installed version matches with the version number written in ./vss-extension.json
-  - if you are testing the report upload task you should deinstall and reinstall the extension to make sure the existing task in the pipeline are replaced with the new one. Alternatively increase the version of the report-upload task in task.json as well.
-- **Make sure not to commit the changes you made to ./vss-extension.json and ./reportUploadTask/task.json**
+Please refer to [our wiki](https://cqse.atlassian.net/wiki/spaces/TS/pages/3035267078/K2+Azure+DevOps+Extension+Testing).
 
 # Publishing
 

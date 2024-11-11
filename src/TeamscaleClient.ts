@@ -1,6 +1,5 @@
 import { IFindingsChurnList } from './IFindingsChurnList';
 import { ITeamscaleBaseline } from './ITeamscaleBaseline';
-import { ITeamscaleBranchesInfo } from './ITeamscaleBranchesInfo';
 import { ITgaSummary } from './ITgaSummary';
 import { IProjectConnectorList } from './IProjectConnectorList';
 
@@ -173,20 +172,6 @@ export default class TeamscaleClient {
         const xhr = this.generateRequest('GET', `/api/v5.2/projects/${project}/baselines`);
         const promise = this.generatePromise<string>(xhr).then(result => {
             return JSON.parse(result) as ITeamscaleBaseline[];
-        });
-        xhr.send();
-        return promise;
-    }
-
-    /**
-     * Retrieves the list of branches of a project from the Teamscale server.
-     */
-    public retrieveBranchesForProject(project: string): PromiseLike<string[]> {
-        project = encodeURIComponent(project);
-        const xhr = this.generateRequest('GET', `/api/v6.5/projects/${project}/branches`);
-        const promise = this.generatePromise<string>(xhr).then(result => {
-            const branchesInfo = JSON.parse(result) as ITeamscaleBranchesInfo;
-            return branchesInfo.liveBranches;
         });
         xhr.send();
         return promise;

@@ -127,31 +127,6 @@
             }
         },
         {
-            "id": "pull-request-ts-findings-tab",
-            "type": "ms.vss-web.tab",
-            "description": "Shows Teamscale findings for this Pull Request.",
-            "targets": [
-                "ms.vss-code-web.pr-tabs"
-            ],
-            "properties": {
-                "name": "Teamscale Findings",
-                "title": "Teamscale Findings",
-                "uri": "sites/pull-request-findings.html",
-                "action": "Teamscale Findings"
-            }
-        },
-        {
-            "id": "pull-request-findings-dialog",
-            "type": "ms.vss-web.external-content",
-            "targets": [],
-            "properties": {
-                "uri": "{{protocol}}://{{teamscaleServer}}/delta.html#findings/{{teamscaleProject}}/?from={{sourceBranch}}:HEAD&to={{targetBranch}}:HEAD&showMergeFindings=true&kioskViewMode=true",
-                "_comment": "The following two properties 'external' and 'interactive' are not documented and stem from email communication with Microsoft team. They tell the host frame not to wait for a notification of a successful loading state and enable the integration of external content without the VSS SDK included.",
-                "external": true,
-                "interactive": false
-            }
-        },
-        {
             "id": "teamscale-login-dialog",
             "type": "ms.vss-web.control",
             "targets": [],

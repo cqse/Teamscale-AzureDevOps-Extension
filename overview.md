@@ -7,7 +7,6 @@ This Extension works with Azure DevOps Service as well as with Azure DevOps Serv
 Analyses results are integrated into
 * Azure DevOps Work Items as Test Gap- and Findings Churn Badges
 * Azure DevOps Dashboards as Dashboard Widget
-* Azure DevOps Pull Request as Tab including results of a Teamscale Delta Analysis between two branches
 
 ## Work Item Integration
 If development in the project is done Work Item (Ticket) based, you can get an overview over how many Teamscale Findings are introduced with a Work Item and if testing information is available. Additionally you can see how thoroughly changes are tested.
@@ -19,11 +18,6 @@ The Dashboard Widget can be configured to display a Findings Churn Badge and a T
 Integration into the dashboard gives a quick overview over how the project evolved since a specfic baseline or for the last days or months.
 
 ![Teamscale Azure DevOps Dashboard Integration](images/overview/dashboard-integration.png)
-
-## Pull Request Integration
-Feature branch develop is common in many projects. The integration of Teamscale findings in the Azure DevOps Pull Request allows to see how many findings would be added to the main branch of the repository if accepted.
-
-![Teamscale Azure DevOps Request Integration](images/overview/findings-in-ados-merge-request.png)
 
 # Upload coverage or other reports to Teamscale
 Coverage or other reports that are created during the build can be uploaded to Teamscale for further analysis.

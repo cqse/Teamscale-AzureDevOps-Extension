@@ -62,8 +62,8 @@ export default class NotificationUtils {
                 break;
             case 404:
                 this.showInfoBanner(`Server <a href="${teamscaleServer}" target="_top">${teamscaleServer}</a> which is `
-                    + 'configured as Teamscale server, returned a <i>Not found</i> (404) error. ' +
-                    + projectInfo + this.generateContactText());
+                    + 'configured as Teamscale server, returned a <i>Not found</i> (404) error for project ' +
+                    + projectInfo + '. ' + this.generateContactText());
 
                 VSS.notifyLoadSucceeded();
                 break;

@@ -7,6 +7,7 @@ We use [semantic versioning](http://semver.org/):
 # 1.4.0
 - removed obsolete pull request integration
 - [fix] updated third party dependencies to recent versions
+- [fix] dashboard widget configuration could not be edited
 
 # 1.3.12
 - [fix] upload task: improved logging

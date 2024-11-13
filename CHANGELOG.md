@@ -4,6 +4,9 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
+# Next Release
+- [fix] dashboard widget configuration could not be edited
+
 # 1.3.12
 - [fix] upload task: improved logging
 - [fix] upload task: ant pattern also matched the upload directory

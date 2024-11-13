@@ -20,9 +20,7 @@ export class Configuration {
 
     private teamscaleClient: TeamscaleClient = null;
     private tgaTeamscaleClient: TeamscaleClient = null;
-    private tsaTeamscaleClient: TeamscaleClient = null;
     private teamscaleTgaProjectSelect = document.getElementById('teamscale-tga-project-select') as HTMLSelectElement;
-    private teamscaleTsaProjectSelect = document.getElementById('teamscale-tsa-project-select') as HTMLSelectElement;
 
     private notificationUtils: NotificationUtils = null;
     private emailContact: string = '';
@@ -33,8 +31,6 @@ export class Configuration {
     private datepicker = $('#datepicker');
     private testGapCheckbox = $('#show-test-gap');
     private separateTgaServerCheckbox = $('#separate-tga-server');
-    private testSmellCheckbox = $('#show-test-smell');
-    private separateTsaServerCheckbox = $('#separate-tsa-server');
 
     private widgetHelpers: any;
     private readonly notificationService: any;
@@ -63,15 +59,11 @@ export class Configuration {
             this.datepicker.datepicker('setDate', new Date(this.widgetSettings.startFixedDate));
             this.testGapCheckbox.prop('checked', this.widgetSettings.showTestGapBadge);
             this.separateTgaServerCheckbox.prop('checked', this.widgetSettings.useSeparateTgaServer);
-            this.testSmellCheckbox.prop('checked', this.widgetSettings.showTestSmellBadge);
-            this.separateTsaServerCheckbox.prop('checked', this.widgetSettings.useSeparateTsaServer);
         }
         this.zipTgaConfiguration();
-        this.zipTsaConfiguration();
         $('#teamscale-project-select').chosen({width: '100%'}).on('change',
             () => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange));
         $('#teamscale-tga-project-select').chosen({width: '100%'}).on('change', notifyWidgetChange);
-        $('#teamscale-tsa-project-select').chosen({width: '100%'}).on('change', notifyWidgetChange);
         $('#ts-baseline-select').chosen({width: '95%'}).on('change', notifyWidgetChange);
 
         this.loadAndCheckConfiguration().then(() => this.fillDropdownsWithProjects())
@@ -93,7 +85,7 @@ export class Configuration {
      * Propagates configuration changes to the widget. Enables live preview/feedback on configuring the widget settings.
      */
     private initializeOnchangeListeners(notifyWidgetChange) {
-        const inputIds: string[] = ['baseline-days-input', 'show-test-gap', 'separate-tga-server', 'show-test-smell', 'separate-tsa-server'];
+        const inputIds: string[] = ['baseline-days-input', 'show-test-gap', 'separate-tga-server'];
         for (const inputId of inputIds) {
             document.getElementById(inputId).addEventListener('input', notifyWidgetChange);
         }
@@ -107,8 +99,6 @@ export class Configuration {
         });
         document.getElementById('show-test-gap').addEventListener('change', () => this.zipTgaConfiguration());
         document.getElementById('separate-tga-server').addEventListener('change', () => this.zipTgaConfiguration());
-        document.getElementById('show-test-smell').addEventListener('change', () => this.zipTsaConfiguration());
-        document.getElementById('separate-tsa-server').addEventListener('change', () => this.zipTsaConfiguration());
     }
 
     private async zipTgaConfiguration() {
@@ -136,31 +126,6 @@ export class Configuration {
         }
     }
 
-    private async zipTsaConfiguration() {
-        const separateTsaServerConfigContainer = document.getElementById('config-container-separate-tsa-server');
-        if (this.testSmellCheckbox.is(':checked')) {
-            separateTsaServerConfigContainer.style.display = 'block';
-        } else {
-            this.separateTsaServerCheckbox.prop('checked', false);
-            separateTsaServerConfigContainer.style.display = 'none';
-        }
-
-        const elementIds: string[] = ['config-container-teamscale-tsa-project-select', 'baseline-tsa-hint'];
-
-        let displayAttribute = 'none';
-        if (this.separateTsaServerCheckbox.is(':checked')) {
-            displayAttribute = 'block';
-
-            if (!this.teamscaleTsaProjectSelect.firstChild) {
-                this.fillTsaDropdownWithProjects();
-            }
-        }
-
-        for (const elementId of elementIds) {
-            document.getElementById(elementId).style.display = displayAttribute;
-        }
-    }
-
     private handleMissingTgaServerConfig() {
         const element = document.createElement('option');
         element.textContent = 'Error: No TGA server configured. Deactivate separate Server option or' +
@@ -171,21 +136,11 @@ export class Configuration {
         return Promise.resolve();
     }
 
-    private handleMissingTsaServerConfig() {
-        const element = document.createElement('option');
-        element.textContent = 'Error: No TSA server configured. Deactivate separate Server option or' +
-            ' configure TSA Server.';
-        this.teamscaleTsaProjectSelect.appendChild(element);
-        $('#' + this.teamscaleTsaProjectSelect.id).prop('disabled', true);
-        $('#' + this.teamscaleTsaProjectSelect.id).trigger('chosen:updated');
-        return Promise.resolve();
-    }
-
     private async fillDropdownsWithProjects() {
-        if (!this.widgetSettings || !this.widgetSettings.useSeparateTgaServer || !this.widgetSettings.useSeparateTsaServer) {
+        if (!this.widgetSettings || !this.widgetSettings.useSeparateTgaServer) {
             return this.fillTqeDropdownWithProjects();
         }
-        return Promise.all([this.fillTqeDropdownWithProjects(), this.fillTgaDropdownWithProjects(), this.fillTsaDropdownWithProjects()]);
+        return Promise.all([this.fillTqeDropdownWithProjects(), this.fillTgaDropdownWithProjects()]);
     }
 
     /**
@@ -208,21 +163,6 @@ export class Configuration {
             this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
         }
         return this.fillDropdownWithProjects(this.tgaTeamscaleClient, this.teamscaleTgaProjectSelect, '#teamscale-tga-project-select');
-    }
-
-    /**
-     * Loads a list of accessible projects from the Teamscale server and appends them to the TSA dropdown menu.
-     */
-    private async fillTsaDropdownWithProjects() {
-        let tsaUrl: string;
-        if (this.projectSettings) {
-            tsaUrl = await this.projectSettings.get(Settings.TSA_TEAMSCALE_URL_KEY);
-            if (!tsaUrl){
-                return this.handleMissingTsaServerConfig();
-            }
-            this.tsaTeamscaleClient = new TeamscaleClient(tsaUrl);
-        }
-        return this.fillDropdownWithProjects(this.tsaTeamscaleClient, this.teamscaleTsaProjectSelect, '#teamscale-tsa-project-select');
     }
 
     /**
@@ -330,20 +270,14 @@ export class Configuration {
 
         this.teamscaleClient = new TeamscaleClient(url);
         this.tgaTeamscaleClient = this.teamscaleClient;
-        this.tsaTeamscaleClient = this.teamscaleClient;
 
-        if (!this.widgetSettings || !this.widgetSettings.useSeparateTgaServer || !this.widgetSettings.useSeparateTsaServer) {
+        if (!this.widgetSettings || !this.widgetSettings.useSeparateTgaServer) {
             return Promise.resolve();
         }
 
         const tgaUrl = await this.projectSettings.get(Settings.TGA_TEAMSCALE_URL_KEY);
         if (tgaUrl) {
             this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
-        }
-
-        const tsaUrl = await this.projectSettings.get(Settings.TSA_TEAMSCALE_URL_KEY);
-        if (tsaUrl) {
-            this.tsaTeamscaleClient = new TeamscaleClient(tsaUrl);
         }
     }
 
@@ -371,7 +305,6 @@ export class Configuration {
     private getAndUpdateCustomSettings(): ITeamscaleWidgetSettings {
         const teamscaleProject: string = this.teamscaleProjectSelect.value;
         const tgaTeamscaleProject: string = this.teamscaleTgaProjectSelect.value;
-        const tsaTeamscaleProject: string = this.teamscaleTsaProjectSelect.value;
         const baselineDays: number = Number(this.baselineDaysInput.value);
         let startFixedDate: number;
         if (this.datepicker.datepicker('getDate')) {
@@ -380,8 +313,6 @@ export class Configuration {
         const tsBaseline: string = this.teamscaleBaselineSelect.value;
         const showTestGapBadge: boolean = document.getElementById('show-test-gap').checked;
         const useSeparateTgaServer: boolean = document.getElementById('separate-tga-server').checked;
-        const showTestSmellBadge: boolean = document.getElementById('show-test-smell').checked;
-        const useSeparateTsaServer: boolean = document.getElementById('separate-tsa-server').checked;
 
         const activeTimeChooser: string = $('.ui-tabs-active').attr('aria-controls');
 
@@ -389,14 +320,11 @@ export class Configuration {
             teamscaleProject,
             tgaTeamscaleProject,
             useSeparateTgaServer,
-            tsaTeamscaleProject,
-            useSeparateTsaServer,
             activeTimeChooser,
             startFixedDate,
             baselineDays,
             tsBaseline,
-            showTestGapBadge,
-            showTestSmellBadge,
+            showTestGapBadge
         } as ITeamscaleWidgetSettings;
         return this.widgetSettings;
     }

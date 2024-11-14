@@ -1,6 +1,7 @@
 Plugin for Azure DevOps that provides
 
-- Extension for the WorkItems pages to show a TestGap badge (targets JS in the browser)
+- Work Item integration that shows Findings Churn and Test Gap badges for each work item
+- Dashboard Widget that shows Findings Churn and Test Gap badges for the project
 - Pipeline Task to upload coverage, findings, and other reports to Teamscale (located in [reportUploadTask](./reportUploadTask), targets NodeJS)
 
 # Building

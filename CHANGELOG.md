@@ -5,7 +5,7 @@ We use [semantic versioning](http://semver.org/):
 - PATCH version when you make backwards compatible bug fixes.
 
 # 1.4.0
-- removed obsolete pull request integration
+- removed obsolete pull request integration. Please use the [built-in Teamscale pull request integration](https://docs.teamscale.com/howto/connecting-version-control-system/azure-devops-git/) instead.
 - [fix] updated third party dependencies to recent versions
 - [fix] dashboard widget configuration could not be edited
 

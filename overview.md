@@ -34,7 +34,7 @@ The configuration page can be reached from the lower left corner of Azure DevOps
 You can define a "Contact e-mail address" here, which will appear to users in case of connectivity issues or other problems regarding the Teamscale Extension.
 
 ## Project settings
-Add the address of your Teamscale server here. For the integration in Azure DevOps Pull Requests and Work Items, specify the name of the Teamscale project for the current Azure DevOps project.
+Add the address of your Teamscale server here. For the integration in Work Items, specify the name of the Teamscale project for the current Azure DevOps project.
 
 In some development environments a separate Teamscale server is operated for the Test Gap Analysis (TGA) in addition to a Teamscale server for the static source code analysis. Then you can specify the second Teamscale server for TGA here.
 

@@ -57,6 +57,10 @@ export class Settings {
         this.scope = scope;
     }
 
+    public getScope() : Scope {
+        return this.scope;
+    }
+
     /**
      * Saves a key value pair in Azure DevOps.
      */

@@ -17,7 +17,7 @@ export class TeamscaleWidget {
     private tgaTeamscaleClient: TeamscaleClient = null;
     private notificationUtils: NotificationUtils = null;
     private emailContact: string = '';
-    private projectSettings: Settings = null;
+    private projectSettings: ProjectSettings = null;
     private organizationSettings: Settings = null;
 
     private readonly timechooserFixedDate: string = 'start-fixed-date';
@@ -214,7 +214,8 @@ export class TeamscaleWidget {
      * Initializes the Teamscale Client with the url configured in the project settings.
      */
     private async initializeTeamscaleClient() {
-        const url = await this.projectSettings.get(Settings.TEAMSCALE_URL_KEY);
+        const storedSettings = await this.projectSettings.loadStoredProjectSettings();
+        const url = this.projectSettings.getOrDefault(Settings.TEAMSCALE_URL_KEY, storedSettings, undefined);
 
         if (!url) {
             this.notificationUtils.showErrorBanner('Teamscale is not configured for this project.' +
@@ -228,7 +229,7 @@ export class TeamscaleWidget {
             this.tgaTeamscaleClient = this.teamscaleClient;
             return;
         }
-        const tgaUrl = await this.projectSettings.get(Settings.TGA_TEAMSCALE_URL_KEY);
+        const tgaUrl = this.projectSettings.getOrDefault(Settings.TGA_TEAMSCALE_URL_KEY, storedSettings, undefined);
 
         if (!tgaUrl) {
             this.notificationUtils.showErrorBanner('No Teamscale for Test Gap Analysis is correctly configured for this project.' +

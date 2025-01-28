@@ -51,16 +51,19 @@ VSS.ready(() => {
  * Loads the current settings stored in ADOS.
  */
 async function loadCurrentSettings() {
-    teamscaleUrlInput.value = await getTeamscaleUrlForKey(Settings.TEAMSCALE_URL_KEY);
-    tgaTeamscaleUrlInput.value = await getTeamscaleUrlForKey(Settings.TGA_TEAMSCALE_URL_KEY);
-    useSeparateTestGapServerInput.checked = UiUtils.convertToBoolean(await settings.get(Settings.USE_SEPARATE_TEST_GAP_SERVER));
-    showTestGapBadgeInput.checked = UiUtils.convertToBoolean(await settings.get(Settings.SHOW_TEST_GAP_BADGE_KEY));
 
-    showFindingsBadgeInput.checked = UiUtils.convertToBoolean(await settings.get(Settings.SHOW_FINDINGS_BADGE_KEY));
+    const storedProjectSettings = await settings.loadStoredProjectSettings();
+
+    teamscaleUrlInput.value = await getTeamscaleUrlForKey(Settings.TEAMSCALE_URL_KEY, storedProjectSettings);
+    tgaTeamscaleUrlInput.value = await getTeamscaleUrlForKey(Settings.TGA_TEAMSCALE_URL_KEY, storedProjectSettings);
+    useSeparateTestGapServerInput.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.USE_SEPARATE_TEST_GAP_SERVER, storedProjectSettings, 'false'));
+    showTestGapBadgeInput.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.SHOW_TEST_GAP_BADGE_KEY, storedProjectSettings, 'false'));
+
+    showFindingsBadgeInput.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.SHOW_FINDINGS_BADGE_KEY, storedProjectSettings, 'false'));
     
-    TSA_TEAMSCALE_URL_INPUT.value = await getTeamscaleUrlForKey(Settings.TSA_TEAMSCALE_URL_KEY);
-    USE_SEPERATE_TEST_SMELL_SERVER_INPUT.checked = UiUtils.convertToBoolean(await settings.get(Settings.USE_SEPARATE_TEST_SMELL_SERVER));
-    SHOW_TEST_SMELL_BADGE_INPUT.checked = UiUtils.convertToBoolean(await settings.get(Settings.SHOW_TEST_SMELL_BADGE_KEY));
+    TSA_TEAMSCALE_URL_INPUT.value = await getTeamscaleUrlForKey(Settings.TSA_TEAMSCALE_URL_KEY, storedProjectSettings);
+    USE_SEPERATE_TEST_SMELL_SERVER_INPUT.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.USE_SEPARATE_TEST_SMELL_SERVER, storedProjectSettings, 'false'));
+    SHOW_TEST_SMELL_BADGE_INPUT.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.SHOW_TEST_SMELL_BADGE_KEY, storedProjectSettings, 'false'));
 
     const projects = await settings.getProjectsList(Settings.TEAMSCALE_PROJECTS_KEY);
     const tgaProjects = await settings.getProjectsList(Settings.TGA_TEAMSCALE_PROJECTS_KEY);
@@ -77,12 +80,8 @@ async function loadCurrentSettings() {
 /**
  * Gets the server address stored in ADOS for the stored key (TGA vs. TQE server).
  */
-async function getTeamscaleUrlForKey(key: string) {
-    const url = await settings.get(key);
-    if (url !== null && url !== undefined) {
-        return url;
-    }
-    return '';
+async function getTeamscaleUrlForKey(key: string, storedSettings: Map<string, string>) {
+    return settings.getOrDefault(key, storedSettings, '');
 }
 
 /**

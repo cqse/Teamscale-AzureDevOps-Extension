@@ -1,5 +1,6 @@
 import { Scope } from './Scope';
 import { Settings } from './Settings';
+import {ExtensionDataService} from "VSS/SDK/Services/ExtensionData";
 
 /**
  * Extends the Settings class to be able to save project specific settings.
@@ -25,8 +26,30 @@ export class ProjectSettings extends Settings {
     /**
      * Gets a value by key from Azure DevOps.
      */
-    public get(key: string): PromiseLike<string> {
-        return super.get(this.getProjectSpecificKey(key));
+    public getOrDefault(key: string, existingSettings : Map<string, string>, defaultValue: string): string {
+        const settingKey = this.getProjectSpecificKey(key);
+        if(existingSettings.has(settingKey)){
+            return existingSettings.get(settingKey);
+        }
+        return defaultValue;
+    }
+
+    public async loadStoredProjectSettings(): Promise<Map<string, string>> {
+       return await this.getConfiguredSettingsForProject();
+    }
+
+    public async getConfiguredSettingsForProject(): Promise<Map<string, string>> {
+        const storedSettingsMap = new Map<string, string>();
+        const projectPrefix = this.project.substring(0, 30) + '-';
+        const dataService: ExtensionDataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
+        const allDocs = await dataService.getDocuments('$settings', {scopeType: this.getScope()});
+        allDocs.map(doc => {
+            const id: string = doc.id;
+            if(id.startsWith(projectPrefix)) {
+                storedSettingsMap.set(doc.id, doc.value)
+            }
+        });
+        return storedSettingsMap;
     }
 
     /**
@@ -51,6 +74,6 @@ export class ProjectSettings extends Settings {
 
     private getProjectSpecificKey(key: string): string {
         // storing too long key does currently not work in ADOS so truncating here
-        return `${this.project.substr(0, 30)}-${key}`;
+        return `${this.project.substring(0, 30)}-${key}`;
     }
 }

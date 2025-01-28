@@ -34,15 +34,12 @@ export class ProjectSettings extends Settings {
         return defaultValue;
     }
 
+    /** Fetches and returns the stored project settings. */
     public async loadStoredProjectSettings(): Promise<Map<string, string>> {
-       return await this.getConfiguredSettingsForProject();
-    }
-
-    public async getConfiguredSettingsForProject(): Promise<Map<string, string>> {
         const storedSettingsMap = new Map<string, string>();
         const projectPrefix = this.project.substring(0, 30) + '-';
         const dataService: ExtensionDataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
-        const allDocs = await dataService.getDocuments('$settings', {scopeType: this.getScope()});
+        const allDocs = await dataService.getDocuments('$settings', {scopeType: this.scope});
         allDocs.map(doc => {
             const id: string = doc.id;
             if(id.startsWith(projectPrefix)) {

@@ -51,14 +51,11 @@ export class Settings {
     /** Key that is used to store the contact email for the TS responsible person. */
     public static readonly EMAIL_CONTACT_KEY = 'email-contact';
 
-    private readonly scope: Scope;
+    /**  The scope in which the settings are stored. **/
+    protected readonly scope: Scope;
 
     constructor(scope: Scope) {
         this.scope = scope;
-    }
-
-    public getScope() : Scope {
-        return this.scope;
     }
 
     /**

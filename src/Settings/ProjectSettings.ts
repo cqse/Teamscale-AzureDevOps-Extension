@@ -24,7 +24,8 @@ export class ProjectSettings extends Settings {
     }
 
     /**
-     * Gets a value by key from Azure DevOps.
+     * Gets the value of the given key from the given map of existing Azure DevOps project settings. If the key
+     * does not exist, then the given default value is returned.
      */
     public getOrDefault(key: string, existingSettings : Map<string, string>, defaultValue: string): string {
         const settingKey = this.getProjectSpecificKey(key);
@@ -59,14 +60,13 @@ export class ProjectSettings extends Settings {
     /**
      * Gets a list of project names stored under the given key in Azure DevOps.
      */
-    public getProjectsList(key: string): PromiseLike<string[]> {
-        return super.get(this.getProjectSpecificKey(key)).then(stringifiedProjects => {
-            try {
-                return JSON.parse(stringifiedProjects);
-            } catch (e) {
-                return [stringifiedProjects];
-            }
-        });
+    public getProjectsList(key: string, existingSettings : Map<string, string>): string[] {
+       const projects = this.getOrDefault(key, existingSettings, "[]");
+        try {
+            return JSON.parse(projects);
+        } catch (e) {
+            return [projects];
+        }
     }
 
     private getProjectSpecificKey(key: string): string {

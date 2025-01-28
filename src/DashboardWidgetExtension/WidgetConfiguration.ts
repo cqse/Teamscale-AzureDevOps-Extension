@@ -246,7 +246,7 @@ export class Configuration {
     }
 
     /**
-     * Loads the Teamscale email contact from the organization settings and assures that an Teamscale server url and project
+     * Loads the Teamscale email contact from the organization settings and assures that a Teamscale server url and project
      * name is set in the Azure DevOps project settings.
      */
     private async loadAndCheckConfiguration() {
@@ -255,15 +255,15 @@ export class Configuration {
         this.organizationSettings = new Settings(Scope.ProjectCollection);
 
         this.emailContact = await this.organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
-        const storedSettings = await this.projectSettings.loadStoredProjectSettings();
-        return Promise.all([this.initializeTeamscaleClient(storedSettings), this.initializeNotificationUtils(storedSettings)]);
+        return Promise.all([this.initializeTeamscaleClient(), this.initializeNotificationUtils()]);
     }
 
     /**
      * Initializes the Teamscale Client with the url configured in the project settings.
      */
-    private async initializeTeamscaleClient(existingSettings : Map<string, string>) {
-        const url = this.projectSettings.getOrDefault(Settings.TEAMSCALE_URL_KEY, existingSettings, undefined);
+    private async initializeTeamscaleClient() {
+        const storedSettings = await this.projectSettings.loadStoredProjectSettings();
+        const url = this.projectSettings.getOrDefault(Settings.TEAMSCALE_URL_KEY, storedSettings, undefined);
 
         if (!url) {
             this.notificationUtils.showErrorBanner(`Teamscale is not configured for this Azure Dev Ops project.`);
@@ -277,7 +277,7 @@ export class Configuration {
             return Promise.resolve();
         }
 
-        const tgaUrl = this.projectSettings.getOrDefault(Settings.TGA_TEAMSCALE_URL_KEY, existingSettings, undefined);
+        const tgaUrl = this.projectSettings.getOrDefault(Settings.TGA_TEAMSCALE_URL_KEY, storedSettings, undefined);
         if (tgaUrl) {
             this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
         }
@@ -286,9 +286,7 @@ export class Configuration {
     /**
      * Initializes the notification and login management handling errors in Teamscale communication.
      */
-    private async initializeNotificationUtils(existingSettings : Map<string, string>) {
-        const url = this.projectSettings.getOrDefault(Settings.TEAMSCALE_URL_KEY, existingSettings, undefined);
-
+    private async initializeNotificationUtils() {
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
             null, this.emailContact, false);
     }

@@ -19,7 +19,7 @@ const tgaTeamscaleUrlInput = document.getElementById('tga-teamscale-url') as HTM
 const tgaTeamscaleProjectInput = document.getElementById('tga-teamscale-project') as HTMLInputElement;
 const TSA_CONFIGURATION_DIV = document.getElementById('extra-tsa-configuration') as HTMLDivElement;
 const TSA_TEAMSCALE_URL_INPUT = document.getElementById('tsa-teamscale-url') as HTMLInputElement;
-const USE_SEPERATE_TEST_SMELL_SERVER_INPUT = document.getElementById('use-extra-tsa-server') as HTMLInputElement;
+const USE_SEPARATE_TEST_SMELL_SERVER_INPUT = document.getElementById('use-extra-tsa-server') as HTMLInputElement;
 const TSA_TEAMSCALE_PROJECT_INPUT = document.getElementById('tsa-teamscale-project') as HTMLInputElement;
 const showTestGapBadgeInput = document.getElementById('show-work-item-tga-badge') as HTMLInputElement;
 const showFindingsBadgeInput = document.getElementById('show-work-item-tqe-badge') as HTMLInputElement;
@@ -38,7 +38,7 @@ VSS.ready(() => {
     
     saveButtonElement.onclick = () => saveFormValues();
     useSeparateTestGapServerInput.onchange = () => zipTgaConfiguration();
-    USE_SEPERATE_TEST_SMELL_SERVER_INPUT.onchange = () => zipTsaConfiguration();
+    USE_SEPARATE_TEST_SMELL_SERVER_INPUT.onchange = () => zipTsaConfiguration();
 
     try {
         loadCurrentSettings();
@@ -51,23 +51,22 @@ VSS.ready(() => {
  * Loads the current settings stored in ADOS.
  */
 async function loadCurrentSettings() {
-
     const storedProjectSettings = await settings.loadStoredProjectSettings();
 
-    teamscaleUrlInput.value = await getTeamscaleUrlForKey(Settings.TEAMSCALE_URL_KEY, storedProjectSettings);
-    tgaTeamscaleUrlInput.value = await getTeamscaleUrlForKey(Settings.TGA_TEAMSCALE_URL_KEY, storedProjectSettings);
+    teamscaleUrlInput.value = settings.getOrDefault(Settings.TEAMSCALE_URL_KEY, storedProjectSettings, '');
+    tgaTeamscaleUrlInput.value = settings.getOrDefault(Settings.TGA_TEAMSCALE_URL_KEY, storedProjectSettings, '');
     useSeparateTestGapServerInput.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.USE_SEPARATE_TEST_GAP_SERVER, storedProjectSettings, 'false'));
     showTestGapBadgeInput.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.SHOW_TEST_GAP_BADGE_KEY, storedProjectSettings, 'false'));
 
     showFindingsBadgeInput.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.SHOW_FINDINGS_BADGE_KEY, storedProjectSettings, 'false'));
     
-    TSA_TEAMSCALE_URL_INPUT.value = await getTeamscaleUrlForKey(Settings.TSA_TEAMSCALE_URL_KEY, storedProjectSettings);
-    USE_SEPERATE_TEST_SMELL_SERVER_INPUT.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.USE_SEPARATE_TEST_SMELL_SERVER, storedProjectSettings, 'false'));
+    TSA_TEAMSCALE_URL_INPUT.value = settings.getOrDefault(Settings.TSA_TEAMSCALE_URL_KEY, storedProjectSettings, '');
+    USE_SEPARATE_TEST_SMELL_SERVER_INPUT.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.USE_SEPARATE_TEST_SMELL_SERVER, storedProjectSettings, 'false'));
     SHOW_TEST_SMELL_BADGE_INPUT.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.SHOW_TEST_SMELL_BADGE_KEY, storedProjectSettings, 'false'));
 
-    const projects = await settings.getProjectsList(Settings.TEAMSCALE_PROJECTS_KEY);
-    const tgaProjects = await settings.getProjectsList(Settings.TGA_TEAMSCALE_PROJECTS_KEY);
-    const tsaProjects = await settings.getProjectsList(Settings.TSA_TEAMSCALE_PROJECTS_KEY);
+    const projects = settings.getProjectsList(Settings.TEAMSCALE_PROJECTS_KEY, storedProjectSettings);
+    const tgaProjects = settings.getProjectsList(Settings.TGA_TEAMSCALE_PROJECTS_KEY, storedProjectSettings);
+    const tsaProjects = settings.getProjectsList(Settings.TSA_TEAMSCALE_PROJECTS_KEY, storedProjectSettings);
     teamscaleProjectInput.value = projects.join(projectSeparator);
     tgaTeamscaleProjectInput.value = tgaProjects.join(projectSeparator);
     TSA_TEAMSCALE_PROJECT_INPUT.value = tsaProjects.join(projectSeparator);
@@ -75,13 +74,6 @@ async function loadCurrentSettings() {
     zipTgaConfiguration();
     zipTsaConfiguration();
     VSS.notifyLoadSucceeded();
-}
-
-/**
- * Gets the server address stored in ADOS for the stored key (TGA vs. TQE server).
- */
-async function getTeamscaleUrlForKey(key: string, storedSettings: Map<string, string>) {
-    return settings.getOrDefault(key, storedSettings, '');
 }
 
 /**
@@ -99,7 +91,7 @@ function zipTgaConfiguration() {
  * Hides and shows the tsa configuration items, depending on whether a separate TSA server should be used.
  */
 function zipTsaConfiguration() {
-    if (USE_SEPERATE_TEST_SMELL_SERVER_INPUT.checked) {
+    if (USE_SEPARATE_TEST_SMELL_SERVER_INPUT.checked) {
         TSA_CONFIGURATION_DIV.style.display = 'block';
         return;
     }
@@ -140,7 +132,7 @@ function createFailedLog(valueDescription: string, error?: any) {
 }
 
 /**
- * Saves the entered TS Server an Project values to the Project settings.
+ * Saves the entered TS Server a Project values to the Project settings.
  */
 function saveFormValues() {
     saveUrlAndProject(teamscaleUrlInput.value, teamscaleProjectInput.value, Settings.TEAMSCALE_URL_KEY,
@@ -166,7 +158,7 @@ function saveFormValues() {
         .then(extraTgaServer => createSuccessfulLog('Use Extra Test Gap Server Option', extraTgaServer),
             e => createFailedLog('Use Extra Test Gap Option', e));
 
-    settings.save(Settings.USE_SEPARATE_TEST_SMELL_SERVER, String(USE_SEPERATE_TEST_SMELL_SERVER_INPUT.checked))
+    settings.save(Settings.USE_SEPARATE_TEST_SMELL_SERVER, String(USE_SEPARATE_TEST_SMELL_SERVER_INPUT.checked))
         .then(extraTsaServer => createSuccessfulLog('Use Extra Test Smell Server Option', extraTsaServer),
             e => createFailedLog('Use Extra Test Smell Option', e));
     

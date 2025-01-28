@@ -130,16 +130,17 @@ export class TeamscaleWidget {
     }
 
     /**
-     * Loads the Teamscale email contact from the organization settings and assures that an Teamscale server url and project
+     * Loads the Teamscale email contact from the organization settings and assures that a Teamscale server url and project
      * name is set in the Azure DevOps project settings.
      */
     private async loadAndCheckConfiguration() {
         const azureProjectName = VSS.getWebContext().project.name;
         this.projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
         this.organizationSettings = new Settings(Scope.ProjectCollection);
-
         this.emailContact = await this.organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
-        return Promise.all([this.initializeTeamscaleClient(), this.initializeNotificationUtils()]);
+
+        await this.initializeNotificationUtils();
+        return Promise.all([this.initializeTeamscaleClient()]);
     }
 
     /**

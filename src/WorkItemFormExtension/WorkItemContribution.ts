@@ -93,7 +93,7 @@ VSS.require(['TFS/WorkItemTracking/Services', 'VSS/Controls', 'VSS/Controls/Noti
     });
 
 /**
- * Loads the Teamscale email contact from the organization settings and assures that an Teamscale server url and project
+ * Loads the Teamscale email contact from the organization settings and assures that a Teamscale server url and project
  * name is set in the Azure DevOps project settings.
  */
 async function loadAndCheckConfiguration() {
@@ -104,7 +104,8 @@ async function loadAndCheckConfiguration() {
 
     emailContact = await organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
     storedSettingsMap = await projectSettings.loadStoredProjectSettings();
-    return Promise.all([initializeTeamscaleClients(), resolveIssueId(), initializeNotificationUtils()]).then(() =>
+    await initializeNotificationUtils();
+    return Promise.all([initializeTeamscaleClients(), resolveIssueId()]).then(() =>
         resolveProjectNames());
 }
 
@@ -112,8 +113,6 @@ async function loadAndCheckConfiguration() {
  * Initializes the notification and login management handling errors in Teamscale communication.
  */
 async function initializeNotificationUtils() {
-    const url = projectSettings.getOrDefault(Settings.TEAMSCALE_URL_KEY, storedSettingsMap, '');
-    const project = projectSettings.getOrDefault(Settings.TEAMSCALE_PROJECTS_KEY, storedSettingsMap, '');
     const callbackOnLoginClose = () => {
         $('#tga-badge').empty();
         $('#message-div').empty();
@@ -316,7 +315,7 @@ async function resolveTgaProjectName() {
 async function resolveProjectName(teamscaleClient, storageProjectsKey, badgeType, readableBadgeType) {
     let teamscaleProject: string;
     let unauthorized: boolean = false;
-    const teamscaleCandidateProjects = await projectSettings.getProjectsList(storageProjectsKey);
+    const teamscaleCandidateProjects = projectSettings.getProjectsList(storageProjectsKey, storedSettingsMap);
     try {
         teamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(teamscaleClient,
             teamscaleCandidateProjects, issueId, notificationUtils, badgeType);

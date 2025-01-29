@@ -1,6 +1,6 @@
 import { Scope } from './Scope';
 import { Settings } from './Settings';
-import {ExtensionDataService} from "VSS/SDK/Services/ExtensionData";
+import {ExtensionSetting} from "./ExtensionSetting";
 
 /**
  * Extends the Settings class to be able to save project specific settings.
@@ -24,30 +24,12 @@ export class ProjectSettings extends Settings {
     }
 
     /**
-     * Gets the value of the given key from the given map of existing Azure DevOps project settings. If the key
-     * does not exist, then the given default value is returned.
+     *  Gets the stored value for the given extension setting from Azure DevOps for the current project. If no value is
+     *  stored, the setting's default value is returned.
      */
-    public getOrDefault(key: string, existingSettings : Map<string, string>, defaultValue: string): string {
-        const settingKey = this.getProjectSpecificKey(key);
-        if(existingSettings.has(settingKey)){
-            return existingSettings.get(settingKey);
-        }
-        return defaultValue;
-    }
-
-    /** Fetches and returns the stored project settings. */
-    public async loadStoredProjectSettings(): Promise<Map<string, string>> {
-        const storedSettingsMap = new Map<string, string>();
-        const projectPrefix = this.project.substring(0, 30) + '-';
-        const dataService: ExtensionDataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
-        const allDocs = await dataService.getDocuments('$settings', {scopeType: this.scope});
-        allDocs.map(doc => {
-            const id: string = doc.id;
-            if(id.startsWith(projectPrefix)) {
-                storedSettingsMap.set(doc.id, doc.value)
-            }
-        });
-        return storedSettingsMap;
+    public async get(setting: ExtensionSetting): Promise<string> {
+        const projectSpecificSetting = new ExtensionSetting(this.getProjectSpecificKey(setting.key), setting.defaultValue);
+        return super.get(projectSpecificSetting);
     }
 
     /**
@@ -60,8 +42,8 @@ export class ProjectSettings extends Settings {
     /**
      * Gets a list of project names stored under the given key in Azure DevOps.
      */
-    public getProjectsList(key: string, existingSettings : Map<string, string>): string[] {
-       const projects = this.getOrDefault(key, existingSettings, "[]");
+    public async getProjectsList(setting: ExtensionSetting): Promise<string[]> {
+       const projects = await this.get(setting);
         try {
             return JSON.parse(projects);
         } catch (e) {

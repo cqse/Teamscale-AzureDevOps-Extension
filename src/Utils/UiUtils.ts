@@ -62,3 +62,8 @@ export function convertToBoolean(input: string): boolean | undefined {
         return undefined;
     }
 }
+
+/** Checks if a string is empty or contains only whitespaces. */
+export function isEmptyOrWhitespace(string: string | null | undefined): string is '' | null | undefined {
+    return string == null || string.trim() === '';
+}

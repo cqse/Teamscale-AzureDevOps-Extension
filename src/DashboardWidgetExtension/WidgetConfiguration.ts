@@ -11,6 +11,8 @@ import { Scope } from '../Settings/Scope';
 import { Settings } from '../Settings/Settings';
 import TeamscaleClient from '../TeamscaleClient';
 import NotificationUtils from '../Utils/NotificationUtils';
+import {ExtensionSetting} from "../Settings/ExtensionSetting";
+import UiUtils = require('../Utils/UiUtils');
 
 export class Configuration {
     private projectSettings: ProjectSettings = null;
@@ -156,9 +158,8 @@ export class Configuration {
     private async fillTgaDropdownWithProjects() {
         let tgaUrl: string;
         if (this.projectSettings) {
-            const storedSettings = await this.projectSettings.loadStoredProjectSettings();
-            tgaUrl = this.projectSettings.getOrDefault(Settings.TGA_TEAMSCALE_URL_KEY, storedSettings, undefined);
-            if (!tgaUrl){
+            tgaUrl = await this.projectSettings.get(ExtensionSetting.TGA_TEAMSCALE_URL);
+            if (UiUtils.isEmptyOrWhitespace(tgaUrl)){
                 return this.handleMissingTgaServerConfig();
             }
             this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
@@ -254,7 +255,7 @@ export class Configuration {
         this.projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
         this.organizationSettings = new Settings(Scope.ProjectCollection);
 
-        this.emailContact = await this.organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
+        this.emailContact = await this.organizationSettings.get(ExtensionSetting.EMAIL_CONTACT);
         return Promise.all([this.initializeTeamscaleClient(), this.initializeNotificationUtils()]);
     }
 
@@ -262,10 +263,9 @@ export class Configuration {
      * Initializes the Teamscale Client with the url configured in the project settings.
      */
     private async initializeTeamscaleClient() {
-        const storedSettings = await this.projectSettings.loadStoredProjectSettings();
-        const url = this.projectSettings.getOrDefault(Settings.TEAMSCALE_URL_KEY, storedSettings, undefined);
+        const url = await this.projectSettings.get(ExtensionSetting.TEAMSCALE_URL);
 
-        if (!url) {
+        if (UiUtils.isEmptyOrWhitespace(url)) {
             this.notificationUtils.showErrorBanner(`Teamscale is not configured for this Azure Dev Ops project.`);
             return Promise.reject();
         }
@@ -277,8 +277,8 @@ export class Configuration {
             return Promise.resolve();
         }
 
-        const tgaUrl = this.projectSettings.getOrDefault(Settings.TGA_TEAMSCALE_URL_KEY, storedSettings, undefined);
-        if (tgaUrl) {
+        const tgaUrl = await this.projectSettings.get(ExtensionSetting.TGA_TEAMSCALE_URL);
+        if (!UiUtils.isEmptyOrWhitespace(tgaUrl)) {
             this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
         }
     }

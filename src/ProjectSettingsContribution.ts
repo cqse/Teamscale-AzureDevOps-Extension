@@ -3,9 +3,9 @@
  */
 import {ProjectSettings} from './Settings/ProjectSettings';
 import {Scope} from './Settings/Scope';
-import {Settings} from './Settings/Settings';
 import {getCurrentTimestamp} from './Utils/UiUtils';
 import UiUtils = require('./Utils/UiUtils');
+import {ExtensionSetting} from "./Settings/ExtensionSetting";
 
 let settings: ProjectSettings = null;
 
@@ -51,22 +51,20 @@ VSS.ready(() => {
  * Loads the current settings stored in ADOS.
  */
 async function loadCurrentSettings() {
-    const storedProjectSettings = await settings.loadStoredProjectSettings();
+    teamscaleUrlInput.value = await settings.get(ExtensionSetting.TEAMSCALE_URL);
+    tgaTeamscaleUrlInput.value = await settings.get(ExtensionSetting.TGA_TEAMSCALE_URL);
+    useSeparateTestGapServerInput.checked = UiUtils.convertToBoolean(await settings.get(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER));
+    showTestGapBadgeInput.checked = UiUtils.convertToBoolean(await settings.get(ExtensionSetting.SHOW_TEST_GAP_BADGE));
 
-    teamscaleUrlInput.value = settings.getOrDefault(Settings.TEAMSCALE_URL_KEY, storedProjectSettings, '');
-    tgaTeamscaleUrlInput.value = settings.getOrDefault(Settings.TGA_TEAMSCALE_URL_KEY, storedProjectSettings, '');
-    useSeparateTestGapServerInput.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.USE_SEPARATE_TEST_GAP_SERVER, storedProjectSettings, 'false'));
-    showTestGapBadgeInput.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.SHOW_TEST_GAP_BADGE_KEY, storedProjectSettings, 'false'));
-
-    showFindingsBadgeInput.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.SHOW_FINDINGS_BADGE_KEY, storedProjectSettings, 'false'));
+    showFindingsBadgeInput.checked = UiUtils.convertToBoolean(await settings.get(ExtensionSetting.SHOW_FINDINGS_BADGE));
     
-    TSA_TEAMSCALE_URL_INPUT.value = settings.getOrDefault(Settings.TSA_TEAMSCALE_URL_KEY, storedProjectSettings, '');
-    USE_SEPARATE_TEST_SMELL_SERVER_INPUT.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.USE_SEPARATE_TEST_SMELL_SERVER, storedProjectSettings, 'false'));
-    SHOW_TEST_SMELL_BADGE_INPUT.checked = UiUtils.convertToBoolean(settings.getOrDefault(Settings.SHOW_TEST_SMELL_BADGE_KEY, storedProjectSettings, 'false'));
+    TSA_TEAMSCALE_URL_INPUT.value = await settings.get(ExtensionSetting.TSA_TEAMSCALE_URL);
+    USE_SEPARATE_TEST_SMELL_SERVER_INPUT.checked = UiUtils.convertToBoolean(await settings.get(ExtensionSetting.USE_SEPARATE_TEST_SMELL_SERVER));
+    SHOW_TEST_SMELL_BADGE_INPUT.checked = UiUtils.convertToBoolean(await settings.get(ExtensionSetting.SHOW_TEST_SMELL_BADGE));
 
-    const projects = settings.getProjectsList(Settings.TEAMSCALE_PROJECTS_KEY, storedProjectSettings);
-    const tgaProjects = settings.getProjectsList(Settings.TGA_TEAMSCALE_PROJECTS_KEY, storedProjectSettings);
-    const tsaProjects = settings.getProjectsList(Settings.TSA_TEAMSCALE_PROJECTS_KEY, storedProjectSettings);
+    const projects = await settings.getProjectsList(ExtensionSetting.TEAMSCALE_PROJECTS);
+    const tgaProjects = await settings.getProjectsList(ExtensionSetting.TGA_TEAMSCALE_PROJECTS);
+    const tsaProjects = await settings.getProjectsList(ExtensionSetting.TSA_TEAMSCALE_PROJECTS);
     teamscaleProjectInput.value = projects.join(projectSeparator);
     tgaTeamscaleProjectInput.value = tgaProjects.join(projectSeparator);
     TSA_TEAMSCALE_PROJECT_INPUT.value = tsaProjects.join(projectSeparator);
@@ -135,30 +133,30 @@ function createFailedLog(valueDescription: string, error?: any) {
  * Saves the entered TS Server a Project values to the Project settings.
  */
 function saveFormValues() {
-    saveUrlAndProject(teamscaleUrlInput.value, teamscaleProjectInput.value, Settings.TEAMSCALE_URL_KEY,
-        Settings.TEAMSCALE_PROJECTS_KEY);
-    saveUrlAndProject(tgaTeamscaleUrlInput.value, tgaTeamscaleProjectInput.value, Settings.TGA_TEAMSCALE_URL_KEY,
-        Settings.TGA_TEAMSCALE_PROJECTS_KEY);
-    saveUrlAndProject(TSA_TEAMSCALE_URL_INPUT.value, TSA_TEAMSCALE_PROJECT_INPUT.value, Settings.TSA_TEAMSCALE_URL_KEY,
-            Settings.TSA_TEAMSCALE_PROJECTS_KEY);
+    saveUrlAndProject(teamscaleUrlInput.value, teamscaleProjectInput.value, ExtensionSetting.TEAMSCALE_URL.key,
+        ExtensionSetting.TEAMSCALE_PROJECTS.key);
+    saveUrlAndProject(tgaTeamscaleUrlInput.value, tgaTeamscaleProjectInput.value, ExtensionSetting.TGA_TEAMSCALE_URL.key,
+        ExtensionSetting.TGA_TEAMSCALE_PROJECTS.key);
+    saveUrlAndProject(TSA_TEAMSCALE_URL_INPUT.value, TSA_TEAMSCALE_PROJECT_INPUT.value, ExtensionSetting.TSA_TEAMSCALE_URL.key,
+        ExtensionSetting.TSA_TEAMSCALE_PROJECTS.key);
 
-    settings.save(Settings.SHOW_TEST_GAP_BADGE_KEY, String(showTestGapBadgeInput.checked))
+    settings.save(ExtensionSetting.SHOW_TEST_GAP_BADGE.key, String(showTestGapBadgeInput.checked))
         .then(showTestGapBadge => createSuccessfulLog('Show Test Gap Badge Option', showTestGapBadge),
             e => createFailedLog('Show Test Gap Badge Option', e));
 
-    settings.save(Settings.SHOW_FINDINGS_BADGE_KEY, String(showFindingsBadgeInput.checked))
+    settings.save(ExtensionSetting.SHOW_FINDINGS_BADGE.key, String(showFindingsBadgeInput.checked))
         .then(showFindingsBadge => createSuccessfulLog('Show Findings Churn Badge Option', showFindingsBadge),
             e => createFailedLog('Show Findings Churn Badge Option', e));
 
-    settings.save(Settings.SHOW_TEST_SMELL_BADGE_KEY, String(SHOW_TEST_SMELL_BADGE_INPUT.checked))
+    settings.save(ExtensionSetting.SHOW_TEST_SMELL_BADGE.key, String(SHOW_TEST_SMELL_BADGE_INPUT.checked))
         .then(showTestSmellBadge => createSuccessfulLog('Show Test Smell Badge Option', showTestSmellBadge),
             e => createFailedLog('Show Test Smell Badge Option', e));        
 
-    settings.save(Settings.USE_SEPARATE_TEST_GAP_SERVER, String(useSeparateTestGapServerInput.checked))
+    settings.save(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER.key, String(useSeparateTestGapServerInput.checked))
         .then(extraTgaServer => createSuccessfulLog('Use Extra Test Gap Server Option', extraTgaServer),
             e => createFailedLog('Use Extra Test Gap Option', e));
 
-    settings.save(Settings.USE_SEPARATE_TEST_SMELL_SERVER, String(USE_SEPARATE_TEST_SMELL_SERVER_INPUT.checked))
+    settings.save(ExtensionSetting.USE_SEPARATE_TEST_SMELL_SERVER.key, String(USE_SEPARATE_TEST_SMELL_SERVER_INPUT.checked))
         .then(extraTsaServer => createSuccessfulLog('Use Extra Test Smell Server Option', extraTsaServer),
             e => createFailedLog('Use Extra Test Smell Option', e));
     

@@ -7,10 +7,11 @@ import { ITeamscaleBaseline } from '../ITeamscaleBaseline';
 import { ITeamscaleWidgetSettings } from '../Settings/ITeamscaleWidgetSettings';
 import { ProjectSettings } from '../Settings/ProjectSettings';
 import { Scope } from '../Settings/Scope';
-import { Settings } from '../Settings/Settings';
+import {Settings} from '../Settings/Settings';
 import TeamscaleClient from '../TeamscaleClient';
 import NotificationUtils from '../Utils/NotificationUtils';
 import UiUtils = require('../Utils/UiUtils');
+import {ExtensionSetting} from "../Settings/ExtensionSetting";
 
 export class TeamscaleWidget {
     private teamscaleClient: TeamscaleClient = null;
@@ -137,7 +138,7 @@ export class TeamscaleWidget {
         const azureProjectName = VSS.getWebContext().project.name;
         this.projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
         this.organizationSettings = new Settings(Scope.ProjectCollection);
-        this.emailContact = await this.organizationSettings.get(Settings.EMAIL_CONTACT_KEY);
+        this.emailContact = await this.organizationSettings.get(ExtensionSetting.EMAIL_CONTACT);
 
         await this.initializeNotificationUtils();
         return Promise.all([this.initializeTeamscaleClient()]);
@@ -215,10 +216,9 @@ export class TeamscaleWidget {
      * Initializes the Teamscale Client with the url configured in the project settings.
      */
     private async initializeTeamscaleClient() {
-        const storedSettings = await this.projectSettings.loadStoredProjectSettings();
-        const url = this.projectSettings.getOrDefault(Settings.TEAMSCALE_URL_KEY, storedSettings, undefined);
+        const url: string = await this.projectSettings.get(ExtensionSetting.TEAMSCALE_URL);
 
-        if (!url) {
+        if (UiUtils.isEmptyOrWhitespace(url)) {
             this.notificationUtils.showErrorBanner('Teamscale is not configured for this project.' +
                 this.notificationUtils.generateContactText());
             return Promise.reject();
@@ -230,9 +230,9 @@ export class TeamscaleWidget {
             this.tgaTeamscaleClient = this.teamscaleClient;
             return;
         }
-        const tgaUrl = this.projectSettings.getOrDefault(Settings.TGA_TEAMSCALE_URL_KEY, storedSettings, undefined);
+        const tgaUrl = await this.projectSettings.get(ExtensionSetting.TGA_TEAMSCALE_URL);
 
-        if (!tgaUrl) {
+        if (UiUtils.isEmptyOrWhitespace(tgaUrl)) {
             this.notificationUtils.showErrorBanner('No Teamscale for Test Gap Analysis is correctly configured for this project.' +
                 this.notificationUtils.generateContactText());
             return Promise.reject();
@@ -263,7 +263,7 @@ export class TeamscaleWidget {
 
     /**
      * Calculate the start timestamp for the badges based on the configured time chooser method and value.
-     * Returns an rejecting promise if the widget is configured to use a Teamscale baseline that could not be resolved
+     * Returns a rejecting promise if the widget is configured to use a Teamscale baseline that could not be resolved
      * to a timespan.
      */
     private calculateStartTimestamp(): PromiseLike<number> {
@@ -285,7 +285,7 @@ export class TeamscaleWidget {
 
     /**
      * If the given array of Teamscale baselines contains a baseline with the name of baseline to use in the widget,
-     * the timestamp of the baseline is returned. Otherwise undefined.
+     * the timestamp of the baseline is returned. Otherwise, undefined.
      */
     private getTimestampForConfiguredBaseline(baselines: ITeamscaleBaseline[]): undefined | number {
         for (const baseline of baselines) {

@@ -256,7 +256,8 @@ export class Configuration {
         this.organizationSettings = new Settings(Scope.ProjectCollection);
 
         this.emailContact = await this.organizationSettings.get(ExtensionSetting.EMAIL_CONTACT);
-        return Promise.all([this.initializeTeamscaleClient(), this.initializeNotificationUtils()]);
+        await this.initializeNotificationUtils();
+        return Promise.all([this.initializeTeamscaleClient()]);
     }
 
     /**

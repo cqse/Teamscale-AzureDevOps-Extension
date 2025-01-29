@@ -45,6 +45,8 @@ export class Settings {
         if(!this.configuredVssSettings) {
             this.configuredVssSettings = new Map();
             const dataService: ExtensionDataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
+            // In Azure DevOps, settings are stored internally as documents. So we fetch all documents to retrieve all
+            // the already configured settings. See: https://learn.microsoft.com/en-us/azure/devops/extend/develop/data-storage?toc=%2Fazure%2Fdevops%2Fmarketplace-extensibility%2Ftoc.json&view=azure-devops#how-settings-get-stored
             const allSettings = await dataService.getDocuments('$settings', {scopeType: this.scope});
             allSettings.map(doc => {
                 this.configuredVssSettings.set(doc.id, doc.value)

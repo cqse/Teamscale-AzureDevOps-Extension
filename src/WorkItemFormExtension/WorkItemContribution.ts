@@ -211,7 +211,7 @@ async function initializeTeamscaleClients() {
 
     const url = await projectSettings.get(ExtensionSetting.TEAMSCALE_URL);
     if (UiUtils.isEmptyOrWhitespace(url) && (showFindingsBadge || (!useExtraTgaConfiguration && showTestGapBadge) || (!useExtraTsaConfiguration && showTestSmellBadge))) {
-        throw new Error('Teamscale is not configured for this project.' + notificationUtils.generateContactText());
+        throw new Error('Teamscale is not configured for this project. ' + notificationUtils.generateContactText());
     }
     teamscaleClient = new TeamscaleClient(url);
     useExtraTgaConfiguration = UiUtils.convertToBoolean(await projectSettings.get(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER));

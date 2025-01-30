@@ -21,9 +21,9 @@ export class TeamscaleWidget {
     private projectSettings: ProjectSettings = null;
     private organizationSettings: Settings = null;
 
-    private readonly timechooserFixedDate: string = 'start-fixed-date';
-    private readonly timechooserTsBaseline: string = 'start-ts-baseline';
-    private readonly timechooserTimespan: string = 'start-timespan';
+    private readonly timePickerFixedDate: string = 'start-fixed-date';
+    private readonly timePickerTsBaseline: string = 'start-ts-baseline';
+    private readonly timePickerTimespan: string = 'start-timespan';
 
     private currentSettings: ITeamscaleWidgetSettings;
 
@@ -52,7 +52,7 @@ export class TeamscaleWidget {
     }
 
     /**
-     * Returns version number of internet explorer or edge (eq. to > 12). For other browsers return undefined.
+     * Returns version number of Internet Explorer or edge (eq. to > 12). For other browsers return undefined.
      */
     private static getVersionOfInternetExplorer(): undefined | number {
         const match = /\b(MSIE |Trident.*?rv:|Edge\/)(\d+)/.exec(navigator.userAgent);
@@ -70,7 +70,7 @@ export class TeamscaleWidget {
         $('.inner-title').text(widgetSettings.name);
         this.parseSettings(widgetSettings);
 
-        if (!this.currentSettings) {
+        if (!this.currentSettings || UiUtils.isEmptyOrWhitespace(this.currentSettings.teamscaleProject)) {
             this.notificationUtils.showInfoBanner('Please configure plugin first.');
             return this.widgetHelpers.WidgetStatusHelper.Success();
         }
@@ -108,19 +108,19 @@ export class TeamscaleWidget {
         }
 
         switch (this.currentSettings.activeTimeChooser) {
-            case this.timechooserFixedDate: {
+            case this.timePickerFixedDate: {
                 if (!Number.isInteger(this.currentSettings.startFixedDate)) {
                     return 'Error in baseline configuration using a fixed date: date not set.';
                 }
                 break;
             }
-            case this.timechooserTsBaseline: {
+            case this.timePickerTsBaseline: {
                 if (this.currentSettings.tsBaseline.length < 1 || this.currentSettings.tsBaseline.startsWith('No baseline configured')) {
                     return 'Error in baseline configuration using a TS baseline: baseline name not set.';
                 }
                 break;
             }
-            case this.timechooserTimespan: {
+            case this.timePickerTimespan: {
                 if (!Number.isInteger(this.currentSettings.baselineDays) || this.currentSettings.baselineDays < 1) {
                     return 'Error in baseline configuration using a timespan: set timespan days not positive.';
                 }
@@ -139,9 +139,7 @@ export class TeamscaleWidget {
         this.projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
         this.organizationSettings = new Settings(Scope.ProjectCollection);
         this.emailContact = await this.organizationSettings.get(ExtensionSetting.EMAIL_CONTACT);
-
-        await this.initializeNotificationUtils();
-        return Promise.all([this.initializeTeamscaleClient()]);
+        return Promise.all([this.initializeTeamscaleClient(), this.initializeNotificationUtils()]);
     }
 
     /**
@@ -216,10 +214,10 @@ export class TeamscaleWidget {
      * Initializes the Teamscale Client with the url configured in the project settings.
      */
     private async initializeTeamscaleClient() {
-        const url: string = await this.projectSettings.get(ExtensionSetting.TEAMSCALE_URL);
+        const url = await this.projectSettings.get(ExtensionSetting.TEAMSCALE_URL);
 
         if (UiUtils.isEmptyOrWhitespace(url)) {
-            this.notificationUtils.showErrorBanner('Teamscale is not configured for this project.' +
+            this.notificationUtils.showErrorBanner('Teamscale is not configured for this project. ' +
                 this.notificationUtils.generateContactText());
             return Promise.reject();
         }
@@ -268,14 +266,14 @@ export class TeamscaleWidget {
      */
     private calculateStartTimestamp(): PromiseLike<number> {
         switch (this.currentSettings.activeTimeChooser) {
-            case this.timechooserFixedDate: {
+            case this.timePickerFixedDate: {
                 return Promise.resolve(this.currentSettings.startFixedDate);
             }
-            case this.timechooserTsBaseline: {
+            case this.timePickerTsBaseline: {
                 return this.teamscaleClient.retrieveBaselinesForProject(this.currentSettings.teamscaleProject)
                     .then(baselines => this.getTimestampForConfiguredBaseline(baselines));
             }
-            case this.timechooserTimespan: {
+            case this.timePickerTimespan: {
                 const date = new Date();
                 date.setDate(date.getDate() - this.currentSettings.baselineDays);
                 return Promise.resolve(date.getTime());

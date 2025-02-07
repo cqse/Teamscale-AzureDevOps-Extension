@@ -2,6 +2,7 @@ import { Scope } from './Settings/Scope';
 import { Settings } from './Settings/Settings';
 import UiUtils = require('./Utils/UiUtils');
 import {convertToBoolean, getCurrentTimestamp} from './Utils/UiUtils';
+import {ExtensionSetting} from "./Settings/ExtensionSetting";
 
 const settings: Settings = new Settings(Scope.ProjectCollection);
 let mailContactInput: HTMLInputElement = null;
@@ -22,12 +23,12 @@ VSS.ready(() => {
     assignOnClickSave();
 
     // Load current settings
-    settings.get(Settings.EMAIL_CONTACT_KEY).then(email => {
+    settings.get(ExtensionSetting.EMAIL_CONTACT).then(email => {
         if (email) {
             mailContactInput.value = email;
         }
     });
-    settings.get(Settings.MINIMIZE_WARNINGS_KEY).then(minimize => {
+    settings.get(ExtensionSetting.MINIMIZE_WARNINGS).then(minimize => {
         minimizeWarningsInput.checked = convertToBoolean(minimize);
         VSS.notifyLoadSucceeded();
     }, () => {
@@ -47,11 +48,11 @@ function assignOnClickSave() {
         logDiv.innerHTML = '';
         const timestamp = getCurrentTimestamp();
         settings
-            .save(Settings.EMAIL_CONTACT_KEY, mailContact)
+            .save(ExtensionSetting.EMAIL_CONTACT.key, mailContact)
             .then(email => UiUtils.logToDiv(logDiv, `${timestamp} Saving Email address "${email ? email : ''}" successful.`),
                 () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving Email address.`));
         settings
-            .save(Settings.MINIMIZE_WARNINGS_KEY, String(minimizeWarnings))
+            .save(ExtensionSetting.MINIMIZE_WARNINGS.key, String(minimizeWarnings))
             .then(() => UiUtils.logToDiv(logDiv, `${timestamp} Saving minimize warnings preference successful.`),
                 () => UiUtils.logToDiv(logDiv, `${timestamp} Error saving minimize preferences.`));
     };

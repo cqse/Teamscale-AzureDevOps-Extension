@@ -1,65 +1,24 @@
 import { ExtensionDataService } from 'VSS/SDK/Services/ExtensionData';
 import { Scope } from './Scope';
+import {ExtensionSetting} from "./ExtensionSetting";
 
 /**
  * Class that facilitates saving settings to VSS.
  * Settings can either be saved on Project or Organization level.
  */
 export class Settings {
-    /** Key that is used to store the Teamscale Server url. */
-    public static readonly TEAMSCALE_URL_KEY = 'teamscale-url';
 
-    /** Key that is used to store the Teamscale Project list which belongs to the Azure DevOps project. */
-    public static readonly TEAMSCALE_PROJECTS_KEY = 'teamscale-project';
+    /** @see Scope.**/
+    protected readonly scope: Scope;
 
-    /**
-     *  Key that is used to store whether a separate Teamscale Server should be used for retrieving information
-     *  of Test Gap Analysis.
-     */
-    public static readonly USE_SEPARATE_TEST_GAP_SERVER = 'use-separate-test-gap-sever';
-
-    /** Key that is used to store the separate TGA Teamscale Server url. */
-    public static readonly TGA_TEAMSCALE_URL_KEY = 'tga-teamscale-url';
-
-    /** Key that is used to store the separate Teamscale Project list which belongs to the Azure DevOps project. */
-    public static readonly TGA_TEAMSCALE_PROJECTS_KEY = 'tga-teamscale-project';
-
-    /**
-     *  Key that is used to store whether a separate Teamscale Server should be used for retrieving information
-     *  of Test Smell Analysis.
-     */
-    public static readonly USE_SEPARATE_TEST_SMELL_SERVER = 'use-separate-test-smell-sever';
-
-    /** Key that is used to store the separate TSA Teamscale Server url. */
-    public static readonly TSA_TEAMSCALE_URL_KEY = 'tsa-teamscale-url';
-
-    /** Key that is used to store the separate Teamscale Project list which belongs to the Azure DevOps project. */
-    public static readonly TSA_TEAMSCALE_PROJECTS_KEY = 'tsa-teamscale-project';
-
-    /** Key that is used to store whether a Findings Badge should be shown in the Work Item View. */
-    public static readonly SHOW_FINDINGS_BADGE_KEY = 'show-findings-badge-for-work-item';
-
-    /** Key that is used to store whether the configuration warning in the work items are displayed */
-    public static readonly MINIMIZE_WARNINGS_KEY = 'minimize-warnings';
-
-    /** Key that is used to store whether a Test Gap Badge should be shown in the Work Item View. */
-    public static readonly SHOW_TEST_GAP_BADGE_KEY = 'show-test-gap-badge-for-work-item';
-
-     /** Key that is used to store whether a Test Smell Badge should be shown in the Work Item View. */
-     public static readonly SHOW_TEST_SMELL_BADGE_KEY = 'show-test-smell-badge-for-work-item';
-
-    /** Key that is used to store the contact email for the TS responsible person. */
-    public static readonly EMAIL_CONTACT_KEY = 'email-contact';
-
-    private readonly scope: Scope;
+    /** The already configured settings saved in Azure DevOps. */
+    private configuredVssSettings: Map<string, string>;
 
     constructor(scope: Scope) {
         this.scope = scope;
     }
 
-    /**
-     * Saves a key value pair in Azure DevOps.
-     */
+    /** Saves a key value pair in Azure DevOps. */
     public save(key: string, value: string): PromiseLike<string> {
         return VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: ExtensionDataService) => {
             if (!value) {
@@ -70,11 +29,28 @@ export class Settings {
     }
 
     /**
-     * Gets a value by key from Azure DevOps.
+     *  Gets the stored value for the given extension setting from Azure DevOps. If no value is stored,
+     *  the setting's default value is returned.
      */
-    public get(key: string): PromiseLike<string> {
-        return VSS.getService(VSS.ServiceIds.ExtensionData).then((dataService: ExtensionDataService) => {
-            return dataService.getValue(key, {scopeType: this.scope});
-        });
+    public async get(setting: ExtensionSetting): Promise<string> {
+        await this.loadConfiguredSettingsIfNeeded();
+        if(this.configuredVssSettings.has(setting.key)){
+            return this.configuredVssSettings.get(setting.key);
+        }
+        return setting.defaultValue;
+    }
+
+    /** Loads all the configured settings saved in VSS, unless they have been already loaded. */
+    private async loadConfiguredSettingsIfNeeded(): Promise<void> {
+        if(!this.configuredVssSettings) {
+            this.configuredVssSettings = new Map();
+            const dataService: ExtensionDataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
+            // In Azure DevOps, settings are stored internally as documents. So we fetch all documents to retrieve all
+            // the already configured settings. See: https://learn.microsoft.com/en-us/azure/devops/extend/develop/data-storage?toc=%2Fazure%2Fdevops%2Fmarketplace-extensibility%2Ftoc.json&view=azure-devops#how-settings-get-stored
+            const allSettings = await dataService.getDocuments('$settings', {scopeType: this.scope});
+            allSettings.map(setting => {
+                this.configuredVssSettings.set(setting.id, setting.value)
+            });
+        }
     }
 }

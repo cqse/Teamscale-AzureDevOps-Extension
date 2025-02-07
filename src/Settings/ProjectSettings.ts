@@ -1,5 +1,6 @@
 import { Scope } from './Scope';
 import { Settings } from './Settings';
+import {ExtensionSetting} from "./ExtensionSetting";
 
 /**
  * Extends the Settings class to be able to save project specific settings.
@@ -23,10 +24,12 @@ export class ProjectSettings extends Settings {
     }
 
     /**
-     * Gets a value by key from Azure DevOps.
+     *  Gets the stored value for the given extension setting from Azure DevOps for the current project. If no value is
+     *  stored, the setting's default value is returned.
      */
-    public get(key: string): PromiseLike<string> {
-        return super.get(this.getProjectSpecificKey(key));
+    public async get(setting: ExtensionSetting): Promise<string> {
+        const projectSpecificSetting = new ExtensionSetting(this.getProjectSpecificKey(setting.key), setting.defaultValue);
+        return super.get(projectSpecificSetting);
     }
 
     /**
@@ -39,18 +42,17 @@ export class ProjectSettings extends Settings {
     /**
      * Gets a list of project names stored under the given key in Azure DevOps.
      */
-    public getProjectsList(key: string): PromiseLike<string[]> {
-        return super.get(this.getProjectSpecificKey(key)).then(stringifiedProjects => {
-            try {
-                return JSON.parse(stringifiedProjects);
-            } catch (e) {
-                return [stringifiedProjects];
-            }
-        });
+    public async getProjectsList(setting: ExtensionSetting): Promise<string[]> {
+       const projects = await this.get(setting);
+        try {
+            return JSON.parse(projects);
+        } catch (e) {
+            return [projects];
+        }
     }
 
     private getProjectSpecificKey(key: string): string {
         // storing too long key does currently not work in ADOS so truncating here
-        return `${this.project.substr(0, 30)}-${key}`;
+        return `${this.project.substring(0, 30)}-${key}`;
     }
 }

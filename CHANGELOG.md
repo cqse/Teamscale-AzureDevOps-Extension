@@ -4,6 +4,9 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
+# 1.4.1
+- [fix] `DocumentDoesNotExistException` when fetching the configured settings in some cases
+
 # 1.4.0
 - removed obsolete pull request integration. Please use the [built-in Teamscale pull request integration](https://docs.teamscale.com/howto/connecting-version-control-system/azure-devops-git/) instead.
 - [fix] updated third party dependencies to recent versions

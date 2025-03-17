@@ -24,7 +24,7 @@
     "replace": "^1.2.2",
     "tfx-cli": "^0.17.0",
     "typescript": "^5.6.3",
-    "shelljs": "^0.8.5"
+    "shelljs": "^0.9.2"
   },
   "dependencies": {
     "@types/chosen-js": "^1.8.6",

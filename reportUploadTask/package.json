@@ -11,13 +11,13 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "azure-pipelines-task-lib": "^4.17.3"
+    "azure-pipelines-task-lib": "^5.0.0"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.7",
-    "@types/node": "^22.9.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.13.13",
     "@types/q": "^1.5.8",
-    "mocha": "^10.8.2",
-    "typescript": "^5.6.3"
+    "mocha": "^11.1.0",
+    "typescript": "^5.8.2"
   }
 }

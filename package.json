@@ -22,9 +22,9 @@
   },
   "devDependencies": {
     "replace": "^1.2.2",
-    "tfx-cli": "^0.21.0",
-    "typescript": "^5.8.2",
-    "shelljs": "^0.9.2"
+    "tfx-cli": "^0.21.1",
+    "typescript": "^5.9.2",
+    "shelljs": "^0.10.0"
   },
   "dependencies": {
     "@types/chosen-js": "^1.8.6",
@@ -37,6 +37,9 @@
     "async": "^3.2.6",
     "execa": {
       "cross-spawn": "^7.0.6"
+    },
+    "tfx-cli": {
+      "tmp": "^0.2.4"
     }
   }
 }

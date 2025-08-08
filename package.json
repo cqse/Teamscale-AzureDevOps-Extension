@@ -1,6 +1,6 @@
 {
   "name": "Teamscale-AzureDevOps-Extension",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Teamscale integration into Azure DevOps",
   "main": "index.js",
   "scripts": {

@@ -4,6 +4,10 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
+# 1.4.3
+- [fix] project settings could not be opened due to `DocumentCollectionDoesNotExistException` when no settings had been stored before
+- [fix] updated third party dependencies to recent versions
+
 # 1.4.2
 - upload task: added support for Node 20 runners and dropped support for end-of-life Node 6 runners
 - [fix] updated third party dependencies to recent versions

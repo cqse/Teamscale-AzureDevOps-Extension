@@ -33,21 +33,21 @@ export class ProjectSettings extends Settings {
     }
 
     /**
-     * Saves a list of project names to the given key in Azure DevOps.
+     * Saves a list of string values to the given key in Azure DevOps.
      */
-    public saveProjectsList(key: string, value: string[]): PromiseLike<string> {
+    public saveValueList(key: string, value: string[]): PromiseLike<string> {
         return super.save(this.getProjectSpecificKey(key), JSON.stringify(value));
     }
 
     /**
-     * Gets a list of project names stored under the given key in Azure DevOps.
+     * Gets a list of string values stored under the given key in Azure DevOps.
      */
-    public async getProjectsList(setting: ExtensionSetting): Promise<string[]> {
-       const projects = await this.get(setting);
+    public async getValueList(setting: ExtensionSetting): Promise<string[]> {
+       const values = await this.get(setting);
         try {
-            return JSON.parse(projects);
+            return JSON.parse(values);
         } catch (e) {
-            return [projects];
+            return [values];
         }
     }
 

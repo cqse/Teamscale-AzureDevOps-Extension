@@ -314,7 +314,7 @@ async function resolveTgaProjectName() {
 async function resolveProjectName(teamscaleClient, storageProjectsKey, badgeType, readableBadgeType) {
     let teamscaleProject: string;
     let unauthorized: boolean = false;
-    const teamscaleCandidateProjects = await projectSettings.getProjectsList(storageProjectsKey);
+    const teamscaleCandidateProjects = await projectSettings.getValueList(storageProjectsKey);
     try {
         teamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(teamscaleClient,
             teamscaleCandidateProjects, issueId, notificationUtils, badgeType);

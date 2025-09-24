@@ -36,11 +36,20 @@ export class ExtensionSetting {
     /** Key that is used to store whether a Findings Badge should be shown in the Work Item View. */
     public static readonly SHOW_FINDINGS_BADGE = new ExtensionSetting('show-findings-badge-for-work-item', 'false');
 
+    /** Key that is used to store for which work item types the findings badge should be shown in the Work Item View. */
+    public static readonly FINDINGS_BADGE_TYPES = new ExtensionSetting('findings-badge-work-item-types', '[]');
+
     /** Key that is used to store whether a Test Gap Badge should be shown in the Work Item View. */
     public static readonly SHOW_TEST_GAP_BADGE = new ExtensionSetting('show-test-gap-badge-for-work-item', 'false');
 
+    /** Key that is used to store for which work item types the test gap badge should be shown in the Work Item View. */
+    public static readonly TEST_GAP_BADGE_TYPES = new ExtensionSetting('tga-badge-work-item-types', '[]');
+
     /** Key that is used to store whether a Test Smell Badge should be shown in the Work Item View. */
     public static readonly SHOW_TEST_SMELL_BADGE = new ExtensionSetting('show-test-smell-badge-for-work-item', 'false');
+
+    /** Key that is used to store for which work item types the test smell badge should be shown in the Work Item View. */
+    public static readonly TEST_SMELL_BADGE_TYPES = new ExtensionSetting('tsa-badge-work-item-types', '[]');
 
     /** Key that is used to store whether the configuration warning in the work items are displayed */
     public static readonly MINIMIZE_WARNINGS = new ExtensionSetting('minimize-warnings', 'false');

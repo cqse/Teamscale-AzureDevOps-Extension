@@ -7,7 +7,7 @@ import { Scope } from '../Settings/Scope';
 import { Settings } from '../Settings/Settings';
 import TeamscaleClient from '../TeamscaleClient';
 import NotificationUtils from '../Utils/NotificationUtils';
-import { NOT_AUTHORIZED_ERROR } from '../Utils/ProjectsUtils';
+import {BadgeType} from '../Utils/ProjectsUtils';
 import ProjectUtils = require('../Utils/ProjectsUtils');
 import UiUtils = require('../Utils/UiUtils');
 import {convertToBoolean} from "../Utils/UiUtils";
@@ -287,7 +287,7 @@ async function resolveProjectNames() {
 async function resolveFindingsChurnProjectName() {
     if (showFindingsBadge) {
         teamscaleProject = await resolveProjectName(teamscaleClient, ExtensionSetting.TEAMSCALE_PROJECTS,
-            ProjectUtils.BadgeType.FindingsChurn, 'Findings Churn');
+            ProjectUtils.BadgeType.FindingsChurn);
     }
 }
 
@@ -302,7 +302,7 @@ async function resolveTsaProjectName() {
 
     if (showTestSmellBadge) {
         tsaTeamscaleProject = await resolveProjectName(tsaTeamscaleClient, tsaProjectsSettingsKey,
-            ProjectUtils.BadgeType.TestSmell, 'Test Smell');
+            ProjectUtils.BadgeType.TestSmell);
     }
 }
 
@@ -317,7 +317,7 @@ async function resolveTgaProjectName() {
 
     if (showTestGapBadge) {
         tgaTeamscaleProject = await resolveProjectName(tgaTeamscaleClient, tgaProjectsSettingsKey,
-            ProjectUtils.BadgeType.TestGap, 'Test Gap');
+            ProjectUtils.BadgeType.TestGap);
     }
 }
 
@@ -325,25 +325,12 @@ async function resolveTgaProjectName() {
  * Read the potential teamscale project names from the ADOS project settings and resolves it to the corresponding
  * Teamscale project.
  */
-async function resolveProjectName(teamscaleClient, storageProjectsKey, badgeType, readableBadgeType) {
+async function resolveProjectName(teamscaleClient: TeamscaleClient, storageProjectsKey: ExtensionSetting, badgeType: BadgeType) {
     let teamscaleProject: string;
-    let unauthorized: boolean = false;
     const teamscaleCandidateProjects = await projectSettings.getValueList(storageProjectsKey);
-    try {
-        teamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(teamscaleClient,
-            teamscaleCandidateProjects, workItemId, notificationUtils, badgeType);
-    } catch (e) {
-        if (e.message !== NOT_AUTHORIZED_ERROR) {
-            throw e;
-        }
-        unauthorized = true;
-        // not authorized message already displayed
-    }
+    teamscaleProject = await ProjectUtils.resolveProjectNameByIssueId(teamscaleClient, teamscaleCandidateProjects,
+        workItemId, notificationUtils, badgeType);
 
-    if (!teamscaleProject && !unauthorized) {
-        notificationUtils.showInfoBanner('Please make sure that Teamscale project option is properly set for ' +
-            readableBadgeType + ' Badges in the Azure DevOps Project settings.');
-    }
     return teamscaleProject;
 }
 

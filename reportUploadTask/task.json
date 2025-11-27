@@ -33,7 +33,7 @@
             "label": "Report Format ID",
             "defaultValue": "VS_COVERAGE",
             "required": true,
-            "helpMarkDown": "The type of report this build step will upload to Teamscale. Check the [Teamscale userguide](https://cqse.eu/userguide) for a complete list of supported formats and their IDs."
+            "helpMarkDown": "The type of report this build step will upload to Teamscale. Check the [Teamscale documentation](https://docs.teamscale.com/reference/upload-formats-and-samples/#supported-formats-for-upload) for a complete list of supported formats and their IDs."
         },
         {
             "name": "url",

@@ -4,6 +4,9 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
+# 1.5.0
+- [feature] work item integration: allow configuring the types of work items that should receive a certain badge
+
 # 1.4.4
 - [fix] updated third party dependencies to recent versions
 
@@ -36,17 +39,14 @@ We use [semantic versioning](http://semver.org/):
 - [fix] upload task was not updated to most recent version
 
 # 1.3.8
-
 - [fix] upload task: Does not fail anymore if no files to upload are found
 - [fix] updated third party dependencies to recent versions
 
 # 1.3.7
-
 - [fix] updated third party dependencies to recent versions
 - [fix] replaced binaries for teamscale-upload with an up-to-date version (9.2.1) 
 
 # 1.3.6
-
 - [feature] support spec-item findings badge
 - [feature] upload task: set sensible default file pattern that works for the `DotNetCoreCLI` pipeline task
 
@@ -63,7 +63,6 @@ We use [semantic versioning](http://semver.org/):
 - [fix] work item integration: the test gap badge for work items was sometimes different from the badge shown in the Teamscale issue perspective
 
 # 1.3.0
-
 - [feature] upload task: use the [teamscale-upload](https://github.com/cqse/teamscale-upload) tool instead of curl for better certificate and error handling
 
 # 1.2.7

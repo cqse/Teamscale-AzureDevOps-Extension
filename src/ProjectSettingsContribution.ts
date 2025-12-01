@@ -9,35 +9,35 @@ import {ExtensionSetting} from "./Settings/ExtensionSetting";
 
 let settings: ProjectSettings = null;
 
-const saveButtonElement = document.getElementById('save-button') as HTMLButtonElement;
-const logDiv = document.getElementById('log') as HTMLDivElement;
+const SAVE_BUTTON_ELEMENT = document.getElementById('save-button') as HTMLButtonElement;
+const LOG_DIV = document.getElementById('log') as HTMLDivElement;
 
-const teamscaleUrlInput = document.getElementById('teamscale-url') as HTMLInputElement;
-const teamscaleProjectInput = document.getElementById('teamscale-project') as HTMLInputElement;
+const TEAMSCALE_URL_INPUT = document.getElementById('teamscale-url') as HTMLInputElement;
+const TEAMSCALE_PROJECT_INPUT = document.getElementById('teamscale-project') as HTMLInputElement;
 
-const useSeparateTestGapServerInput = document.getElementById('use-extra-tga-server') as HTMLInputElement;
-const tgaConfigurationDiv = document.getElementById('extra-tga-configuration') as HTMLDivElement;
-const tgaTeamscaleUrlInput = document.getElementById('tga-teamscale-url') as HTMLInputElement;
-const tgaTeamscaleProjectInput = document.getElementById('tga-teamscale-project') as HTMLInputElement;
+const USE_SEPARATE_TEST_GAP_SERVER_INPUT = document.getElementById('use-extra-tga-server') as HTMLInputElement;
+const TGA_CONFIGURATION_DIV = document.getElementById('extra-tga-configuration') as HTMLDivElement;
+const TGA_TEAMSCALE_URL_INPUT = document.getElementById('tga-teamscale-url') as HTMLInputElement;
+const TGA_TEAMSCALE_PROJECT_INPUT = document.getElementById('tga-teamscale-project') as HTMLInputElement;
 
-const useSeparateTestSmellServerInput = document.getElementById('use-extra-tsa-server') as HTMLInputElement;
-const tsaConfigurationDiv = document.getElementById('extra-tsa-configuration') as HTMLDivElement;
-const tsaTeamscaleUrlInput = document.getElementById('tsa-teamscale-url') as HTMLInputElement;
-const tsaTeamscaleProjectInput = document.getElementById('tsa-teamscale-project') as HTMLInputElement;
+const USE_SEPARATE_TEST_SMELL_SERVER_INPUT = document.getElementById('use-extra-tsa-server') as HTMLInputElement;
+const TSA_CONFIGURATION_DIV = document.getElementById('extra-tsa-configuration') as HTMLDivElement;
+const TSA_TEAMSCALE_URL_INPUT = document.getElementById('tsa-teamscale-url') as HTMLInputElement;
+const TSA_TEAMSCALE_PROJECT_INPUT = document.getElementById('tsa-teamscale-project') as HTMLInputElement;
 
-const showTestGapBadgeInput = document.getElementById('show-work-item-tga-badge') as HTMLInputElement;
-const testGapBadgeWorkItemTypesInput = document.getElementById('tga-badge-work-item-types') as HTMLInputElement;
-const testGapBadgeWorkItemTypesWrapper = document.getElementById('tga-badge-work-item-types-wrapper') as HTMLDivElement;
+const SHOW_TEST_GAP_BADGE_INPUT = document.getElementById('show-work-item-tga-badge') as HTMLInputElement;
+const TEST_GAP_BADGE_WORK_ITEM_TYPES_INPUT = document.getElementById('tga-badge-work-item-types') as HTMLInputElement;
+const TEST_GAP_BADGE_WORK_ITEM_TYPES_WRAPPER = document.getElementById('tga-badge-work-item-types-wrapper') as HTMLDivElement;
 
-const showFindingsBadgeInput = document.getElementById('show-work-item-tqe-badge') as HTMLInputElement;
-const findingsBadgeWorkItemTypesInput = document.getElementById('tqe-badge-work-item-types') as HTMLInputElement;
-const findingsBadgeWorkItemTypesWrapper = document.getElementById('tqe-badge-work-item-types-wrapper') as HTMLDivElement;
+const SHOW_FINDINGS_BADGE_INPUT = document.getElementById('show-work-item-tqe-badge') as HTMLInputElement;
+const FINDINGS_BADGE_WORK_ITEM_TYPES_INPUT = document.getElementById('tqe-badge-work-item-types') as HTMLInputElement;
+const FINDINGS_BADGE_WORK_ITEM_TYPES_WRAPPER = document.getElementById('tqe-badge-work-item-types-wrapper') as HTMLDivElement;
 
-const showTestSmellBadgeInput = document.getElementById('show-work-item-tsa-badge') as HTMLInputElement;
-const testSmellBadgeWorkItemTypesInput = document.getElementById('tsa-badge-work-item-types') as HTMLInputElement;
-const testSmellBadgeWorkItemTypesWrapper = document.getElementById('tsa-badge-work-item-types-wrapper') as HTMLDivElement;
+const SHOW_TEST_SMELL_BADGE_INPUT = document.getElementById('show-work-item-tsa-badge') as HTMLInputElement;
+const TEST_SMELL_BADGE_WORK_ITEM_TYPES_INPUT = document.getElementById('tsa-badge-work-item-types') as HTMLInputElement;
+const TEST_SMELL_BADGE_WORK_ITEM_TYPES_WRAPPER = document.getElementById('tsa-badge-work-item-types-wrapper') as HTMLDivElement;
 
-const separator: string = ',';
+const SEPARATOR: string = ',';
 
 VSS.init({
     explicitNotifyLoaded: true,
@@ -48,7 +48,7 @@ VSS.ready(() => {
     const azureProjectName = VSS.getWebContext().project.name;
     settings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
     
-    saveButtonElement.onclick = () => saveFormValues();
+    SAVE_BUTTON_ELEMENT.onclick = () => saveFormValues();
 
     try {
         loadCurrentSettings();
@@ -73,40 +73,40 @@ async function loadCurrentSettings() {
 }
 
 async function loadDefaultServerSettings() {
-    await loadServerSettings(teamscaleUrlInput, teamscaleProjectInput, ExtensionSetting.TEAMSCALE_URL, ExtensionSetting.TEAMSCALE_PROJECTS);
+    await loadServerSettings(TEAMSCALE_URL_INPUT, TEAMSCALE_PROJECT_INPUT, ExtensionSetting.TEAMSCALE_URL, ExtensionSetting.TEAMSCALE_PROJECTS);
 }
 
 async function loadTgaServerSettings() {
-    await loadServerSettings(tgaTeamscaleUrlInput, tgaTeamscaleProjectInput, ExtensionSetting.TGA_TEAMSCALE_URL, ExtensionSetting.TGA_TEAMSCALE_PROJECTS);
-    useSeparateTestGapServerInput.checked = UiUtils.convertToBoolean(await settings.get(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER));
-    zipAndHookSectionDependingOnCheckbox(useSeparateTestGapServerInput, tgaConfigurationDiv);
+    await loadServerSettings(TGA_TEAMSCALE_URL_INPUT, TGA_TEAMSCALE_PROJECT_INPUT, ExtensionSetting.TGA_TEAMSCALE_URL, ExtensionSetting.TGA_TEAMSCALE_PROJECTS);
+    USE_SEPARATE_TEST_GAP_SERVER_INPUT.checked = UiUtils.convertToBoolean(await settings.get(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER));
+    zipAndHookSectionDependingOnCheckbox(USE_SEPARATE_TEST_GAP_SERVER_INPUT, TGA_CONFIGURATION_DIV);
 }
 
 async function loadTsaServerSettings() {
-    await loadServerSettings(tsaTeamscaleUrlInput, tsaTeamscaleProjectInput, ExtensionSetting.TSA_TEAMSCALE_URL, ExtensionSetting.TSA_TEAMSCALE_PROJECTS);
-    useSeparateTestSmellServerInput.checked = UiUtils.convertToBoolean(await settings.get(ExtensionSetting.USE_SEPARATE_TEST_SMELL_SERVER));
-    zipAndHookSectionDependingOnCheckbox(useSeparateTestSmellServerInput, tsaConfigurationDiv);
+    await loadServerSettings(TSA_TEAMSCALE_URL_INPUT, TSA_TEAMSCALE_PROJECT_INPUT, ExtensionSetting.TSA_TEAMSCALE_URL, ExtensionSetting.TSA_TEAMSCALE_PROJECTS);
+    USE_SEPARATE_TEST_SMELL_SERVER_INPUT.checked = UiUtils.convertToBoolean(await settings.get(ExtensionSetting.USE_SEPARATE_TEST_SMELL_SERVER));
+    zipAndHookSectionDependingOnCheckbox(USE_SEPARATE_TEST_SMELL_SERVER_INPUT, TSA_CONFIGURATION_DIV);
 }
 
 async function loadServerSettings(serverUrlInput: HTMLInputElement, projectNamesInput: HTMLInputElement,
                                   serverUrlSetting: ExtensionSetting, projectNamesSetting: ExtensionSetting): Promise<void> {
     serverUrlInput.value = await settings.get(serverUrlSetting);
     const projectNames = await settings.getValueList(projectNamesSetting);
-    projectNamesInput.value = projectNames.join(separator);
+    projectNamesInput.value = projectNames.join(SEPARATOR);
 }
 
 async function loadFindingsBadgeSettings(){
-    await loadBadgeSettings(showFindingsBadgeInput, findingsBadgeWorkItemTypesInput, findingsBadgeWorkItemTypesWrapper,
+    await loadBadgeSettings(SHOW_FINDINGS_BADGE_INPUT, FINDINGS_BADGE_WORK_ITEM_TYPES_INPUT, FINDINGS_BADGE_WORK_ITEM_TYPES_WRAPPER,
         ExtensionSetting.SHOW_FINDINGS_BADGE, ExtensionSetting.FINDINGS_BADGE_TYPES);
 }
 
 async function loadTestGapBadgeSettings(){
-    await loadBadgeSettings(showTestGapBadgeInput, testGapBadgeWorkItemTypesInput, testGapBadgeWorkItemTypesWrapper,
+    await loadBadgeSettings(SHOW_TEST_GAP_BADGE_INPUT, TEST_GAP_BADGE_WORK_ITEM_TYPES_INPUT, TEST_GAP_BADGE_WORK_ITEM_TYPES_WRAPPER,
         ExtensionSetting.SHOW_TEST_GAP_BADGE, ExtensionSetting.TEST_GAP_BADGE_TYPES);
 }
 
 async function loadTestSmellBadgeSettings(){
-    await loadBadgeSettings(showTestSmellBadgeInput, testSmellBadgeWorkItemTypesInput, testSmellBadgeWorkItemTypesWrapper,
+    await loadBadgeSettings(SHOW_TEST_SMELL_BADGE_INPUT, TEST_SMELL_BADGE_WORK_ITEM_TYPES_INPUT, TEST_SMELL_BADGE_WORK_ITEM_TYPES_WRAPPER,
         ExtensionSetting.SHOW_TEST_SMELL_BADGE, ExtensionSetting.TEST_SMELL_BADGE_TYPES);
 }
 
@@ -114,7 +114,7 @@ async function loadBadgeSettings(enablementCheckbox: HTMLInputElement, workItemT
                                  enablementSetting: ExtensionSetting, workItemTypesSetting: ExtensionSetting): Promise<void> {
     enablementCheckbox.checked = UiUtils.convertToBoolean(await settings.get(enablementSetting));
     const workItemTypes = await settings.getValueList(workItemTypesSetting);
-    workItemTypesInput.value = workItemTypes.join(separator);
+    workItemTypesInput.value = workItemTypes.join(SEPARATOR);
     zipAndHookSectionDependingOnCheckbox(enablementCheckbox, workItemTypesWrapper);
 }
 
@@ -135,7 +135,7 @@ function zipSectionDependingOnCheckbox(checkbox: HTMLInputElement, section:HTMLD
  * Saves the entered TS Servers, Project values and work item badge configurations to the Project settings.
  */
 function saveFormValues() {
-    logDiv.innerHTML = '';
+    LOG_DIV.innerHTML = '';
 
     saveDefaultServerSettings();
     saveTgaServerSettings();
@@ -148,22 +148,22 @@ function saveFormValues() {
 
 function saveDefaultServerSettings() {
     const serverName = 'Default Server';
-    saveServerUrl(ExtensionSetting.TEAMSCALE_URL.key, teamscaleUrlInput.value, serverName);
-    saveProjectNames(ExtensionSetting.TEAMSCALE_PROJECTS.key, teamscaleProjectInput.value, serverName);
+    saveServerUrl(ExtensionSetting.TEAMSCALE_URL.key, TEAMSCALE_URL_INPUT.value, serverName);
+    saveProjectNames(ExtensionSetting.TEAMSCALE_PROJECTS.key, TEAMSCALE_PROJECT_INPUT.value, serverName);
 }
 
 function saveTgaServerSettings() {
     const serverName = 'Test Gap Server';
-    saveServerUrl(ExtensionSetting.TGA_TEAMSCALE_URL.key, tgaTeamscaleUrlInput.value, serverName);
-    saveProjectNames(ExtensionSetting.TGA_TEAMSCALE_PROJECTS.key, tgaTeamscaleProjectInput.value, serverName);
-    saveServerEnablement(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER.key, useSeparateTestGapServerInput.checked, serverName);
+    saveServerUrl(ExtensionSetting.TGA_TEAMSCALE_URL.key, TGA_TEAMSCALE_URL_INPUT.value, serverName);
+    saveProjectNames(ExtensionSetting.TGA_TEAMSCALE_PROJECTS.key, TGA_TEAMSCALE_PROJECT_INPUT.value, serverName);
+    saveServerEnablement(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER.key, USE_SEPARATE_TEST_GAP_SERVER_INPUT.checked, serverName);
 }
 
 function saveTsaServerSettings() {
     const serverName = 'Test Smell Server';
-    saveServerUrl(ExtensionSetting.TSA_TEAMSCALE_URL.key, tsaTeamscaleUrlInput.value, serverName);
-    saveProjectNames( ExtensionSetting.TSA_TEAMSCALE_PROJECTS.key, tsaTeamscaleProjectInput.value, serverName);
-    saveServerEnablement(ExtensionSetting.USE_SEPARATE_TEST_SMELL_SERVER.key, useSeparateTestSmellServerInput.checked, serverName);
+    saveServerUrl(ExtensionSetting.TSA_TEAMSCALE_URL.key, TSA_TEAMSCALE_URL_INPUT.value, serverName);
+    saveProjectNames( ExtensionSetting.TSA_TEAMSCALE_PROJECTS.key, TSA_TEAMSCALE_PROJECT_INPUT.value, serverName);
+    saveServerEnablement(ExtensionSetting.USE_SEPARATE_TEST_SMELL_SERVER.key, USE_SEPARATE_TEST_SMELL_SERVER_INPUT.checked, serverName);
 }
 
 function saveServerUrl(serverUrlKey: string, teamscaleUrlFormInput: string, readableServerName: string) {
@@ -193,20 +193,20 @@ function saveServerEnablement(enablementKey: string, isEnabled: boolean, readabl
 
 function saveFindingsBadgeSettings() {
     const badgeName = 'Findings Churn Badge';
-    saveBadgeEnablement(ExtensionSetting.SHOW_FINDINGS_BADGE.key, showFindingsBadgeInput, badgeName)
-    saveBadgeWorkItemTypes(ExtensionSetting.FINDINGS_BADGE_TYPES.key, findingsBadgeWorkItemTypesInput, badgeName);
+    saveBadgeEnablement(ExtensionSetting.SHOW_FINDINGS_BADGE.key, SHOW_FINDINGS_BADGE_INPUT, badgeName)
+    saveBadgeWorkItemTypes(ExtensionSetting.FINDINGS_BADGE_TYPES.key, FINDINGS_BADGE_WORK_ITEM_TYPES_INPUT, badgeName);
 }
 
 function saveTgaBadgeSettings() {
     const badgeName = 'Test Gap Badge';
-    saveBadgeEnablement(ExtensionSetting.SHOW_TEST_GAP_BADGE.key, showTestGapBadgeInput, badgeName);
-    saveBadgeWorkItemTypes(ExtensionSetting.TEST_GAP_BADGE_TYPES.key, testGapBadgeWorkItemTypesInput, badgeName);
+    saveBadgeEnablement(ExtensionSetting.SHOW_TEST_GAP_BADGE.key, SHOW_TEST_GAP_BADGE_INPUT, badgeName);
+    saveBadgeWorkItemTypes(ExtensionSetting.TEST_GAP_BADGE_TYPES.key, TEST_GAP_BADGE_WORK_ITEM_TYPES_INPUT, badgeName);
 }
 
 function saveTsaBadgeSettings() {
     const badgeName = 'Test Smell Badge';
-    saveBadgeEnablement(ExtensionSetting.SHOW_TEST_SMELL_BADGE.key, showTestSmellBadgeInput, badgeName)
-    saveBadgeWorkItemTypes(ExtensionSetting.TEST_SMELL_BADGE_TYPES.key, testSmellBadgeWorkItemTypesInput, badgeName);
+    saveBadgeEnablement(ExtensionSetting.SHOW_TEST_SMELL_BADGE.key, SHOW_TEST_SMELL_BADGE_INPUT, badgeName)
+    saveBadgeWorkItemTypes(ExtensionSetting.TEST_SMELL_BADGE_TYPES.key, TEST_SMELL_BADGE_WORK_ITEM_TYPES_INPUT, badgeName);
 }
 
 function saveBadgeEnablement(badgeEnablementKey: string, badgeEnablementInput: HTMLInputElement, readableBadgeName: string) {
@@ -223,12 +223,12 @@ function saveBadgeWorkItemTypes(workItemTypesKey: string, workItemTypesInput: HT
 }
 
 function readValueList(formInput: string): string[]{
-    let values: string[] = formInput.split(separator);
+    let values: string[] = formInput.split(SEPARATOR);
     return values.map(entry => entry.trim()).filter(entry => entry !== '');
 }
 
 function createSuccessfulLog(valueDescription: string, value: string) {
-    UiUtils.logToDiv(logDiv, `${getCurrentTimestamp()} Saving ${valueDescription} "${value ? value : ''}" successful.`);
+    UiUtils.logToDiv(LOG_DIV, `${getCurrentTimestamp()} Saving ${valueDescription} "${value ? value : ''}" successful.`);
 }
 
 function createFailedLog(valueDescription: string, error?: any) {
@@ -237,5 +237,5 @@ function createFailedLog(valueDescription: string, error?: any) {
         errorMessage = error.message;
     }
 
-    UiUtils.logToDiv(logDiv, `${getCurrentTimestamp()} Error saving &quot;${valueDescription}&quot;. ${errorMessage}`);
+    UiUtils.logToDiv(LOG_DIV, `${getCurrentTimestamp()} Error saving &quot;${valueDescription}&quot;. ${errorMessage}`);
 }

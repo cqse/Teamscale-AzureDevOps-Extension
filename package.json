@@ -1,6 +1,6 @@
 {
   "name": "Teamscale-AzureDevOps-Extension",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Teamscale integration into Azure DevOps",
   "main": "index.js",
   "scripts": {
@@ -22,8 +22,8 @@
   },
   "devDependencies": {
     "replace": "^1.2.2",
-    "tfx-cli": "^0.21.1",
-    "typescript": "^5.9.2",
+    "tfx-cli": "^0.22.2",
+    "typescript": "^5.9.3",
     "shelljs": "^0.10.0"
   },
   "dependencies": {
@@ -39,7 +39,7 @@
       "cross-spawn": "^7.0.6"
     },
     "tfx-cli": {
-      "tmp": "^0.2.4"
+      "tmp": "^0.2.5"
     }
   }
 }

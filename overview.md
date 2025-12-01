@@ -163,7 +163,7 @@ If badges don't appear in your work items, check the following:
 
 ##### 1. Badge Not Enabled
 
-**Symptom:** A specific badge is not displayed in any of the work items or no badges are displayed at all and an info message is shown: "Please activate at least one Badge to show in the Project settings (Extensions → Teamscale)."
+**Symptom:** A specific badge is not displayed in any of the work items or no badges are displayed at all and an info message is shown: "Please activate at least one Badge for this work item type in the Project settings (Extensions → Teamscale)."
 
 **Cause:** The badges are disabled in the extension settings
 

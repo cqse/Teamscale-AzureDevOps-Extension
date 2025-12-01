@@ -129,8 +129,8 @@ async function initializeNotificationUtils() {
 async function loadBadges() {
     if (!showTestGapBadge && !showFindingsBadge && !showTestSmellBadge) {
         if(!minimizeWarnings){
-            notificationUtils.showInfoBanner('Please activate at least one Badge to show in the Project settings' +
-                ' (Extensions → Teamscale).');
+            notificationUtils.showInfoBanner('Please activate at least one Badge for this work item type in the' +
+                ' Project settings (Extensions → Teamscale).');
         }
         UiUtils.resizeHost();
         VSS.notifyLoadSucceeded();

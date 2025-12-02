@@ -4,6 +4,9 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
+# 1.4.5
+- [fix] upload task: `CodeCoverage.exe` was missing
+
 # 1.4.4
 - [fix] updated third party dependencies to recent versions
 

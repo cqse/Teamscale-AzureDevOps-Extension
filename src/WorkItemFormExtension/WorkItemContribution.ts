@@ -104,15 +104,16 @@ async function loadAndCheckConfiguration() {
     minimizeWarnings = convertToBoolean(await organizationSettings.get(ExtensionSetting.MINIMIZE_WARNINGS));
 
     emailContact = await organizationSettings.get(ExtensionSetting.EMAIL_CONTACT);
-    await initializeNotificationUtils();
-    return Promise.all([initializeTeamscaleClients(), resolveIssueIdAndType()]).then(() =>
-        resolveProjectNames());
+    initializeNotificationUtils();
+    return resolveIssueIdAndType()
+        .then(() => initializeTeamscaleClients())
+        .then(() => resolveProjectNames());
 }
 
 /**
  * Initializes the notification and login management handling errors in Teamscale communication.
  */
-async function initializeNotificationUtils() {
+function initializeNotificationUtils() {
     const callbackOnLoginClose = () => {
         $('#tga-badge').empty();
         $('#message-div').empty();

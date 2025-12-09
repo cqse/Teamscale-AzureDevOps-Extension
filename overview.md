@@ -11,12 +11,12 @@ The extension provides two main integration points:
 2. **Report Uploader**: Upload coverage and other reports from build pipelines to Teamscale
 
 ## Work Item Integration
-If development in your project is done work item (ticket) based, you can get insights into code quality and test coverage directly in your work items.
+If your project uses work items (tickets) for development, you can get insights into code quality and test coverage directly in your work items.
 The extension supports three types of badges:
 
-1. **Findings Churn Badge**: Shows how many findings were introduced or removed with a work item
-2. **Test Gap Badge**: Displays test gap information for the code changes associated with a work item
-3. **Test Smell Badge**: Shows whether and how many test smells are present in a work item
+1. **Findings Churn Badge**: Shows how many findings were introduced or resolved by the work item's changes.
+2. **Test Gap Badge**: Displays test gap information for the code changes associated with a work item.
+3. **Test Smell Badge**: Shows the presence and count of test smells associated with a work item.
 
 ![Teamscale Azure DevOps Work Item Integration](images/overview/ados-ts-work-item-integration.png)
 
@@ -37,20 +37,20 @@ The upload to Teamscale and the integration of analysis results from Teamscale a
 
 ## Configuring the Report Uploader
 Add the Task "Teamscale Report Uploader" to the build pipeline and fill in the configuration form:
-* _Display name_: The name of this build step as shown in the UI of the pipeline
-* _Files_: The file(s) to be uploaded. Wildcards can be used. For example, **/*.coverage for all .coverage files in all subfolders.
+* _Display name_: The name of this build step as shown in the pipeline's UI.
+* _Files_: The file(s) to be uploaded. Wildcards can be used. For example, `**/*.coverage` for all `.coverage` files in all subfolders.
 * _Report Format ID_: The type of report this build step will upload to Teamscale. Please refer to the [Teamscale documentation](https://docs.teamscale.com/reference/upload-formats-and-samples/#supported-formats-for-upload) for a complete list of supported formats and their IDs.
 * _Teamscale URL_: The URL of the Teamscale server. Please make sure that the Teamscale server is reachable from your Build Agent.
 * _Username_: The name of the Teamscale user used to perform the upload.
-* _IDE Access Key_: The IDE access key of the Teamscale user used to perform the upload. You can generate one for the user in Teamscale under Admin > Users. Alternatively, you can specify the (secret) variable `teamscale.accessKey` in the pipeline settings or the environment variable `TEAMSCALE_ACCESS_KEY`.
-* _Teamscale Project_: The ID or alias of the Teamscale project to which the reports should be uploaded. You can find these in the Projects perspective of Teamscale.
-* _Partition_: An identifier under which the uploaded data will be grouped. Data uploaded into a partition will replace all previous data uploaded to that partition. If you'd e.g. like to upload multiple coverage reports for multiple test stages that all should be merged in Teamscale to calculate the line coverage metric, use different partitions for each upload.
+* _IDE Access Key_: The IDE access key of the Teamscale user used to perform the upload. You can generate one for the user in Teamscale under _Admin > Users_. Alternatively, you can specify the (secret) variable `teamscale.accessKey` in the pipeline settings or the environment variable `TEAMSCALE_ACCESS_KEY`.
+* _Teamscale Project_: The ID of the Teamscale project to which the reports should be uploaded. You can find these in the Projects perspective of Teamscale.
+* _Partition_: An identifier under which the uploaded data will be grouped. Data uploaded into a partition will replace all previous data uploaded to that partition. For example, if you would like to upload multiple coverage reports for multiple test stages that all should be merged in Teamscale to calculate the line coverage metric, use different partitions for each upload.
 * _Skip certificate validation_: Causes SSL certificates to be accepted without validation.
-* _Path to custom trusted keystore_: Per default, this plugin uses an embedded Java keystore to validate certificates. If you want to use a custom Java keystore, e.g. for self-signed certificates, you can specify the path to it here. You can find instructions how to create such a keystore [here](https://docs.teamscale.com/howto/connecting-via-https/#using-self-signed-certificates).
+* _Path to custom trusted keystore_: By default, this plugin uses an embedded Java keystore to validate certificates. If you want to use a custom Java keystore, e.g. for self-signed certificates, you can specify the path to it here. You can find instructions how to create such a keystore [here](https://docs.teamscale.com/howto/connecting-via-https/#using-self-signed-certificates).
 * _Password of the custom trusted keystore_: The password for the specified custom Java keystore. Alternatively, you can specify the (secret) variable `teamscale.keystorePassword` in the pipeline settings.
 * _Print stack trace_: Enables printing stack traces in all cases where errors occur. Used for debugging.
-* _Path to CodeCoverage.exe_: If you'd like to upload Visual Studio .coverage files to Teamscale, you must provide the path to CodeCoverage.exe. This file is used to convert the binary .coverage files to .xml files suitable for uploading to Teamscale. This plugin ships with a version of CodeCoverage.exe. If you prefer to use a different version, you'll have to configure the correct path to it here.
-* _Batch size for coverage conversion_: The number of .coverage files to convert in one step using CodeCoverage.exe. Defaults to 1000. Values <= 0 disable batch processing and all available files are converted at once. For very large numbers of files or very long file paths, this may result in "spawn ENAMETOOLONG" errors - in that case please configure a smaller batch size.
+* _Path to CodeCoverage.exe_: If you'd like to upload Visual Studio `.coverage` files to Teamscale, you must provide the path to `CodeCoverage.exe`. This file is used to convert the binary `.coverage` files to `.xml` files suitable for uploading to Teamscale. This plugin ships with a version of `CodeCoverage.exe`. If you prefer to use a different version, you'll have to configure the correct path to it here.
+* _Batch size for coverage conversion_: The number of `.coverage` files to convert in one step using `CodeCoverage.exe`. Defaults to **1000**. Values <= 0 disable batch processing and all available files are converted at once. For very large numbers of files or very long file paths, this may result in "spawn ENAMETOOLONG" errors - in that case please configure a smaller batch size.
 
 Please note that files in the Visual Studio Coverage format (`.coverage` binary files, format ID `VS_COVERAGE`) can currently only be processed on Windows agents.
 
@@ -101,7 +101,7 @@ Before configuring the Findings Churn Badge, ensure the following prerequisites 
 
 ##### Configuration Steps
 To enable the Findings Churn Badge:
-1. In the "Work Item View: Badge Settings" section, enable the option _"Show Findings Churn Badge in Work Item View"_
+1. In the _"Work Item View: Badge Settings"_ section, enable the option _"Show Findings Churn Badge in Work Item View"_
 2. [Optional] In the _"Types of Work Items for Findings Churn Badge"_ field, specify work item types that should display the badge:
     - Enter comma-separated work item types (e.g., "Bug, Feature, User Story")
     - Leave empty to show the badge on all work item types
@@ -115,7 +115,7 @@ Before configuring the Findings Churn Badge, ensure the following prerequisites 
 
 ##### Configuration Steps
 To enable the Test Gap Badge using the default Teamscale server:
-1. In the "Work Item View: Badge Settings" section, enable the option **"Show Test Gap Badge in Work Item View"**
+1. In the _"Work Item View: Badge Settings"_ section, enable the option _"Show Test Gap Badge in Work Item View"_
 2. [Optional] In the _"Types of Work Items for Test Gap Badge"_ field, specify work item types that should display the badge:
     - Enter comma-separated work item types (e.g., "Bug, Feature, User Story")
     - Leave empty to show the badge on all work item types
@@ -215,16 +215,16 @@ The dashboard widget requires the Teamscale server URL and projects to be set in
 #### Adding the Widget to a Dashboard
 To add the Teamscale widget to your Azure DevOps dashboard:
 1. Open dashboard where you want to add the widget
-2. Click the **Edit** button in the top right
-3. In the right sidebar under "Add Widget", search for "Teamscale", select the widget and click "Add"
+2. Click the _Edit_ button in the top right
+3. In the right sidebar under _"Add Widget"_, search for "Teamscale", select the widget and click _"Add"_
 4. Drag and position the widget where you want it on the dashboard
-5. Click **Done Editing** to save your changes
+5. Click _Done Editing_ to save your changes
 After adding the widget to your dashboard, you need to configure it to display the desired metrics.
 
 #### Opening the Configuration Dialog
-1. While in edit mode (click **Edit** on the dashboard if not already in edit mode)
+1. While in edit mode (click _Edit_ on the dashboard if not already in edit mode)
 2. Hover over the Teamscale widget
-3. Click the **Configure** button (gear icon) that appears
+3. Click the _Configure_ button (gear icon) that appears
 
 #### Configuration Options
 The widget configuration dialog provides the following options:

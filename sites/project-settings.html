@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../styles/settings.css">
 </head>
 
-<body>
+<body style="overflow: auto;">
     <h2 class="title-l">Teamscale Server Settings</h2>
 
     <h3 class="overview-heading ts-option-header">Teamscale URL</h3>
@@ -68,16 +68,47 @@
 
     <h2 class="title-l">Work Item View: Badge Settings</h2>
 
+
     <div>
         <label><input id="show-work-item-tqe-badge" type="checkbox">Show Findings Churn Badge in Work Item View</label>
     </div>
-
-    <div>
-        <label><input id="show-work-item-tga-badge" type="checkbox">Show Test Gap Badge in Work Item View</label>
+    <div id="tqe-badge-work-item-types-wrapper" style="margin-left: 1em; margin-top: 0.5em;">
+        <div>
+            <abbr title="Comma separated list of Work Item types for which the Findings Churn Badge is shown, e.g. Feature, Bug. Leave empty for all types.">
+            Types of Work Items for Findings Churn Badge
+            </abbr>
+        </div>
+        <div>
+            <input id="tqe-badge-work-item-types" class="text-input">
+        </div>
     </div>
 
-    <div>
+    <div style="margin-top: 1em;">
+        <label><input id="show-work-item-tga-badge" type="checkbox">Show Test Gap Badge in Work Item View</label>
+    </div>
+    <div id="tga-badge-work-item-types-wrapper" style="margin-left: 1em; margin-top: 0.5em;">
+        <div>
+            <abbr title="Comma separated list of Work Item types for which the Test Gap Badge is shown, e.g. Feature, Bug. Leave empty for all types.">
+                Types of Work Items for Test Gap Badge
+            </abbr>
+        </div>
+        <div>
+            <input id="tga-badge-work-item-types" class="text-input">
+        </div>
+    </div>
+
+    <div style="margin-top: 1em;">
         <label><input id="show-work-item-tsa-badge" type="checkbox">Show Test Smell Badge in Work Item View</label>
+    </div>
+    <div id="tsa-badge-work-item-types-wrapper" style="margin-left: 1em; margin-top: 0.5em;">
+        <div>
+            <abbr title="Comma separated list of Work Item types for which the Test Smell Badge is shown, e.g. Test Case. Leave empty for all types.">
+                Types of Work Items for Test Smell Badge
+            </abbr>
+        </div>
+        <div>
+            <input id="tsa-badge-work-item-types" class="text-input">
+        </div>
     </div>
 
     <button id="save-button">Save</button>

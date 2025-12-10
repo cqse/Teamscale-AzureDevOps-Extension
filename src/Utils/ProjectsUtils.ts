@@ -7,16 +7,13 @@ import { ITgaSummary } from '../ITgaSummary';
 import TeamscaleClient from '../TeamscaleClient';
 import NotificationUtils from './NotificationUtils';
 
-export enum BadgeType { TestGap, FindingsChurn, TestSmell }
-
-export const NOT_AUTHORIZED_ERROR = 'Not authorized for Teamscale usage. Please log in.';
+export enum BadgeType { TestGap = 'Test Gap', FindingsChurn = 'Findings Churn', TestSmell = 'Test Smell' }
 
 export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClient, projectCandidates: string[],
                                                   issueId: number, notificationUtils: NotificationUtils,
                                                   badgeType: BadgeType): Promise<string> {
     if (projectCandidates.length === 0) {
-        notificationUtils.showErrorBanner('No Teamscale Project is configured for this Azure DevOps Project (Badge: ' +
-            BadgeType[badgeType] + ').');
+        showProjectResolutionError(notificationUtils, badgeType, 'No Teamscale Project is configured for this Azure DevOps Project.');
         return;
     }
 
@@ -52,16 +49,24 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
     if (validProjects.length === 0) {
         if (errorCodeSum > 0 && (errorCodeSum % 401 === 0 || errorCodeSum % 403 === 0)) {
             notificationUtils.handleErrorInTeamscaleCommunication({status: 403}, teamscaleClient.url);
-            throw new Error(NOT_AUTHORIZED_ERROR);
+            return;
         }
 
-        notificationUtils.showErrorBanner('None of the configured Teamscale projects (' + projectCandidates.join(',') +
-            ') on Server <i>' + teamscaleClient.url + '</i> has valid information for issue ' + issueId + ' (Badge: ' +
-            BadgeType[badgeType] + ').');
+        showProjectResolutionError(notificationUtils, badgeType, 'None of the configured Teamscale projects (' +
+            projectCandidates.join(',') + ') on Server <i>' + teamscaleClient.url + '</i> has valid ' +
+            badgeType + ' information for issue ' + issueId + '.');
         return;
     }
 
     return validProjects[0];
+}
+
+function showProjectResolutionError(notificationUtils: NotificationUtils,
+                                    badgeType: BadgeType, errorMessage: string): void {
+    const message: string = 'Error resolving project for ' + badgeType + ' Badge: ' + errorMessage +
+        ' Please make sure that the Teamscale project option is properly set for ' +
+        badgeType + ' Badges in the Azure DevOps Project settings.'
+    notificationUtils.showErrorBanner(message);
 }
 
 /**

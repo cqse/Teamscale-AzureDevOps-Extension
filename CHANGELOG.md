@@ -6,6 +6,7 @@ We use [semantic versioning](http://semver.org/):
 
 # 1.5.0
 - [feature] work item integration: allow configuring the types of work items that should receive a certain badge
+- [fix] updated third party dependencies to recent versions
 
 # 1.4.5
 - [fix] upload task: `CodeCoverage.exe` was missing

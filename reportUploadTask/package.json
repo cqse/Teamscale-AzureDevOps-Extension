@@ -1,21 +1,21 @@
 {
   "name": "teamscale-azure-devops-tasks",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "",
   "main": "index.js",
   "scripts": {
     "restore": "npm ci && bash fetch_dependencies.sh",
-    "compile": "$(npm bin)/tsc",
-    "test": "npm run restore && npm run compile && $(npm bin)/mocha tests/*.js"
+    "compile": "npx tsc",
+    "test": "npm run restore && npm run compile && npx mocha tests/*.js"
   },
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "azure-pipelines-task-lib": "^5.2.2"
+    "azure-pipelines-task-lib": "^5.2.4"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "^24.10.3",
+    "@types/node": "^24.10.4",
     "@types/q": "^1.5.8",
     "mocha": "^11.7.5",
     "typescript": "^5.9.3"

@@ -1,16 +1,16 @@
 {
   "name": "Teamscale-AzureDevOps-Extension",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Teamscale integration into Azure DevOps",
   "main": "index.js",
   "scripts": {
     "replace": "echo fixes https://github.com/Microsoft/vss-web-extension-sdk/issues/112; replace \"\\s+nodeType: number;\" \"\" \"node_modules/vss-web-extension-sdk/typings/vss.d.ts\" -r",
-    "compileTypeScript": "$(npm bin)/tsc && cd reportUploadTask && npm run compile",
+    "compileTypeScript": "npx tsc && cd reportUploadTask && npm run compile",
     "restore": "npm ci && cd reportUploadTask && npm run restore",
     "build": "npm run restore && npm run replace && npm run compileTypeScript",
     "pruneDepsUploadTask": "cd reportUploadTask && npm prune --production && cd ..",
-    "package": "npm run build && npm run pruneDepsUploadTask && $(npm bin)/tfx extension create --output-path ./deployment/",
-    "publish": "npm run build && npm run pruneDepsUploadTask && $(npm bin)/tfx extension publish --output-path deployment --token $(node scripts/cat.js token)",
+    "package": "npm run build && npm run pruneDepsUploadTask && npx tfx extension create --output-path ./deployment/",
+    "publish": "npm run build && npm run pruneDepsUploadTask && npx tfx extension publish --output-path deployment --token $(node scripts/cat.js token)",
     "test": "cd reportUploadTask && npm run test"
   },
   "keywords": [],
@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "replace": "^1.2.2",
-    "tfx-cli": "^0.22.2",
+    "tfx-cli": "^0.22.6",
     "typescript": "^5.9.3",
     "shelljs": "^0.10.0"
   },

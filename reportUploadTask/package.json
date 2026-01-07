@@ -11,7 +11,7 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "azure-pipelines-task-lib": "^5.2.4"
+    "azure-pipelines-task-lib": "^5.2.5"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",

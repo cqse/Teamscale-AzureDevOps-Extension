@@ -1,10 +1,10 @@
 {
   "name": "Teamscale-AzureDevOps-Extension",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Teamscale integration into Azure DevOps",
   "main": "index.js",
   "scripts": {
-    "replace": "echo fixes https://github.com/Microsoft/vss-web-extension-sdk/issues/112; replace \"\\s+nodeType: number;\" \"\" \"node_modules/vss-web-extension-sdk/typings/vss.d.ts\" -r",
+    "replace": "echo fixes https://github.com/Microsoft/vss-web-extension-sdk/issues/112; sed -i '/^\\s*nodeType: number;$/d' node_modules/vss-web-extension-sdk/typings/vss.d.ts",
     "compileTypeScript": "npx tsc && cd reportUploadTask && npm run compile",
     "restore": "npm ci && cd reportUploadTask && npm run restore",
     "build": "npm run restore && npm run replace && npm run compileTypeScript",
@@ -21,20 +21,20 @@
     "url": "https://github.com/cqse/Teamscale-AzureDevOps-Extension.git"
   },
   "devDependencies": {
-    "replace": "^1.2.2",
-    "tfx-cli": "^0.22.6",
-    "typescript": "^5.9.3",
-    "shelljs": "^0.10.0"
+    "shelljs": "^0.10.0",
+    "tfx-cli": "^0.23.1",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@types/chosen-js": "^1.8.6",
     "chosen-js": "^1.8.7",
-    "jquery": "^3.7.1",
+    "jquery": "^4.0.0",
     "jquery-ui-dist": "^1.13.3",
     "vss-web-extension-sdk": "^5.141.0"
   },
   "overrides": {
     "async": "^3.2.6",
+    "minimatch": "^10.2.3",
     "execa": {
       "cross-spawn": "^7.0.6"
     },

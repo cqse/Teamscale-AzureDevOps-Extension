@@ -183,7 +183,7 @@ export default class TeamscaleClient {
     private wrapWithIssueIdLink(xhr: XMLHttpRequest, project: string, issueId: number) {
         const promise = this.generatePromise<string>(xhr).then(badge => {
             // Wrap the svg in a link element pointing to the issue perspective on Teamscale
-            const issueUrl = `${this.url}/issues.html#/${project}/${issueId}`;
+            const issueUrl = `${this.url}/activity/issue/${project}?id=${issueId}`;
             return `<a href="${issueUrl}" target="_top">${badge}</a>`;
         });
         xhr.send();

@@ -34,7 +34,7 @@
   },
   "overrides": {
     "async": "^3.2.6",
-    "minimatch": "^10.2.3",
+    "minimatch": "^10.2.5",
     "execa": {
       "cross-spawn": "^7.0.6"
     },

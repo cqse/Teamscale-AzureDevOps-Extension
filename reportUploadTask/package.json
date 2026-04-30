@@ -11,17 +11,17 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "azure-pipelines-task-lib": "^5.2.8"
+    "azure-pipelines-task-lib": "^5.2.10"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.6.0",
     "@types/q": "^1.5.8",
     "mocha": "^11.7.5",
     "typescript": "^5.9.3"
   },
   "overrides": {
-    "minimatch": "^10.2.3",
-    "serialize-javascript": "^7.0.3"
+    "minimatch": "^10.2.5",
+    "serialize-javascript": "^7.0.5"
   }
 }

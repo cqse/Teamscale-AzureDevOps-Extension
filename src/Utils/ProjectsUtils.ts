@@ -113,7 +113,7 @@ export async function retrieveRequirementsConnectorId(teamscaleClient: Teamscale
             if (projectConnector.type !== 'Azure DevOps Boards as Requirement Management Tool') {
                 continue;
             }
-            connectorId = projectConnector.options['Requirements Connector identifier'];
+            connectorId = projectConnector.options['Requirements Connector Identifier'];
         }
     }
     return connectorId;

@@ -232,12 +232,15 @@ async function uploadFiles(taskParameters: TaskParameters, dirPatternToUpload: s
 
 function createTeamscaleUploadRunner(taskParameters: TaskParameters, message: string, dirPatternToUpload: string): toolRunner.ToolRunner {
 	const isWindows = os.type().match(/^Win/);
-	let teamscaleUploadPath = path.join(__dirname, 'teamscaleUpload/teamscale-upload.exe');
+	const teamscaleUploadBaseDir = path.join(__dirname, 'teamscaleUpload');
+	let teamscaleUploadPath = path.join(teamscaleUploadBaseDir, 'teamscale-upload-windows', 'bin', 'teamscale-upload');
 	if (!isWindows) {
-		teamscaleUploadPath = path.join(__dirname, 'teamscaleUpload/teamscale-upload');
+		teamscaleUploadPath = path.join(teamscaleUploadBaseDir, 'teamscale-upload-linux', 'bin', 'teamscale-upload');
 		// the vsix is a zip which does not preserve permissions
-		// so our teamscale-upload binary is not executable by default
+		// so our teamscale-upload and java binaries are not executable by default
 		fs.chmodSync(teamscaleUploadPath, '777');
+		const teamscaleUploadJavaPath = path.join(teamscaleUploadBaseDir, 'teamscale-upload-linux', 'bin', 'java');
+		fs.chmodSync(teamscaleUploadJavaPath, '777');
 	}
 
 	let enableDebugOutput = false;

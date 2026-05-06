@@ -63,10 +63,10 @@ export class Configuration {
             this.separateTgaServerCheckbox.prop('checked', this.widgetSettings.useSeparateTgaServer);
         }
         this.zipTgaConfiguration();
-        $('#teamscale-project-select').chosen({width: '100%'}).on('change',
+        $('#teamscale-project-select').select2({width: '100%'}).on('change',
             () => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange));
-        $('#teamscale-tga-project-select').chosen({width: '100%'}).on('change', notifyWidgetChange);
-        $('#ts-baseline-select').chosen({width: '95%'}).on('change', notifyWidgetChange);
+        $('#teamscale-tga-project-select').select2({width: '100%'}).on('change', notifyWidgetChange);
+        $('#ts-baseline-select').select2({width: '95%'}).on('change', notifyWidgetChange);
 
         this.loadAndCheckConfiguration().then(() => this.fillDropdownsWithProjects())
             .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange))
@@ -134,7 +134,7 @@ export class Configuration {
             ' configure TGA Server.';
         this.teamscaleTgaProjectSelect.appendChild(element);
         $('#' + this.teamscaleTgaProjectSelect.id).prop('disabled', true);
-        $('#' + this.teamscaleTgaProjectSelect.id).trigger('chosen:updated');
+        $('#' + this.teamscaleTgaProjectSelect.id).trigger('change.select2');
         return Promise.resolve();
     }
 
@@ -189,7 +189,7 @@ export class Configuration {
             selectElement.appendChild(element);
         }
 
-        $(selectElementId).trigger('chosen:updated');
+        $(selectElementId).trigger('change.select2');
     }
 
     /**
@@ -228,7 +228,7 @@ export class Configuration {
 
         // update widget settings to get rid of a baseline which belongs to the formally chosen project
         this.getAndUpdateCustomSettings();
-        $('#ts-baseline-select').trigger('chosen:updated');
+        $('#ts-baseline-select').trigger('change.select2');
         notifyWidgetChange();
     }
 

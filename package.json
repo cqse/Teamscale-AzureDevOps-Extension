@@ -26,10 +26,10 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@types/chosen-js": "^1.8.6",
-    "chosen-js": "^1.8.7",
+    "@types/select2": "^4.0.63",
     "jquery": "^4.0.0",
     "jquery-ui-dist": "^1.13.3",
+    "select2": "^4.0.13",
     "vss-web-extension-sdk": "^5.141.0"
   },
   "overrides": {

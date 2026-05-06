@@ -4,6 +4,12 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
+# 1.5.3
+- [fix] work item integration: findings and test gap badges had outdated links to Teamscale
+- [fix] work item integration: spec-item findings badges always showed an "unchanged" findings churn and clicking them led to an error page in Teamscale
+- [fix] upload task: updated `teamscale-upload`
+- [fix] updated third party dependencies to recent versions
+
 # 1.5.2
 - [fix] updated third party dependencies to recent versions
 

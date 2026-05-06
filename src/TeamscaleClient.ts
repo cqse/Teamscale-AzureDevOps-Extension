@@ -153,6 +153,18 @@ export default class TeamscaleClient {
     }
 
     /**
+     * Retrieves the server version info from the Teamscale server.
+     */
+    public retrieveServerVersion(): PromiseLike<{ maxApiVersion: { major: number, minor: number, patch: number } }> {
+        const xhr = this.generateRequest('GET', '/api/version');
+        const promise = this.generatePromise<string>(xhr).then(result => {
+            return JSON.parse(result);
+        });
+        xhr.send();
+        return promise;
+    }
+
+    /**
      * Retrieves a list of accessible Teamscale projects from the Teamscale server.
      */
     public retrieveTeamscaleProjects(): PromiseLike<string[]> {

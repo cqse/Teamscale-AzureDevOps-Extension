@@ -107,14 +107,35 @@ async function hasFindingsChurn(teamscaleClient: TeamscaleClient, projectCandida
  */
 export async function retrieveRequirementsConnectorId(teamscaleClient: TeamscaleClient, projectCandidate: string) {
     let connectorId: string = '';
-    const projectConnectorList = await teamscaleClient.retrieveProjectConnectorList();
+    const [projectConnectorList, connectorIdOptionName] = await Promise.all([
+        teamscaleClient.retrieveProjectConnectorList(),
+        getConnectorIdOptionName(teamscaleClient)
+    ]);
     if (projectConnectorList.hasOwnProperty(projectCandidate)) {
         for (const projectConnector of projectConnectorList[projectCandidate]) {
             if (projectConnector.type !== 'Azure DevOps Boards as Requirement Management Tool') {
                 continue;
             }
-            connectorId = projectConnector.options['Requirements Connector Identifier'];
+            connectorId = projectConnector.options[connectorIdOptionName];
         }
     }
     return connectorId;
+}
+
+/**
+ * Returns the correct option name for the connector identifier based on the Teamscale server version.
+ * Before 2026.1 it was "Requirements Connector identifier", from 2026.1 onwards "Requirements Connector Identifier".
+ */
+async function getConnectorIdOptionName(teamscaleClient: TeamscaleClient): Promise<string> {
+    try {
+        const versionInfo = await teamscaleClient.retrieveServerVersion();
+        const version = versionInfo.maxApiVersion;
+        if (version.major > 2026 || (version.major === 2026 && version.minor >= 1)) {
+            return 'Requirements Connector Identifier';
+        }
+    } catch (e) {
+        // Fall back to new name if version check fails
+        return 'Requirements Connector Identifier';
+    }
+    return 'Requirements Connector identifier';
 }

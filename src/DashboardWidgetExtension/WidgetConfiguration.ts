@@ -14,6 +14,8 @@ import NotificationUtils from '../Utils/NotificationUtils';
 import {ExtensionSetting} from "../Settings/ExtensionSetting";
 import UiUtils = require('../Utils/UiUtils');
 
+declare var TomSelect: any;
+
 export class Configuration {
     private projectSettings: ProjectSettings = null;
     private organizationSettings: Settings = null;
@@ -33,6 +35,10 @@ export class Configuration {
     private datepicker = $('#datepicker');
     private testGapCheckbox = $('#show-test-gap');
     private separateTgaServerCheckbox = $('#separate-tga-server');
+
+    private tsProjectSelect: any;
+    private tsTgaProjectSelect: any;
+    private tsBaselineSelect: any;
 
     private widgetHelpers: any;
     private readonly notificationService: any;
@@ -63,10 +69,15 @@ export class Configuration {
             this.separateTgaServerCheckbox.prop('checked', this.widgetSettings.useSeparateTgaServer);
         }
         this.zipTgaConfiguration();
-        $('#teamscale-project-select').select2({width: '100%'}).on('change',
-            () => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange));
-        $('#teamscale-tga-project-select').select2({width: '100%'}).on('change', notifyWidgetChange);
-        $('#ts-baseline-select').select2({width: '95%'}).on('change', notifyWidgetChange);
+
+        this.tsProjectSelect = new TomSelect('#teamscale-project-select', {});
+        this.tsProjectSelect.on('change', () => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange));
+
+        this.tsTgaProjectSelect = new TomSelect('#teamscale-tga-project-select', {});
+        this.tsTgaProjectSelect.on('change', notifyWidgetChange);
+
+        this.tsBaselineSelect = new TomSelect('#ts-baseline-select', {});
+        this.tsBaselineSelect.on('change', notifyWidgetChange);
 
         this.loadAndCheckConfiguration().then(() => this.fillDropdownsWithProjects())
             .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange))
@@ -129,12 +140,8 @@ export class Configuration {
     }
 
     private handleMissingTgaServerConfig() {
-        const element = document.createElement('option');
-        element.textContent = 'Error: No TGA server configured. Deactivate separate Server option or' +
-            ' configure TGA Server.';
-        this.teamscaleTgaProjectSelect.appendChild(element);
-        $('#' + this.teamscaleTgaProjectSelect.id).prop('disabled', true);
-        $('#' + this.teamscaleTgaProjectSelect.id).trigger('change.select2');
+        this.tsTgaProjectSelect.addOption({value: '', text: 'Error: No TGA server configured. Deactivate separate Server option or configure TGA Server.'});
+        this.tsTgaProjectSelect.disable();
         return Promise.resolve();
     }
 
@@ -149,7 +156,7 @@ export class Configuration {
      * Loads a list of accessible projects from the Teamscale server and appends them to the TQE dropdown menu.
      */
     private async fillTqeDropdownWithProjects() {
-        return this.fillDropdownWithProjects(this.teamscaleClient, this.teamscaleProjectSelect, '#teamscale-project-select');
+        return this.fillDropdownWithProjects(this.teamscaleClient, this.tsProjectSelect, 'teamscaleProject');
     }
 
     /**
@@ -164,13 +171,13 @@ export class Configuration {
             }
             this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
         }
-        return this.fillDropdownWithProjects(this.tgaTeamscaleClient, this.teamscaleTgaProjectSelect, '#teamscale-tga-project-select');
+        return this.fillDropdownWithProjects(this.tgaTeamscaleClient, this.tsTgaProjectSelect, 'tgaTeamscaleProject');
     }
 
     /**
      * Loads a list of accessible projects from the Teamscale server and appends them to the dropdown menu.
      */
-    private async fillDropdownWithProjects(teamscaleClient: TeamscaleClient, selectElement: HTMLSelectElement, selectElementId: string) {
+    private async fillDropdownWithProjects(teamscaleClient: TeamscaleClient, tomSelect: any, settingsKey: string) {
         let projects: string[];
         try {
             projects = await teamscaleClient.retrieveTeamscaleProjects();
@@ -179,17 +186,14 @@ export class Configuration {
             return Promise.reject(error);
         }
 
+        tomSelect.clearOptions();
         for (const project of projects) {
-            const element = document.createElement('option');
-            element.textContent = project;
-            element.value = project;
-            if (this.widgetSettings) {
-                element.selected = this.widgetSettings.teamscaleProject === project;
-            }
-            selectElement.appendChild(element);
+            tomSelect.addOption({value: project, text: project});
         }
 
-        $(selectElementId).trigger('change.select2');
+        if (this.widgetSettings && this.widgetSettings[settingsKey]) {
+            tomSelect.setValue(this.widgetSettings[settingsKey], true);
+        }
     }
 
     /**
@@ -197,7 +201,7 @@ export class Configuration {
      */
     private async fillDropdownWithTeamscaleBaselines(notifyWidgetChange) {
         // use input value and not widgetSetting Object which might hold an outdated project name
-        // since the chosen change event of the project selector is fired before the settings object update
+        // since the change event of the project selector is fired before the settings object update
         const teamscaleProject: string = this.teamscaleProjectSelect.value;
 
         let baselines: ITeamscaleBaseline[];
@@ -209,26 +213,22 @@ export class Configuration {
             return Promise.reject(error);
         }
 
-        while (this.teamscaleBaselineSelect.firstChild) {
-            this.teamscaleBaselineSelect.removeChild(this.teamscaleBaselineSelect.firstChild);
-        }
+        this.tsBaselineSelect.clearOptions();
 
         this.disableBaselineDropdownForProjectsWithoutBaselines(baselines, teamscaleProject);
 
         for (const baseline of baselines) {
-            const element = document.createElement('option');
             const date = new Date(baseline.timestamp);
-            element.textContent = baseline.name + ' (' + date.toLocaleDateString() + ')';
-            element.value = baseline.name;
-            if (this.widgetSettings) {
-                element.selected = this.widgetSettings.tsBaseline === baseline.name;
-            }
-            this.teamscaleBaselineSelect.appendChild(element);
+            const text = baseline.name + ' (' + date.toLocaleDateString() + ')';
+            this.tsBaselineSelect.addOption({value: baseline.name, text: text});
         }
 
-        // update widget settings to get rid of a baseline which belongs to the formally chosen project
+        if (this.widgetSettings && this.widgetSettings.tsBaseline) {
+            this.tsBaselineSelect.setValue(this.widgetSettings.tsBaseline, true);
+        }
+
+        // update widget settings to get rid of a baseline which belongs to the formerly chosen project
         this.getAndUpdateCustomSettings();
-        $('#ts-baseline-select').trigger('change.select2');
         notifyWidgetChange();
     }
 
@@ -237,12 +237,10 @@ export class Configuration {
      */
     private disableBaselineDropdownForProjectsWithoutBaselines(baselines: ITeamscaleBaseline[], teamscaleProject: string) {
         if (baselines.length === 0) {
-            const element = document.createElement('option');
-            element.textContent = 'No baseline configured for project »' + teamscaleProject + '«';
-            this.teamscaleBaselineSelect.appendChild(element);
-            $('#ts-baseline-select').prop('disabled', true);
+            this.tsBaselineSelect.addOption({value: '', text: 'No baseline configured for project »' + teamscaleProject + '«'});
+            this.tsBaselineSelect.disable();
         } else {
-            $('#ts-baseline-select').prop('disabled', false);
+            this.tsBaselineSelect.enable();
         }
     }
 

@@ -168,14 +168,14 @@
             "packagePath": "lib/VSS.SDK.min.js"
         },
         {
-            "path": "node_modules/select2/dist/js/select2.min.js",
+            "path": "node_modules/tom-select/dist/js/tom-select.complete.min.js",
             "addressable": true,
-            "packagePath": "lib/select2.min.js"
+            "packagePath": "lib/tom-select.complete.min.js"
         },
         {
-            "path": "node_modules/select2/dist/css/select2.min.css",
+            "path": "node_modules/tom-select/dist/css/tom-select.default.min.css",
             "addressable": true,
-            "packagePath": "styles/select2.min.css"
+            "packagePath": "styles/tom-select.default.min.css"
         },
         {
             "path": "node_modules/jquery/dist/jquery.min.js",

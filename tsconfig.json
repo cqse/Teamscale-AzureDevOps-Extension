@@ -9,8 +9,7 @@
         "rootDir": "src/",
         "outDir": "dist/",
         "types": [
-            "vss-web-extension-sdk",
-            "select2"
+            "vss-web-extension-sdk"
         ],
         "lib": [ "es2015", "dom" ]
     }

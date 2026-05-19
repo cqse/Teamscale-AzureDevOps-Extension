@@ -14,7 +14,7 @@ import NotificationUtils from '../Utils/NotificationUtils';
 import {ExtensionSetting} from "../Settings/ExtensionSetting";
 import UiUtils = require('../Utils/UiUtils');
 
-declare var TomSelect: any;
+declare const TomSelect: any;
 
 export class Configuration {
     private projectSettings: ProjectSettings = null;
@@ -24,13 +24,10 @@ export class Configuration {
 
     private teamscaleClient: TeamscaleClient = null;
     private tgaTeamscaleClient: TeamscaleClient = null;
-    private teamscaleTgaProjectSelect = document.getElementById('teamscale-tga-project-select') as HTMLSelectElement;
 
     private notificationUtils: NotificationUtils = null;
     private emailContact: string = '';
 
-    private teamscaleProjectSelect = document.getElementById('teamscale-project-select') as HTMLSelectElement;
-    private teamscaleBaselineSelect = document.getElementById('ts-baseline-select') as HTMLSelectElement;
     private baselineDaysInput = document.getElementById('baseline-days-input') as HTMLInputElement;
     private datepicker = $('#datepicker');
     private testGapCheckbox = $('#show-test-gap');
@@ -129,7 +126,7 @@ export class Configuration {
         if (this.separateTgaServerCheckbox.is(':checked')) {
             displayAttribute = 'block';
 
-            if (!this.teamscaleTgaProjectSelect.firstChild) {
+            if (Object.keys(this.tsTgaProjectSelect.options).length === 0) {
                 this.fillTgaDropdownWithProjects();
             }
         }
@@ -140,7 +137,11 @@ export class Configuration {
     }
 
     private handleMissingTgaServerConfig() {
-        this.tsTgaProjectSelect.addOption({value: '', text: 'Error: No TGA server configured. Deactivate separate Server option or configure TGA Server.'});
+        const message = 'Error: No TGA server configured. Deactivate separate Server option or configure TGA Server.';
+        this.tsTgaProjectSelect.clear(true);
+        this.tsTgaProjectSelect.clearOptions();
+        this.tsTgaProjectSelect.addOption({value: message, text: message});
+        this.tsTgaProjectSelect.setValue(message, true);
         this.tsTgaProjectSelect.disable();
         return Promise.resolve();
     }
@@ -177,7 +178,7 @@ export class Configuration {
     /**
      * Loads a list of accessible projects from the Teamscale server and appends them to the dropdown menu.
      */
-    private async fillDropdownWithProjects(teamscaleClient: TeamscaleClient, tomSelect: any, settingsKey: string) {
+    private async fillDropdownWithProjects(teamscaleClient: TeamscaleClient, projectSelect: any, settingsKey: string) {
         let projects: string[];
         try {
             projects = await teamscaleClient.retrieveTeamscaleProjects();
@@ -186,13 +187,18 @@ export class Configuration {
             return Promise.reject(error);
         }
 
-        tomSelect.clearOptions();
+        projectSelect.clear(true);
+        projectSelect.clearOptions();
+        projectSelect.enable();
         for (const project of projects) {
-            tomSelect.addOption({value: project, text: project});
+            projectSelect.addOption({value: project, text: project});
         }
 
-        if (this.widgetSettings && this.widgetSettings[settingsKey]) {
-            tomSelect.setValue(this.widgetSettings[settingsKey], true);
+        const savedValue = this.widgetSettings && this.widgetSettings[settingsKey];
+        if (savedValue && projects.indexOf(savedValue) !== -1) {
+            projectSelect.setValue(savedValue, true);
+        } else if (projects.length > 0) {
+            projectSelect.setValue(projects[0], true);
         }
     }
 
@@ -202,7 +208,10 @@ export class Configuration {
     private async fillDropdownWithTeamscaleBaselines(notifyWidgetChange) {
         // use input value and not widgetSetting Object which might hold an outdated project name
         // since the change event of the project selector is fired before the settings object update
-        const teamscaleProject: string = this.teamscaleProjectSelect.value;
+        const teamscaleProject: string = this.tsProjectSelect.getValue();
+        if (!teamscaleProject) {
+            return;
+        }
 
         let baselines: ITeamscaleBaseline[];
         try {
@@ -213,35 +222,29 @@ export class Configuration {
             return Promise.reject(error);
         }
 
+        this.tsBaselineSelect.clear(true);
         this.tsBaselineSelect.clearOptions();
 
-        this.disableBaselineDropdownForProjectsWithoutBaselines(baselines, teamscaleProject);
-
-        for (const baseline of baselines) {
-            const date = new Date(baseline.timestamp);
-            const text = baseline.name + ' (' + date.toLocaleDateString() + ')';
-            this.tsBaselineSelect.addOption({value: baseline.name, text: text});
-        }
-
-        if (this.widgetSettings && this.widgetSettings.tsBaseline) {
-            this.tsBaselineSelect.setValue(this.widgetSettings.tsBaseline, true);
+        if (baselines.length === 0) {
+            const message = 'No baseline configured for project »' + teamscaleProject + '«';
+            this.tsBaselineSelect.addOption({value: message, text: message});
+            this.tsBaselineSelect.setValue(message, true);
+            this.tsBaselineSelect.disable();
+        } else {
+            this.tsBaselineSelect.enable();
+            for (const baseline of baselines) {
+                const date = new Date(baseline.timestamp);
+                const text = baseline.name + ' (' + date.toLocaleDateString() + ')';
+                this.tsBaselineSelect.addOption({value: baseline.name, text: text});
+            }
+            if (this.widgetSettings && this.widgetSettings.tsBaseline) {
+                this.tsBaselineSelect.setValue(this.widgetSettings.tsBaseline, true);
+            }
         }
 
         // update widget settings to get rid of a baseline which belongs to the formerly chosen project
         this.getAndUpdateCustomSettings();
         notifyWidgetChange();
-    }
-
-    /**
-     * Disables the baseline chooser for projects without configured Teamscale baselines.
-     */
-    private disableBaselineDropdownForProjectsWithoutBaselines(baselines: ITeamscaleBaseline[], teamscaleProject: string) {
-        if (baselines.length === 0) {
-            this.tsBaselineSelect.addOption({value: '', text: 'No baseline configured for project »' + teamscaleProject + '«'});
-            this.tsBaselineSelect.disable();
-        } else {
-            this.tsBaselineSelect.enable();
-        }
     }
 
     /**
@@ -302,14 +305,14 @@ export class Configuration {
      * Read the current configuration as specified in the configuration form. Stores it as class member and returns it.
      */
     private getAndUpdateCustomSettings(): ITeamscaleWidgetSettings {
-        const teamscaleProject: string = this.teamscaleProjectSelect.value;
-        const tgaTeamscaleProject: string = this.teamscaleTgaProjectSelect.value;
+        const teamscaleProject: string = this.tsProjectSelect ? this.tsProjectSelect.getValue() : '';
+        const tgaTeamscaleProject: string = this.tsTgaProjectSelect ? this.tsTgaProjectSelect.getValue() : '';
         const baselineDays: number = Number(this.baselineDaysInput.value);
         let startFixedDate: number;
         if (this.datepicker.datepicker('getDate')) {
             startFixedDate = this.datepicker.datepicker('getDate').getTime();
         }
-        const tsBaseline: string = this.teamscaleBaselineSelect.value;
+        const tsBaseline: string = this.tsBaselineSelect ? this.tsBaselineSelect.getValue() : '';
         const showTestGapBadge: boolean = document.getElementById('show-test-gap').checked;
         const useSeparateTgaServer: boolean = document.getElementById('separate-tga-server').checked;
 

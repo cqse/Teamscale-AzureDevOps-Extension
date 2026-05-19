@@ -168,14 +168,14 @@
             "packagePath": "lib/VSS.SDK.min.js"
         },
         {
-            "path": "node_modules/chosen-js/chosen.jquery.min.js",
+            "path": "node_modules/tom-select/dist/js/tom-select.complete.min.js",
             "addressable": true,
-            "packagePath": "lib/chosen.jquery.min.js"
+            "packagePath": "lib/tom-select.complete.min.js"
         },
         {
-            "path": "node_modules/chosen-js/chosen.min.css",
+            "path": "node_modules/tom-select/dist/css/tom-select.default.min.css",
             "addressable": true,
-            "packagePath": "styles/chosen.min.css"
+            "packagePath": "styles/tom-select.default.min.css"
         },
         {
             "path": "node_modules/jquery/dist/jquery.min.js",
@@ -196,11 +196,6 @@
             "path": "node_modules/jquery-ui-dist/images/ui-icons_444444_256x240.png",
             "addressable": true,
             "packagePath": "styles/images/ui-icons_444444_256x240.png"
-        },
-        {
-            "path": "node_modules/chosen-js/chosen-sprite.png",
-            "addressable": true,
-            "packagePath": "styles/chosen-sprite.png"
         },
         {
             "path": "scripts/require.js",

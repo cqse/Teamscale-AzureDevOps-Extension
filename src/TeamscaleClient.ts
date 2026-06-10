@@ -131,6 +131,34 @@ export default class TeamscaleClient {
     }
 
     /**
+     * Checks whether the given spec item exists in the given project.
+     * Resolves true on HTTP 200, false on HTTP 404, and rejects on any other status
+     * (e.g. 401/403) so authentication errors can still be detected by the caller.
+     *
+     * @param project The project in which to look for the spec item
+     * @param connectorId The id of the requirements connector
+     * @param specItemId The id of the spec item to look for
+     */
+    public specItemExists(project: string, connectorId: string, specItemId: string): PromiseLike<boolean> {
+        project = encodeURIComponent(project);
+        // The spec-items endpoint expects the TeamscaleIssueId "connectorId|specItemId"
+        // as a single, fully URL-encoded path segment.
+        const issueId = encodeURIComponent(`${connectorId}|${specItemId}`);
+        const xhr = this.generateRequest(
+            'GET', `/api/projects/${project}/spec-items/${issueId}`);
+        const promise = this.generatePromise<string>(xhr).then(
+            () => true,
+            reason => {
+                if (reason && reason.status === 404) {
+                    return false;
+                }
+                throw reason;
+            });
+        xhr.send();
+        return promise;
+    }
+
+    /**
      * Retrieves the project connector list.
      */
     public retrieveProjectConnectorList(): PromiseLike<IProjectConnectorList> {

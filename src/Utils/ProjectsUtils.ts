@@ -27,16 +27,23 @@ export async function resolveProjectNameByIssueId(teamscaleClient: TeamscaleClie
                 hasFindings = await hasTestGapFindings(teamscaleClient, projectCandidate, issueId);
             }
             else if (badgeType === BadgeType.TestSmell) {
-                hasFindings = await hasTestSmellFindings(teamscaleClient, projectCandidate, issueId);
-            } 
-            else {
-                hasFindings = await hasFindingsChurn(teamscaleClient, projectCandidate, issueId);  
+                const connectorId: string = await retrieveRequirementsConnectorId(teamscaleClient, projectCandidate);
+                // Skip projects that do not contain the spec item, so we never resolve to (and link
+                // to) a project that lacks it. A missing connector means it cannot contain the item.
+                if (!connectorId ||
+                        !(await teamscaleClient.specItemExists(projectCandidate, connectorId, issueId.toString()))) {
+                    continue;
+                }
+                hasFindings = await hasTestSmellFindings(teamscaleClient, projectCandidate, connectorId, issueId);
             }
-            
+            else {
+                hasFindings = await hasFindingsChurn(teamscaleClient, projectCandidate, issueId);
+            }
+
             if (hasFindings) {
                 return projectCandidate;
             }
-            
+
             validProjects.push(projectCandidate);
         } catch (reason) {
             if (reason && reason.status) {
@@ -81,16 +88,14 @@ async function hasTestGapFindings(teamscaleClient: TeamscaleClient, projectCandi
 /**
  * Returns true if the client returns test smell findings for the given project candidate and issue id.
  */
-async function hasTestSmellFindings(teamscaleClient: TeamscaleClient, projectCandidate: string, issueId: number): Promise<boolean> {
-    let connectorId: string = await retrieveRequirementsConnectorId(teamscaleClient, projectCandidate);
-    
+async function hasTestSmellFindings(teamscaleClient: TeamscaleClient, projectCandidate: string,
+                                    connectorId: string, issueId: number): Promise<boolean> {
     const testSmellSummary = await teamscaleClient.retrieveFindingsChurnListForSpecItem(projectCandidate, connectorId, issueId.toString());
-    
+
     return testSmellSummary.addedFindings && testSmellSummary.addedFindings.length > 0 ||
         testSmellSummary.findingsInChangedCode && testSmellSummary.findingsInChangedCode.length > 0 ||
         testSmellSummary.removedFindings && testSmellSummary.removedFindings.length > 0;
 }
-
 
 /**
  * Returns true if the client returns findings churn for the given project candidate and issue id.

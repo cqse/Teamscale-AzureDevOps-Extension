@@ -6,6 +6,7 @@ We use [semantic versioning](http://semver.org/):
 
 # Next Release
 - [fix] updated third party dependencies to recent versions
+- [fix] work item integration: spec-item findings badge resolved to the wrong Teamscale project when multiple projects were configured, showing an "unchanged" churn and linking to a project that did not contain the spec item
 
 # 1.5.4
 - [fix] dashboard widget: project and baseline dropdowns only offered one element

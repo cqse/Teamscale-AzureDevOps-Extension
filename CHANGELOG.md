@@ -4,6 +4,9 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
+# Next Release
+- [fix] updated third party dependencies to recent versions
+
 # 1.5.4
 - [fix] dashboard widget: project and baseline dropdowns only offered one element
 

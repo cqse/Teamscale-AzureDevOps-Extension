@@ -4,7 +4,7 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
-# Next Release
+# 1.5.5
 - [fix] updated third party dependencies to recent versions
 - [fix] work item integration: spec-item findings badge resolved to the wrong Teamscale project when multiple projects were configured, showing an "unchanged" churn and linking to a project that did not contain the spec item
 

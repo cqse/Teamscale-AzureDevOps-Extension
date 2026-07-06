@@ -132,14 +132,7 @@ export async function retrieveRequirementsConnectorId(teamscaleClient: Teamscale
  * Before 2026.1 it was "Requirements Connector identifier", from 2026.1 onwards "Requirements Connector Identifier".
  */
 async function getConnectorIdOptionName(teamscaleClient: TeamscaleClient): Promise<string> {
-    try {
-        const versionInfo = await teamscaleClient.retrieveServerVersion();
-        const version = versionInfo.maxApiVersion;
-        if (version.major > 2026 || (version.major === 2026 && version.minor >= 1)) {
-            return 'Requirements Connector Identifier';
-        }
-    } catch (e) {
-        // Fall back to new name if version check fails
+    if (await teamscaleClient.isServerVersionAtLeast(2026, 1)) {
         return 'Requirements Connector Identifier';
     }
     return 'Requirements Connector identifier';

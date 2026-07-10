@@ -2,6 +2,7 @@ import { IFindingsChurnList } from './IFindingsChurnList';
 import { ITeamscaleBaseline } from './ITeamscaleBaseline';
 import { ITgaSummary } from './ITgaSummary';
 import { IProjectConnectorList } from './IProjectConnectorList';
+import { IServerVersion } from './IServerVersion';
 
 /**
  * Media type to use when requesting a badge.
@@ -12,6 +13,9 @@ const IMAGE_SVG = "image/svg+xml";
  * Encapsulates calls to Teamscale
  */
 export default class TeamscaleClient {
+
+    /** Cached server version, fetched lazily on first use. */
+    private serverVersion: IServerVersion | null = null;
 
     constructor(public readonly url: string) {
     }
@@ -181,15 +185,34 @@ export default class TeamscaleClient {
     }
 
     /**
-     * Retrieves the server version info from the Teamscale server.
+     * Retrieves the server version info from the Teamscale server, caching it on first success.
+     * Returns null if the version cannot be determined; in that case it is re-fetched on the next call.
      */
-    public retrieveServerVersion(): PromiseLike<{ maxApiVersion: { major: number, minor: number, patch: number } }> {
-        const xhr = this.generateRequest('GET', '/api/version');
-        const promise = this.generatePromise<string>(xhr).then(result => {
-            return JSON.parse(result);
-        });
-        xhr.send();
-        return promise;
+    private async retrieveServerVersion(): Promise<IServerVersion | null> {
+        if (this.serverVersion === null) {
+            try {
+                const xhr = this.generateRequest('GET', '/api/version');
+                const promise = this.generatePromise<string>(xhr).then(result => JSON.parse(result));
+                xhr.send();
+                this.serverVersion = await promise;
+            } catch (e) {
+                return null; // not cached -> retried on the next call
+            }
+        }
+        return this.serverVersion;
+    }
+
+    /**
+     * Returns whether the Teamscale server version is at least the given major.minor version.
+     * If the version cannot be determined, it is treated as a recent version (returns true).
+     */
+    public async isServerVersionAtLeast(major: number, minor: number): Promise<boolean> {
+        const version = await this.retrieveServerVersion();
+        if (version === null) {
+            return true;
+        }
+        const serverVersion = version.maxApiVersion;
+        return serverVersion.major > major || (serverVersion.major === major && serverVersion.minor >= minor);
     }
 
     /**
@@ -221,9 +244,10 @@ export default class TeamscaleClient {
      * Wraps the response of a badge request with a link to the issue perspective.
      */
     private wrapWithIssueIdLink(xhr: XMLHttpRequest, project: string, issueId: number) {
-        const promise = this.generatePromise<string>(xhr).then(badge => {
-            // Wrap the svg in a link element pointing to the issue perspective on Teamscale
-            const issueUrl = `${this.url}/activity/issues/${project}?id=${issueId}`;
+        const promise = this.generatePromise<string>(xhr).then(async badge => {
+            // Wrap the svg in a link element pointing to the issue perspective on Teamscale.
+            const isLegacyIssuePerspective = !(await this.isServerVersionAtLeast(2025, 4));
+            const issueUrl = `${this.url}/activity/${isLegacyIssuePerspective ? 'issues' : 'issue'}/${project}?id=${issueId}${isLegacyIssuePerspective ? '&action=view' : ''}`;
             return `<a href="${issueUrl}" target="_top">${badge}</a>`;
         });
         xhr.send();

@@ -6,6 +6,7 @@ We use [semantic versioning](http://semver.org/):
 
 # Next Release
 - [fix] dashboard widget: test gap badge showed wrong percentage
+- [fix] work item integration: findings and test gap badges linked to list of issues instead of issue details in Teamscale
 
 # 1.5.5
 - [fix] updated third party dependencies to recent versions

@@ -54,7 +54,7 @@ export default class TeamscaleClient {
     public retrieveTestGapDeltaBadge(project: string, startTimestamp: number): PromiseLike<string> {
         project = encodeURIComponent(project);
         const xhr = this.generateRequest(
-            'GET', `/api/projects/${project}/test-gaps/badge?baseline=${startTimestamp}&end=HEAD`, IMAGE_SVG);
+            'GET', `/api/projects/${project}/test-gaps/badge?baseline=${startTimestamp}&end=HEAD&all-partitions=true`, IMAGE_SVG);
         const promise = this.generatePromise<string>(xhr).then(badge => {
             const testGapDeltaLink = `${this.url}/delta.html#test-gap/${project}/?from=${startTimestamp}&to=HEAD`;
             return `<a href="${testGapDeltaLink}" target="_top">${badge}</a>`;

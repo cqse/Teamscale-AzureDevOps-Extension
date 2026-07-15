@@ -62,15 +62,20 @@ export default class NotificationUtils {
                 break;
             case 404:
                 this.showInfoBanner(`Server <a href="${teamscaleServer}" target="_top">${teamscaleServer}</a> which is `
-                    + 'configured as Teamscale server, returned a <i>Not found</i> (404) error for project ' +
+                    + 'configured as Teamscale server, returned a <i>Not found</i> (404) error for project '
                     + projectInfo + '. ' + this.generateContactText());
 
                 VSS.notifyLoadSucceeded();
                 break;
             default:
-                let message = `Failed ${action ? action + ' ' : ''}with error code ${reason.status}`;
+                let message = `Failed ${action ? action + ' ' : ''}calling `
+                    + `<a href="${teamscaleServer}" target="_top">${teamscaleServer}</a> with error code ${reason.status}`;
                 if (reason.statusText) {
                     message += `: ${reason.statusText}`;
+                }
+                if (reason.status === -1) {
+                    message += '. This may indicate the configured Teamscale URL is unreachable from this '
+                        + 'Azure DevOps extension (e.g. wrong URL or CORS misconfiguration on the Teamscale server)';
                 }
                 message += `. ${this.generateContactText()}`;
                 this.showErrorBanner(message);

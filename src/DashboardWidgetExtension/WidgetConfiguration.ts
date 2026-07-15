@@ -79,13 +79,36 @@ export class Configuration {
         this.tsBaselineSelect = new TomSelect('#ts-baseline-select', {});
         this.tsBaselineSelect.on('change', notifyWidgetChange);
 
+        this.initializeFrameResizing();
+
         this.loadAndCheckConfiguration().then(() => this.applyProjectLevelTgaGating())
             .then(() => this.fillDropdownsWithProjects())
             .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange))
             .catch(() => $('.teamscale-config-group').hide());
 
-        VSS.resize();
         return this.widgetHelpers.WidgetStatusHelper.Success();
+    }
+
+    /**
+     * Requests a fitting iframe height from the host whenever the form content changes size (async loads, error
+     * banners, tab switches, toggling optional rows). The host does not reliably honor resize requests, especially
+     * for content that only grows after the initial load; .container therefore scrolls internally as a fallback so
+     * no option ever becomes unreachable (see settings.css).
+     */
+    private initializeFrameResizing() {
+        const observer = new ResizeObserver(() => this.resize());
+        // Observe the content blocks rather than .container itself, which is fixed at 100% of the iframe height.
+        observer.observe(document.getElementById('message-div'));
+        observer.observe(document.querySelector('.teamscale-config-group'));
+    }
+
+    /**
+     * Resizes the host iframe to match the current content height.
+     */
+    private resize() {
+        const container = document.querySelector('.container');
+        // scrollHeight is the full content height, even while the container is clipped and scrolling internally.
+        VSS.resize(document.body.scrollWidth, container.scrollHeight);
     }
 
     /**

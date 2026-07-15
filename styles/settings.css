@@ -2,6 +2,15 @@ html {
     margin-left: 16px;
 }
 
+/* The widget configuration page must fill the host iframe exactly so that .container can scroll internally.
+   Its indentation is therefore done via the container padding instead of the html margin used on the other
+   settings pages. */
+html.widget-configuration,
+html.widget-configuration body {
+    margin: 0;
+    height: 100%;
+}
+
 .ts-option-header {
     margin-bottom: 0.3em;
 }
@@ -30,18 +39,54 @@ html {
     margin-right: 20px;
 }
 
+/* Fills the widget configuration iframe exactly and scrolls internally: the iframe's height is controlled by the
+   dashboard host and cannot be fully trusted (see resize() in WidgetConfiguration.ts). If the host grants less
+   height than the content needs, the scrollbar keeps all options reachable instead of them being clipped at the
+   iframe boundary. */
 .container {
-    display: inline-block;
+    box-sizing: border-box;
     height: 100%;
     width: 100%;
+    overflow-y: auto;
+    padding: 8px 8px 8px 24px;
 }
 
 .teamscale-config-group {
-    margin-bottom: 15px;
+    /* Padding instead of margin so the spacing is reliably part of .container's scrollHeight, which is used to
+       request the iframe height from the host. */
+    padding-bottom: 15px;
     width: 100%;
 }
 
 /* Greys out the label of a disabled option so it is visually distinguishable from enabled ones. */
 .disabled-option {
     opacity: 0.5;
+}
+
+/* Add space below the notification banner (only when it actually contains a message). */
+#message-div:not(:empty) {
+    margin-bottom: 15px;
+}
+
+/* A label + right-aligned input row that contains its floated input (clearfix) so following content flows below it. */
+.config-row {
+    clear: both;
+    margin-top: 8px;
+}
+
+.config-row::after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+.config-input {
+    float: right;
+    width: 70%;
+}
+
+/* Explanatory text placed below the dropdown rows, not wrapping around them. */
+.config-explanation {
+    clear: both;
+    margin-top: 15px;
 }

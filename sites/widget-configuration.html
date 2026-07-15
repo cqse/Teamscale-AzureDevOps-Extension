@@ -1,4 +1,4 @@
-<html>
+<html class="widget-configuration">
 <head>
     <meta charset="UTF-8">
     <script src="../lib/VSS.SDK.min.js"></script>
@@ -14,29 +14,28 @@
     <div id="message-div"></div>
 
     <div class="teamscale-config-group">
-        <label class="config-label">Project:</label>
-        <div style="float: right; width: 70%;">
-            <select id="teamscale-project-select"></select>
-        </div>
-
-        <br>
-        <div style="padding-top: 8px; clear: both; height: 33px;">
-            <div id="config-container-teamscale-tga-project-select">
-                <label class="config-label">TGA Project:</label>
-                <div style="float: right; width: 70%;">
-                    <select id="teamscale-tga-project-select"></select>
-                </div>
+        <div class="config-row">
+            <label class="config-label">Project:</label>
+            <div class="config-input">
+                <select id="teamscale-project-select"></select>
             </div>
         </div>
 
-        <p>This widget uses data on the Teamscale default branch
+        <div id="config-container-teamscale-tga-project-select" class="config-row">
+            <label class="config-label">TGA Project:</label>
+            <div class="config-input">
+                <select id="teamscale-tga-project-select"></select>
+            </div>
+        </div>
+
+        <p class="config-explanation">This widget uses data on the Teamscale default branch
             from a defined starting point until the last commit on the default branch.</p>
 
         <br>
 
         Start date:
         <div style="clear: both; margin-top: 5px;">
-            <div id="tabs" style="height: 160px;">
+            <div id="tabs">
                 <ul>
                     <li><a href="#start-fixed-date">Fixed date</a></li>
                     <li><a href="#start-timespan">Timespan</a></li>

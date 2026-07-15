@@ -52,14 +52,14 @@ export function replaceClipPathId(plainSvg: string, clipPathId: string): string 
 }
 
 /**
- * Converts a string representation of a boolean value back to a Boolean value. Return undefined in case of an
- * unexpected error.
+ * Converts a string representation of a boolean value back to a Boolean value. Returns true only for the string
+ * "true"; any other value (including non-boolean values, null/undefined and parsing errors) yields false.
  */
-export function convertToBoolean(input: string): boolean | undefined {
+export function convertToBoolean(input: string): boolean {
     try {
-        return JSON.parse(input);
+        return JSON.parse(input) === true;
     } catch (e) {
-        return undefined;
+        return false;
     }
 }
 

@@ -25,6 +25,9 @@ export class Configuration {
     private teamscaleClient: TeamscaleClient = null;
     private tgaTeamscaleClient: TeamscaleClient = null;
 
+    /** Whether the project settings enable a separate Teamscale server for Test Gap Analysis. */
+    private projectUsesSeparateTgaServer: boolean = false;
+
     private notificationUtils: NotificationUtils = null;
     private emailContact: string = '';
 
@@ -76,7 +79,8 @@ export class Configuration {
         this.tsBaselineSelect = new TomSelect('#ts-baseline-select', {});
         this.tsBaselineSelect.on('change', notifyWidgetChange);
 
-        this.loadAndCheckConfiguration().then(() => this.fillDropdownsWithProjects())
+        this.loadAndCheckConfiguration().then(() => this.applyProjectLevelTgaGating())
+            .then(() => this.fillDropdownsWithProjects())
             .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange))
             .catch(() => $('.teamscale-config-group').hide());
 
@@ -127,7 +131,7 @@ export class Configuration {
             displayAttribute = 'block';
 
             if (Object.keys(this.tsTgaProjectSelect.options).length === 0) {
-                this.fillTgaDropdownWithProjects();
+                this.fillTgaDropdownWithProjects().catch(() => this.handleTgaDropdownFailure());
             }
         }
 
@@ -136,21 +140,80 @@ export class Configuration {
         }
     }
 
-    private handleMissingTgaServerConfig() {
-        const message = 'Error: No TGA server configured. Deactivate separate Server option or configure TGA Server.';
-        this.tsTgaProjectSelect.clear(true);
-        this.tsTgaProjectSelect.clearOptions();
-        this.tsTgaProjectSelect.addOption({value: message, text: message});
-        this.tsTgaProjectSelect.setValue(message, true);
-        this.tsTgaProjectSelect.disable();
+    /**
+     * Puts the given Tom Select dropdown into a disabled state showing the given placeholder message. This signals a
+     * problem with a single dropdown while keeping the rest of the configuration form interactive (see TS-46229).
+     */
+    private disableDropdown(select: any, message: string) {
+        select.clear(true);
+        select.clearOptions();
+        select.addOption({value: message, text: message});
+        select.setValue(message, true);
+        select.disable();
         return Promise.resolve();
     }
 
-    private async fillDropdownsWithProjects() {
-        if (!this.widgetSettings || !this.widgetSettings.useSeparateTgaServer) {
-            return this.fillTqeDropdownWithProjects();
+    /**
+     * Puts the TGA project dropdown into a disabled state showing the given placeholder message.
+     */
+    private disableTgaDropdown(message: string) {
+        return this.disableDropdown(this.tsTgaProjectSelect, message);
+    }
+
+    /**
+     * The separate-server option is enabled but no TGA server URL is configured in the project settings.
+     */
+    private handleMissingTgaServerConfig() {
+        return this.disableTgaDropdown('Error: No TGA server configured. Deactivate separate Server option or configure TGA Server.');
+    }
+
+    /**
+     * Populating the TGA project dropdown failed (e.g. the configured separate Teamscale server is unreachable).
+     * The corresponding error banner is already shown by {@link fillDropdownWithProjects}.
+     */
+    private handleTgaDropdownFailure() {
+        return this.disableTgaDropdown('Error: Could not load projects from the separate Test Gap server.');
+    }
+
+    /**
+     * The widget only uses a separate Teamscale server for the Test Gap badge when BOTH the widget-level option and the
+     * project-level option are enabled. Returns the effective (AND-combined) value.
+     */
+    private usesSeparateTgaServer(): boolean {
+        return this.widgetSettings != null && this.widgetSettings.useSeparateTgaServer
+            && this.projectUsesSeparateTgaServer;
+    }
+
+    /**
+     * Disables the widget-level "use separate Teamscale server" checkbox (with an explanatory tooltip) when the project
+     * does not have a separate Teamscale server for Test Gap Analysis configured. This keeps the two settings in sync
+     * and prevents the widget from talking to a server the project has disabled (see TS-46229).
+     */
+    private applyProjectLevelTgaGating() {
+        if (this.projectUsesSeparateTgaServer) {
+            return;
         }
-        return Promise.all([this.fillTqeDropdownWithProjects(), this.fillTgaDropdownWithProjects()]);
+        const tooltip = 'The project does not have a separate Teamscale server for Test Gap Analysis configured.';
+        this.separateTgaServerCheckbox.prop('checked', false);
+        this.separateTgaServerCheckbox.prop('disabled', true);
+        this.separateTgaServerCheckbox.attr('title', tooltip);
+        // Grey out the surrounding label so the disabled option is clearly distinguishable from the enabled ones.
+        this.separateTgaServerCheckbox.closest('label').addClass('disabled-option');
+        const configContainer = document.getElementById('config-container-separate-tga-server');
+        if (configContainer) {
+            configContainer.title = tooltip;
+        }
+        this.zipTgaConfiguration();
+    }
+
+    private async fillDropdownsWithProjects() {
+        const fills: Array<PromiseLike<any>> = [this.fillTqeDropdownWithProjects()];
+        if (this.usesSeparateTgaServer()) {
+            // Isolate the TGA fetch: a failure here disables only the TGA dropdown and must not reject the whole chain
+            // (which would hide the entire configuration form). See TS-46229.
+            fills.push(this.fillTgaDropdownWithProjects().catch(() => this.handleTgaDropdownFailure()));
+        }
+        return Promise.all(fills);
     }
 
     /**
@@ -217,9 +280,13 @@ export class Configuration {
         try {
             baselines = await this.teamscaleClient.retrieveBaselinesForProject(teamscaleProject);
         } catch (error) {
+            // Isolate the failure: a baseline load error disables only the baseline dropdown and must not reject the
+            // load chain (which would hide the entire configuration form). The main Teamscale server is still usable
+            // for the rest of the form. See TS-46229.
             this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
                 teamscaleProject);
-            return Promise.reject(error);
+            return this.disableDropdown(this.tsBaselineSelect,
+                'Error: Could not load baselines from the Teamscale server.');
         }
 
         this.tsBaselineSelect.clear(true);
@@ -275,7 +342,10 @@ export class Configuration {
         this.teamscaleClient = new TeamscaleClient(url);
         this.tgaTeamscaleClient = this.teamscaleClient;
 
-        if (!this.widgetSettings || !this.widgetSettings.useSeparateTgaServer) {
+        this.projectUsesSeparateTgaServer = UiUtils.convertToBoolean(
+            await this.projectSettings.get(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER));
+
+        if (!this.usesSeparateTgaServer()) {
             return Promise.resolve();
         }
 

@@ -6,6 +6,8 @@ We use [semantic versioning](http://semver.org/):
 
 # Next Release
 - [fix] dashboard widget: test gap badge showed wrong percentage
+- [fix] dashboard widget: a single unreachable server or failed dropdown (project, TGA project, or baseline) collapsed the entire widget configuration form
+- [fix] dashboard widget: a separate test gap server could be used even if it was disabled in the project settings
 - [fix] work item integration: findings and test gap badges linked to list of issues instead of issue details in Teamscale
 
 # 1.5.5

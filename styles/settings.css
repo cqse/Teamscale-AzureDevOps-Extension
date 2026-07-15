@@ -40,3 +40,8 @@ html {
     margin-bottom: 15px;
     width: 100%;
 }
+
+/* Greys out the label of a disabled option so it is visually distinguishable from enabled ones. */
+.disabled-option {
+    opacity: 0.5;
+}

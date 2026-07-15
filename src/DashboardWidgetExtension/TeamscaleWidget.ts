@@ -16,6 +16,9 @@ import {ExtensionSetting} from "../Settings/ExtensionSetting";
 export class TeamscaleWidget {
     private teamscaleClient: TeamscaleClient = null;
     private tgaTeamscaleClient: TeamscaleClient = null;
+    /** Effective flag: use a separate Teamscale server for the Test Gap badge only if BOTH the widget-level and the
+     * project-level option are enabled. */
+    private useSeparateTgaServer: boolean = false;
     private notificationUtils: NotificationUtils = null;
     private emailContact: string = '';
     private projectSettings: ProjectSettings = null;
@@ -166,7 +169,7 @@ export class TeamscaleWidget {
 
         if (this.currentSettings.showTestGapBadge === true) {
             let tgaTeamscaleProject = this.currentSettings.teamscaleProject;
-            if (this.currentSettings.useSeparateTgaServer === true) {
+            if (this.useSeparateTgaServer) {
                 tgaTeamscaleProject = this.currentSettings.tgaTeamscaleProject;
             }
 
@@ -224,7 +227,11 @@ export class TeamscaleWidget {
 
         this.teamscaleClient = new TeamscaleClient(url);
 
-        if (!this.currentSettings.useSeparateTgaServer) {
+        const projectUsesSeparateTgaServer = UiUtils.convertToBoolean(
+            await this.projectSettings.get(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER));
+        this.useSeparateTgaServer = this.currentSettings.useSeparateTgaServer && projectUsesSeparateTgaServer;
+
+        if (!this.useSeparateTgaServer) {
             this.tgaTeamscaleClient = this.teamscaleClient;
             return;
         }

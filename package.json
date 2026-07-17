@@ -28,7 +28,7 @@
   "dependencies": {
     "jquery": "^4.0.0",
     "jquery-ui-dist": "^1.13.3",
-    "tom-select": "^2.6.1",
+    "tom-select": "^2.6.2",
     "vss-web-extension-sdk": "^5.141.0"
   },
   "overrides": {

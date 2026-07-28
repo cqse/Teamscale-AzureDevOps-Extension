@@ -4,9 +4,10 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
-# Next Release
+# 1.5.6
 - [fix] dashboard widget: test gap badge showed wrong percentage
 - [fix] work item integration: findings and test gap badges linked to list of issues instead of issue details in Teamscale
+- [fix] updated third party dependencies to recent versions
 
 # 1.5.5
 - [fix] updated third party dependencies to recent versions

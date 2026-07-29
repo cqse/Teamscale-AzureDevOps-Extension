@@ -90,3 +90,9 @@ html.widget-configuration body {
     clear: both;
     margin-top: 15px;
 }
+
+/* Message area attached to a single dropdown. Only takes up space while it actually contains a message. */
+.dropdown-message-area:not(:empty) {
+    clear: both;
+    margin-bottom: 8px;
+}

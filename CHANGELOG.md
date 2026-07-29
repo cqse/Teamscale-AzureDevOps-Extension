@@ -7,7 +7,7 @@ We use [semantic versioning](http://semver.org/):
 # Next Release
 - [fix] dashboard widget: a single unreachable server or failed dropdown (project, TGA project, or baseline) collapsed the entire widget configuration form
 - [fix] dashboard widget: a separate test gap server could be used even if it was disabled in the project settings
-- [fix] dashboard widget: an error message could be stored as the configured TGA project or baseline name, leading to badge requests that could not succeed
+- [fix] dashboard widget: an error message could be stored as the configured TGA project or baseline name, leading to badge requests that could not succeed; such values stored by earlier versions are now ignored
 
 # 1.5.6
 - [fix] dashboard widget: test gap badge showed wrong percentage

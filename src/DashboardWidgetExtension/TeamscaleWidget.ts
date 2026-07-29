@@ -12,6 +12,7 @@ import TeamscaleClient from '../TeamscaleClient';
 import NotificationUtils from '../Utils/NotificationUtils';
 import UiUtils = require('../Utils/UiUtils');
 import {ExtensionSetting} from "../Settings/ExtensionSetting";
+import {removeLegacyPlaceholders} from '../Settings/WidgetSettingsCleaner';
 
 export class TeamscaleWidget {
     private teamscaleClient: TeamscaleClient = null;
@@ -158,7 +159,7 @@ export class TeamscaleWidget {
                 break;
             }
             case this.timePickerTsBaseline: {
-                if (this.currentSettings.tsBaseline.length < 1 || this.currentSettings.tsBaseline.startsWith('No baseline configured')) {
+                if (UiUtils.isEmptyOrWhitespace(this.currentSettings.tsBaseline)) {
                     return 'Error in baseline configuration using a TS baseline: baseline name not set.';
                 }
                 break;
@@ -312,7 +313,8 @@ export class TeamscaleWidget {
      * Parses JSON-stringified widget settings to a field member.
      */
     private parseSettings(widgetSettings) {
-        this.currentSettings = JSON.parse(widgetSettings.customSettings.data) as ITeamscaleWidgetSettings;
+        this.currentSettings = removeLegacyPlaceholders(
+            JSON.parse(widgetSettings.customSettings.data) as ITeamscaleWidgetSettings);
     }
 
     /**

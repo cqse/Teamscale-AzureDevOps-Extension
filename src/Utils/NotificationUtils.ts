@@ -6,19 +6,30 @@ import UiUtils = require('./UiUtils');
 
 export default class NotificationUtils {
 
+    /**
+     * Default container for banners: the page level message area. Pass a different selector to the constructor to
+     * scope an instance to a single form control's message area, which lets the caller clear that area once the
+     * control's problem is resolved without touching unrelated banners.
+     */
+    public static readonly DEFAULT_MESSAGE_CONTAINER = '#message-div';
+
     private readonly emailContact: string;
     private readonly callbackOnLoginClose: any;
     private readonly useDialogInsteadOfNewWindow: boolean;
+    /** Selector of the container this instance places its banners in. */
+    private readonly messageContainer: string;
     private controlService: any;
     private notificationService: any;
 
-    constructor(controlService, notificationService, callbackOnLoginClose, emailContact, useDialog) {
+    constructor(controlService, notificationService, callbackOnLoginClose, emailContact, useDialog,
+                messageContainer: string = NotificationUtils.DEFAULT_MESSAGE_CONTAINER) {
         this.controlService = controlService;
         this.notificationService = notificationService;
 
         this.emailContact = emailContact;
         this.callbackOnLoginClose = callbackOnLoginClose;
         this.useDialogInsteadOfNewWindow = useDialog;
+        this.messageContainer = messageContainer;
     }
 
     /**
@@ -102,8 +113,9 @@ export default class NotificationUtils {
         if (this.useDialogInsteadOfNewWindow) {
             const message: string = `Please log into <a class="login-link" data-ts-url="${encodeURIComponent(serverUrl)}"> Teamscale</a> (${$('<div/>').text(serverUrl).html()})`;
             if (this.showInfoBanner(message)) {
-                // do not add listener twice
-                $(`.login-link[data-ts-url="${encodeURIComponent(serverUrl)}"]`).on('click',
+                // Do not add the listener twice. The lookup is scoped to this instance's container, so a login message
+                // for the same server in another message area does not get a second listener attached.
+                $(this.messageContainer).find(`.login-link[data-ts-url="${encodeURIComponent(serverUrl)}"]`).on('click',
                     () => this.showLoginDialog(serverUrl));
             }
         } else {
@@ -135,7 +147,7 @@ export default class NotificationUtils {
      * (as the dashboard widget does) or empties the container to re-render.
      */
     public hasDisplayedMessage(): boolean {
-        const notificationContainer = $('#message-div');
+        const notificationContainer = $(this.messageContainer);
         return notificationContainer.length > 0 && !UiUtils.isEmptyOrWhitespace(notificationContainer.html());
     }
 
@@ -144,8 +156,8 @@ export default class NotificationUtils {
      * @return True, if banner was added. False, otherwise.
      */
     private showBanner(message: string, bannerType: any): boolean {
-        const notificationContainer = $('#message-div');
-        if (notificationContainer.html().includes(message)) {
+        const existingMessages = $(this.messageContainer).html();
+        if (existingMessages && existingMessages.includes(message)) {
             // do not display the same message more than once
             return false;
         }
@@ -160,7 +172,7 @@ export default class NotificationUtils {
      * Generates a notification control (banner) with an icon and which is not closeable
      */
     public generateNotification() {
-        const notificationContainer = $('#message-div');
+        const notificationContainer = $(this.messageContainer);
         return this.controlService.create(this.notificationService.MessageAreaControl, notificationContainer, {
             closeable: false,
             showIcon: true,

@@ -11,7 +11,9 @@ import { Scope } from '../Settings/Scope';
 import { Settings } from '../Settings/Settings';
 import TeamscaleClient from '../TeamscaleClient';
 import NotificationUtils from '../Utils/NotificationUtils';
+import DropdownWithMessageArea from './DropdownWithMessageArea';
 import {ExtensionSetting} from "../Settings/ExtensionSetting";
+import {removeLegacyPlaceholders} from '../Settings/WidgetSettingsCleaner';
 import UiUtils = require('../Utils/UiUtils');
 
 import type TomSelectControl from 'tom-select';
@@ -30,6 +32,13 @@ export class Configuration {
     /** Whether the project settings enable a separate Teamscale server for Test Gap Analysis. */
     private projectUsesSeparateTgaServer: boolean = false;
 
+    /**
+     * Whether the TGA project dropdown currently holds a project list that was loaded from the server. Tracked
+     * explicitly rather than derived from the number of options, because the dropdown is pre-seeded with the stored
+     * value (see {@link seedDropdownWithStoredValue}) and therefore has options even before anything was loaded.
+     */
+    private tgaProjectsLoaded: boolean = false;
+
     private notificationUtils: NotificationUtils = null;
     private emailContact: string = '';
 
@@ -38,9 +47,9 @@ export class Configuration {
     private testGapCheckbox = $('#show-test-gap');
     private separateTgaServerCheckbox = $('#separate-tga-server');
 
-    private tsProjectSelect: TomSelectControl;
-    private tsTgaProjectSelect: TomSelectControl;
-    private tsBaselineSelect: TomSelectControl;
+    private tsProjectDropdown: DropdownWithMessageArea;
+    private tsTgaProjectDropdown: DropdownWithMessageArea;
+    private tsBaselineDropdown: DropdownWithMessageArea;
 
     private widgetHelpers: any;
     private readonly notificationService: any;
@@ -56,7 +65,8 @@ export class Configuration {
      * Prepares the configuration dialog; called by ADOS.
      */
     public load(widgetSettings, widgetConfigurationContext) {
-        this.widgetSettings = JSON.parse(widgetSettings.customSettings.data) as ITeamscaleWidgetSettings;
+        this.widgetSettings = removeLegacyPlaceholders(
+            JSON.parse(widgetSettings.customSettings.data) as ITeamscaleWidgetSettings);
         const notifyWidgetChange = () =>
             widgetConfigurationContext.notify(this.widgetHelpers.WidgetEvent.ConfigurationChange,
                 this.widgetHelpers.WidgetEvent.Args(this.getWrappedCustomSettings()));
@@ -72,23 +82,57 @@ export class Configuration {
         }
         this.zipTgaConfiguration();
 
-        this.tsProjectSelect = new TomSelect('#teamscale-project-select', {});
-        this.tsProjectSelect.on('change', () => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange));
+        // Each dropdown owns a message area, so problems with loading its content are shown right at the affected
+        // control and can be cleared again once a retry succeeds. Errors of the main project dropdown go to the page
+        // level message area instead, since they make the whole form unusable.
+        this.tsProjectDropdown = new DropdownWithMessageArea(new TomSelect('#teamscale-project-select', {}),
+            NotificationUtils.DEFAULT_MESSAGE_CONTAINER);
+        this.tsProjectDropdown.onChange(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange));
 
-        this.tsTgaProjectSelect = new TomSelect('#teamscale-tga-project-select', {});
-        this.tsTgaProjectSelect.on('change', notifyWidgetChange);
+        this.tsTgaProjectDropdown = new DropdownWithMessageArea(new TomSelect('#teamscale-tga-project-select', {}),
+            '#tga-project-message-area');
+        this.tsTgaProjectDropdown.onChange(notifyWidgetChange);
 
-        this.tsBaselineSelect = new TomSelect('#ts-baseline-select', {});
-        this.tsBaselineSelect.on('change', notifyWidgetChange);
+        this.tsBaselineDropdown = new DropdownWithMessageArea(new TomSelect('#ts-baseline-select', {}),
+            '#baseline-message-area');
+        this.tsBaselineDropdown.onChange(notifyWidgetChange);
+
+        // Seed the dropdowns with the stored configuration before the first request is sent. This must happen
+        // synchronously, because notifyWidgetChange may fire (and thus read the dropdowns) while the lists are still
+        // loading.
+        this.seedDropdownWithStoredValue(this.tsProjectDropdown, 'teamscaleProject');
+        this.seedDropdownWithStoredValue(this.tsTgaProjectDropdown, 'tgaTeamscaleProject');
+        this.seedDropdownWithStoredValue(this.tsBaselineDropdown, 'tsBaseline');
 
         this.initializeFrameResizing();
 
         this.loadAndCheckConfiguration().then(() => this.applyProjectLevelTgaGating())
             .then(() => this.fillDropdownsWithProjects())
             .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange))
-            .catch(() => $('.teamscale-config-group').hide());
+            .catch(reason => this.handleFatalLoadFailure(reason));
 
         return this.widgetHelpers.WidgetStatusHelper.Success();
+    }
+
+    /**
+     * Handles a failure that makes the whole configuration form unusable (e.g. no Teamscale server configured or the
+     * main server unreachable): hides the form and makes sure the reason is discoverable. Most rejections have already
+     * shown a specific banner; unexpected ones (i.e. programming errors) would otherwise be swallowed silently, leaving
+     * a blank dialog with no trace of what went wrong.
+     */
+    private handleFatalLoadFailure(reason: any) {
+        console.error('Loading the Teamscale widget configuration failed.', reason);
+        $('.teamscale-config-group').hide();
+        if (!this.notificationUtils) {
+            // The failure happened before the notification handling could be set up; a plain text message is all
+            // that is left to show.
+            $(NotificationUtils.DEFAULT_MESSAGE_CONTAINER).text('Could not load the Teamscale widget configuration.');
+            return;
+        }
+        if (!this.notificationUtils.hasDisplayedMessage()) {
+            this.notificationUtils.showErrorBanner('Could not load the Teamscale widget configuration. '
+                + this.notificationUtils.generateContactText());
+        }
     }
 
     /**
@@ -155,7 +199,7 @@ export class Configuration {
         if (this.separateTgaServerCheckbox.is(':checked')) {
             displayAttribute = 'block';
 
-            if (Object.keys(this.tsTgaProjectSelect.options).length === 0) {
+            if (!this.tgaProjectsLoaded) {
                 this.fillTgaDropdownWithProjects().catch(() => this.handleTgaDropdownFailure());
             }
         }
@@ -166,38 +210,36 @@ export class Configuration {
     }
 
     /**
-     * Puts the given Tom Select dropdown into a disabled state showing the given placeholder message. This signals a
-     * problem with a single dropdown while keeping the rest of the configuration form interactive (see TS-46229).
+     * Selects the stored value of the given setting in the dropdown, before any list has been loaded from a Teamscale
+     * server (see {@link DropdownWithMessageArea#seedWithStoredValue}).
      */
-    private disableDropdown(select: TomSelectControl, message: string) {
-        select.clear(true);
-        select.clearOptions();
-        select.addOption({value: message, text: message});
-        select.setValue(message, true);
-        select.disable();
-        return Promise.resolve();
+    private seedDropdownWithStoredValue(dropdown: DropdownWithMessageArea, settingsKey: string) {
+        dropdown.seedWithStoredValue(this.widgetSettings ? this.widgetSettings[settingsKey] : null);
     }
 
     /**
-     * Puts the TGA project dropdown into a disabled state showing the given placeholder message.
-     */
-    private disableTgaDropdown(message: string) {
-        return this.disableDropdown(this.tsTgaProjectSelect, message);
-    }
-
-    /**
-     * The separate-server option is enabled but no TGA server URL is configured in the project settings.
+     * The separate-server option is enabled but no TGA server URL is configured in the project settings. Unlike an
+     * unreachable server, this does not produce an error banner on its own, so one is shown in the dropdown's
+     * message area here.
      */
     private handleMissingTgaServerConfig() {
-        return this.disableTgaDropdown('Error: No TGA server configured. Deactivate separate Server option or configure TGA Server.');
+        this.tgaProjectsLoaded = false;
+        this.tsTgaProjectDropdown.showErrorBannerWithContact('No Teamscale server for Test Gap Analysis is configured '
+            + 'for this Azure DevOps project. Please configure one in the project settings or deactivate the separate '
+            + 'server option.');
+        this.tsTgaProjectDropdown.disable(
+            'No Teamscale server for Test Gap Analysis is configured for this Azure DevOps project.');
     }
 
     /**
      * Populating the TGA project dropdown failed (e.g. the configured separate Teamscale server is unreachable).
-     * The corresponding error banner is already shown by {@link fillDropdownWithProjects}.
+     * The corresponding error banner is already shown in the dropdown's message area by
+     * {@link fillDropdownWithProjects}.
      */
     private handleTgaDropdownFailure() {
-        return this.disableTgaDropdown('Error: Could not load projects from the separate Test Gap server.');
+        this.tgaProjectsLoaded = false;
+        this.tsTgaProjectDropdown.disable('The projects of the separate Teamscale server for Test Gap Analysis could '
+            + 'not be loaded. The configured project is kept.');
     }
 
     /**
@@ -245,7 +287,8 @@ export class Configuration {
      * Loads a list of accessible projects from the Teamscale server and appends them to the TQE dropdown menu.
      */
     private async fillTqeDropdownWithProjects() {
-        return this.fillDropdownWithProjects(this.teamscaleClient, this.tsProjectSelect, 'teamscaleProject');
+        return this.fillDropdownWithProjects(this.teamscaleClient, this.tsProjectDropdown, 'teamscaleProject',
+            'loading the list of Teamscale projects');
     }
 
     /**
@@ -260,35 +303,28 @@ export class Configuration {
             }
             this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
         }
-        return this.fillDropdownWithProjects(this.tgaTeamscaleClient, this.tsTgaProjectSelect, 'tgaTeamscaleProject');
+        await this.fillDropdownWithProjects(this.tgaTeamscaleClient, this.tsTgaProjectDropdown, 'tgaTeamscaleProject',
+            'loading the list of Teamscale projects for Test Gap Analysis');
+        this.tgaProjectsLoaded = true;
     }
 
     /**
-     * Loads a list of accessible projects from the Teamscale server and appends them to the dropdown menu.
+     * Loads a list of accessible projects from the Teamscale server and appends them to the dropdown menu. On failure,
+     * an error banner is shown in the dropdown's message area.
      */
-    private async fillDropdownWithProjects(teamscaleClient: TeamscaleClient, projectSelect: TomSelectControl,
-                                           settingsKey: string) {
+    private async fillDropdownWithProjects(teamscaleClient: TeamscaleClient, dropdown: DropdownWithMessageArea,
+                                           settingsKey: string, action: string) {
         let projects: string[];
         try {
             projects = await teamscaleClient.retrieveTeamscaleProjects();
         } catch (error) {
-            this.notificationUtils.handleErrorInTeamscaleCommunication(error, teamscaleClient.url);
+            dropdown.handleCommunicationError(error, teamscaleClient.url, null, action);
             return Promise.reject(error);
         }
 
-        projectSelect.clear(true);
-        projectSelect.clearOptions();
-        projectSelect.enable();
-        for (const project of projects) {
-            projectSelect.addOption({value: project, text: project});
-        }
-
         const savedValue = this.widgetSettings && this.widgetSettings[settingsKey];
-        if (savedValue && projects.indexOf(savedValue) !== -1) {
-            projectSelect.setValue(savedValue, true);
-        } else if (projects.length > 0) {
-            projectSelect.setValue(projects[0], true);
-        }
+        const valueToSelect = savedValue && projects.indexOf(savedValue) !== -1 ? savedValue : projects[0];
+        dropdown.replaceOptions(projects.map(project => ({value: project, text: project})), valueToSelect);
     }
 
     /**
@@ -297,7 +333,7 @@ export class Configuration {
     private async fillDropdownWithTeamscaleBaselines(notifyWidgetChange) {
         // use input value and not widgetSetting Object which might hold an outdated project name
         // since the change event of the project selector is fired before the settings object update
-        const teamscaleProject: string = this.getSelectableValue(this.tsProjectSelect);
+        const teamscaleProject: string = this.getDropdownValue(this.tsProjectDropdown);
         if (!teamscaleProject) {
             return;
         }
@@ -308,31 +344,30 @@ export class Configuration {
         } catch (error) {
             // Isolate the failure: a baseline load error disables only the baseline dropdown and must not reject the
             // load chain (which would hide the entire configuration form). The main Teamscale server is still usable
-            // for the rest of the form. See TS-46229.
-            this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.teamscaleClient.url,
-                teamscaleProject);
-            return this.disableDropdown(this.tsBaselineSelect,
-                'Error: Could not load baselines from the Teamscale server.');
+            // for the rest of the form. The configured baseline is kept, since it may well still exist. See TS-46229.
+            this.tsBaselineDropdown.handleCommunicationError(error, this.teamscaleClient.url, teamscaleProject,
+                'loading the baselines');
+            this.tsBaselineDropdown.disable(
+                'The baselines could not be loaded from the Teamscale server. The configured baseline is kept.');
+            return;
         }
 
-        this.tsBaselineSelect.clear(true);
-        this.tsBaselineSelect.clearOptions();
+        const baselineOptions = baselines.map(baseline => ({
+            value: baseline.name,
+            text: baseline.name + ' (' + new Date(baseline.timestamp).toLocaleDateString() + ')',
+        }));
+        this.tsBaselineDropdown.replaceOptions(baselineOptions,
+            this.widgetSettings ? this.widgetSettings.tsBaseline : null);
 
         if (baselines.length === 0) {
-            const message = 'No baseline configured for project »' + teamscaleProject + '«';
-            this.tsBaselineSelect.addOption({value: message, text: message});
-            this.tsBaselineSelect.setValue(message, true);
-            this.tsBaselineSelect.disable();
-        } else {
-            this.tsBaselineSelect.enable();
-            for (const baseline of baselines) {
-                const date = new Date(baseline.timestamp);
-                const text = baseline.name + ' (' + date.toLocaleDateString() + ')';
-                this.tsBaselineSelect.addOption({value: baseline.name, text: text});
-            }
-            if (this.widgetSettings && this.widgetSettings.tsBaseline) {
-                this.tsBaselineSelect.setValue(this.widgetSettings.tsBaseline, true);
-            }
+            // Unlike a failed load this is not an error, and the configured baseline is deliberately not kept: it
+            // belongs to a project that is no longer selected.
+            // Banners are rendered as HTML, so the project name has to be escaped.
+            this.tsBaselineDropdown.showInfoBanner('No baseline is configured for project <i>'
+                + $('<div/>').text(teamscaleProject).html()
+                + '</i> on the Teamscale server. Please choose a different starting point for this widget.');
+            this.tsBaselineDropdown.disable(
+                'No baseline is configured for project »' + teamscaleProject + '« on the Teamscale server.');
         }
 
         // update widget settings to get rid of a baseline which belongs to the formerly chosen project
@@ -382,11 +417,15 @@ export class Configuration {
     }
 
     /**
-     * Initializes the notification and login management handling errors in Teamscale communication.
+     * Initializes the notification and login management handling errors in Teamscale communication, both for the page
+     * level message area and for the per-dropdown message areas.
      */
     private async initializeNotificationUtils() {
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
             null, this.emailContact, false);
+        for (const dropdown of [this.tsProjectDropdown, this.tsTgaProjectDropdown, this.tsBaselineDropdown]) {
+            dropdown.initializeNotifications(this.controlService, this.notificationService, this.emailContact);
+        }
     }
 
     /**
@@ -398,31 +437,28 @@ export class Configuration {
     }
 
     /**
-     * Returns the value of the given dropdown, or an empty string if it is missing or disabled. Disabled
-     * dropdowns hold a placeholder message (e.g. an error text or "No baseline configured") as their value, which must
-     * never be persisted as an actual setting.
+     * Returns the value currently selected in the given dropdown, or an empty string if it has not been created yet
+     * (an input event may fire before {@link load} finished building the dropdowns).
      */
-    private getSelectableValue(select: TomSelectControl): string {
-        if (!select || select.isDisabled) {
+    private getDropdownValue(dropdown: DropdownWithMessageArea): string {
+        if (!dropdown) {
             return '';
         }
-        // All dropdowns of this configuration form are single-select, so getValue() yields a plain string here. The
-        // array half of its return type only applies to multi-select controls.
-        return select.getValue() as string;
+        return dropdown.getValue();
     }
 
     /**
      * Read the current configuration as specified in the configuration form. Stores it as class member and returns it.
      */
     private getAndUpdateCustomSettings(): ITeamscaleWidgetSettings {
-        const teamscaleProject: string = this.getSelectableValue(this.tsProjectSelect);
-        const tgaTeamscaleProject: string = this.getSelectableValue(this.tsTgaProjectSelect);
+        const teamscaleProject: string = this.getDropdownValue(this.tsProjectDropdown);
+        const tgaTeamscaleProject: string = this.getDropdownValue(this.tsTgaProjectDropdown);
         const baselineDays: number = Number(this.baselineDaysInput.value);
         let startFixedDate: number;
         if (this.datepicker.datepicker('getDate')) {
             startFixedDate = this.datepicker.datepicker('getDate').getTime();
         }
-        const tsBaseline: string = this.getSelectableValue(this.tsBaselineSelect);
+        const tsBaseline: string = this.getDropdownValue(this.tsBaselineDropdown);
         const showTestGapBadge: boolean = document.getElementById('show-test-gap').checked;
         const useSeparateTgaServer: boolean = document.getElementById('separate-tga-server').checked;
 

@@ -14,7 +14,9 @@ import NotificationUtils from '../Utils/NotificationUtils';
 import {ExtensionSetting} from "../Settings/ExtensionSetting";
 import UiUtils = require('../Utils/UiUtils');
 
-declare const TomSelect: any;
+import type TomSelectControl from 'tom-select';
+
+declare const TomSelect: typeof TomSelectControl;
 
 export class Configuration {
     private projectSettings: ProjectSettings = null;
@@ -36,9 +38,9 @@ export class Configuration {
     private testGapCheckbox = $('#show-test-gap');
     private separateTgaServerCheckbox = $('#separate-tga-server');
 
-    private tsProjectSelect: any;
-    private tsTgaProjectSelect: any;
-    private tsBaselineSelect: any;
+    private tsProjectSelect: TomSelectControl;
+    private tsTgaProjectSelect: TomSelectControl;
+    private tsBaselineSelect: TomSelectControl;
 
     private widgetHelpers: any;
     private readonly notificationService: any;
@@ -167,7 +169,7 @@ export class Configuration {
      * Puts the given Tom Select dropdown into a disabled state showing the given placeholder message. This signals a
      * problem with a single dropdown while keeping the rest of the configuration form interactive (see TS-46229).
      */
-    private disableDropdown(select: any, message: string) {
+    private disableDropdown(select: TomSelectControl, message: string) {
         select.clear(true);
         select.clearOptions();
         select.addOption({value: message, text: message});
@@ -264,7 +266,8 @@ export class Configuration {
     /**
      * Loads a list of accessible projects from the Teamscale server and appends them to the dropdown menu.
      */
-    private async fillDropdownWithProjects(teamscaleClient: TeamscaleClient, projectSelect: any, settingsKey: string) {
+    private async fillDropdownWithProjects(teamscaleClient: TeamscaleClient, projectSelect: TomSelectControl,
+                                           settingsKey: string) {
         let projects: string[];
         try {
             projects = await teamscaleClient.retrieveTeamscaleProjects();
@@ -294,7 +297,7 @@ export class Configuration {
     private async fillDropdownWithTeamscaleBaselines(notifyWidgetChange) {
         // use input value and not widgetSetting Object which might hold an outdated project name
         // since the change event of the project selector is fired before the settings object update
-        const teamscaleProject: string = this.tsProjectSelect.getValue();
+        const teamscaleProject: string = this.getSelectableValue(this.tsProjectSelect);
         if (!teamscaleProject) {
             return;
         }
@@ -399,11 +402,13 @@ export class Configuration {
      * dropdowns hold a placeholder message (e.g. an error text or "No baseline configured") as their value, which must
      * never be persisted as an actual setting.
      */
-    private getSelectableValue(select: any): string {
+    private getSelectableValue(select: TomSelectControl): string {
         if (!select || select.isDisabled) {
             return '';
         }
-        return select.getValue();
+        // All dropdowns of this configuration form are single-select, so getValue() yields a plain string here. The
+        // array half of its return type only applies to multi-select controls.
+        return select.getValue() as string;
     }
 
     /**

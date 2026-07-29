@@ -82,6 +82,21 @@ export class Configuration {
         }
         this.zipTgaConfiguration();
 
+        this.createAndSeedDropdowns(notifyWidgetChange);
+        this.initializeFrameResizing();
+
+        this.loadAndCheckConfiguration().then(() => this.applyProjectLevelTgaGating())
+            .then(() => this.fillDropdownsWithProjects())
+            .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange))
+            .catch(reason => this.handleFatalLoadFailure(reason));
+
+        return this.widgetHelpers.WidgetStatusHelper.Success();
+    }
+
+    /**
+     * Builds the dropdowns of the configuration form and preselects the stored configuration in them.
+     */
+    private createAndSeedDropdowns(notifyWidgetChange: () => void) {
         // Each dropdown owns a message area, so problems with loading its content are shown right at the affected
         // control and can be cleared again once a retry succeeds. Errors of the main project dropdown go to the page
         // level message area instead, since they make the whole form unusable.
@@ -103,15 +118,6 @@ export class Configuration {
         this.seedDropdownWithStoredValue(this.tsProjectDropdown, 'teamscaleProject');
         this.seedDropdownWithStoredValue(this.tsTgaProjectDropdown, 'tgaTeamscaleProject');
         this.seedDropdownWithStoredValue(this.tsBaselineDropdown, 'tsBaseline');
-
-        this.initializeFrameResizing();
-
-        this.loadAndCheckConfiguration().then(() => this.applyProjectLevelTgaGating())
-            .then(() => this.fillDropdownsWithProjects())
-            .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange))
-            .catch(reason => this.handleFatalLoadFailure(reason));
-
-        return this.widgetHelpers.WidgetStatusHelper.Success();
     }
 
     /**

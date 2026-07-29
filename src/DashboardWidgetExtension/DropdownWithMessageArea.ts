@@ -1,13 +1,13 @@
-/**
- * A TomSelect dropdown of the widget configuration form together with its own message area. Problems with loading the
- * dropdown's content are reported as a banner directly at the affected control and are cleared again once a reload
- * succeeds.
- */
 import NotificationUtils from '../Utils/NotificationUtils';
 import UiUtils = require('../Utils/UiUtils');
 
 import type TomSelectControl from 'tom-select';
 
+/**
+ * A TomSelect dropdown of the widget configuration form together with its own message area. Problems with loading the
+ * dropdown's content are reported as a banner directly at the affected control and are cleared again once a reload
+ * succeeds.
+ */
 export default class DropdownWithMessageArea {
 
     /** Notification handling scoped to this dropdown's message area. Created in {@link initializeNotifications}. */

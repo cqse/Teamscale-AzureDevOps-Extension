@@ -2,6 +2,7 @@ import NotificationUtils from '../Utils/NotificationUtils';
 import UiUtils = require('../Utils/UiUtils');
 
 import type TomSelectControl from 'tom-select';
+import type TeamscaleClient from '../TeamscaleClient';
 
 /**
  * A TomSelect dropdown of the widget configuration form together with its own message area. Problems with loading the
@@ -106,6 +107,27 @@ export default class DropdownWithMessageArea {
         if (valueToSelect) {
             this.select.setValue(valueToSelect, true);
         }
+    }
+
+    /**
+     * Loads the list of accessible projects from the given Teamscale server and replaces the dropdown's options with
+     * it. The currently selected value is re-selected if it is still in the list; since the dropdowns are seeded with
+     * the stored configuration before the first load, this keeps the configured project selected. On failure, an error
+     * banner with the given action description is shown in this dropdown's message area and the returned promise is
+     * rejected.
+     */
+    public async loadProjects(teamscaleClient: TeamscaleClient, action: string): Promise<void> {
+        let projects: string[];
+        try {
+            projects = await teamscaleClient.retrieveTeamscaleProjects();
+        } catch (error) {
+            this.handleCommunicationError(error, teamscaleClient.url, null, action);
+            return Promise.reject(error);
+        }
+
+        const currentValue = this.getValue();
+        const valueToSelect = currentValue && projects.indexOf(currentValue) !== -1 ? currentValue : projects[0];
+        this.replaceOptions(projects.map(project => ({value: project, text: project})), valueToSelect);
     }
 
     /**

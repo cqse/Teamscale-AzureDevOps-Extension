@@ -12,6 +12,7 @@ import { Settings } from '../Settings/Settings';
 import TeamscaleClient from '../TeamscaleClient';
 import NotificationUtils from '../Utils/NotificationUtils';
 import DropdownWithMessageArea from './DropdownWithMessageArea';
+import TgaConfiguration from './TgaConfiguration';
 import {ExtensionSetting} from "../Settings/ExtensionSetting";
 import {removeLegacyPlaceholders} from '../Settings/WidgetSettingsCleaner';
 import UiUtils = require('../Utils/UiUtils');
@@ -27,29 +28,18 @@ export class Configuration {
     private widgetSettings: ITeamscaleWidgetSettings = null;
 
     private teamscaleClient: TeamscaleClient = null;
-    private tgaTeamscaleClient: TeamscaleClient = null;
-
-    /** Whether the project settings enable a separate Teamscale server for Test Gap Analysis. */
-    private projectUsesSeparateTgaServer: boolean = false;
-
-    /**
-     * Whether the TGA project dropdown currently holds a project list that was loaded from the server. Tracked
-     * explicitly rather than derived from the number of options, because the dropdown is pre-seeded with the stored
-     * value (see {@link seedDropdownWithStoredValue}) and therefore has options even before anything was loaded.
-     */
-    private tgaProjectsLoaded: boolean = false;
 
     private notificationUtils: NotificationUtils = null;
     private emailContact: string = '';
 
     private baselineDaysInput = document.getElementById('baseline-days-input') as HTMLInputElement;
     private datepicker = $('#datepicker');
-    private testGapCheckbox = $('#show-test-gap');
-    private separateTgaServerCheckbox = $('#separate-tga-server');
 
     private tsProjectDropdown: DropdownWithMessageArea;
-    private tsTgaProjectDropdown: DropdownWithMessageArea;
     private tsBaselineDropdown: DropdownWithMessageArea;
+
+    /** The Test Gap Analysis part of the form; owns all TGA related controls. Created in {@link load}. */
+    private tgaConfiguration: TgaConfiguration = null;
 
     private widgetHelpers: any;
     private readonly notificationService: any;
@@ -71,21 +61,22 @@ export class Configuration {
             widgetConfigurationContext.notify(this.widgetHelpers.WidgetEvent.ConfigurationChange,
                 this.widgetHelpers.WidgetEvent.Args(this.getWrappedCustomSettings()));
 
+        this.projectSettings = new ProjectSettings(Scope.ProjectCollection, VSS.getWebContext().project.name);
+        this.tgaConfiguration = new TgaConfiguration(this.projectSettings, notifyWidgetChange);
+
         this.initializeOnchangeListeners(notifyWidgetChange);
         this.datepicker.datepicker({onSelect: notifyWidgetChange});
 
         if (this.widgetSettings) {
             this.baselineDaysInput.value = String(this.widgetSettings.baselineDays);
             this.datepicker.datepicker('setDate', new Date(this.widgetSettings.startFixedDate));
-            this.testGapCheckbox.prop('checked', this.widgetSettings.showTestGapBadge);
-            this.separateTgaServerCheckbox.prop('checked', this.widgetSettings.useSeparateTgaServer);
         }
-        this.zipTgaConfiguration();
+        this.tgaConfiguration.applyStoredSettings(this.widgetSettings);
 
         this.createAndSeedDropdowns(notifyWidgetChange);
         this.initializeFrameResizing();
 
-        this.loadAndCheckConfiguration().then(() => this.applyProjectLevelTgaGating())
+        this.loadAndCheckConfiguration().then(() => this.tgaConfiguration.applyProjectLevelGating())
             .then(() => this.fillDropdownsWithProjects())
             .then(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange))
             .catch(reason => this.handleFatalLoadFailure(reason));
@@ -104,10 +95,6 @@ export class Configuration {
             NotificationUtils.DEFAULT_MESSAGE_CONTAINER);
         this.tsProjectDropdown.onChange(() => this.fillDropdownWithTeamscaleBaselines(notifyWidgetChange));
 
-        this.tsTgaProjectDropdown = new DropdownWithMessageArea(new TomSelect('#teamscale-tga-project-select', {}),
-            '#tga-project-message-area');
-        this.tsTgaProjectDropdown.onChange(notifyWidgetChange);
-
         this.tsBaselineDropdown = new DropdownWithMessageArea(new TomSelect('#ts-baseline-select', {}),
             '#baseline-message-area');
         this.tsBaselineDropdown.onChange(notifyWidgetChange);
@@ -116,7 +103,6 @@ export class Configuration {
         // synchronously, because notifyWidgetChange may fire (and thus read the dropdowns) while the lists are still
         // loading.
         this.seedDropdownWithStoredValue(this.tsProjectDropdown, 'teamscaleProject');
-        this.seedDropdownWithStoredValue(this.tsTgaProjectDropdown, 'tgaTeamscaleProject');
         this.seedDropdownWithStoredValue(this.tsBaselineDropdown, 'tsBaseline');
     }
 
@@ -174,10 +160,7 @@ export class Configuration {
      * Propagates configuration changes to the widget. Enables live preview/feedback on configuring the widget settings.
      */
     private initializeOnchangeListeners(notifyWidgetChange) {
-        const inputIds: string[] = ['baseline-days-input', 'show-test-gap', 'separate-tga-server'];
-        for (const inputId of inputIds) {
-            document.getElementById(inputId).addEventListener('input', notifyWidgetChange);
-        }
+        document.getElementById('baseline-days-input').addEventListener('input', notifyWidgetChange);
         let activeTabIndex: number = 0;
         if (this.widgetSettings) {
             activeTabIndex = $('#tabs a[href="#' + this.widgetSettings.activeTimeChooser + '"]').parent().index();
@@ -186,35 +169,6 @@ export class Configuration {
             activate: notifyWidgetChange,
             active: activeTabIndex,
         });
-        document.getElementById('show-test-gap').addEventListener('change', () => this.zipTgaConfiguration());
-        document.getElementById('separate-tga-server').addEventListener('change', () => {
-            this.zipTgaConfiguration();
-            // Lazily load the TGA project list when the user enables the separate server option. The initial load
-            // for a widget that was stored with the option enabled happens in fillDropdownsWithProjects() instead.
-            if (this.separateTgaServerCheckbox.is(':checked') && !this.tgaProjectsLoaded) {
-                this.fillTgaDropdownWithProjects().catch(() => this.handleTgaDropdownFailure());
-            }
-        });
-    }
-
-    /**
-     * Shows or hides the TGA related parts of the form to match the checkbox states.
-     */
-    private zipTgaConfiguration() {
-        const separateTgaServerConfigContainer = document.getElementById('config-container-separate-tga-server');
-        if (this.testGapCheckbox.is(':checked')) {
-            separateTgaServerConfigContainer.style.display = 'block';
-        } else {
-            this.separateTgaServerCheckbox.prop('checked', false);
-            separateTgaServerConfigContainer.style.display = 'none';
-        }
-
-        const elementIds: string[] = ['config-container-teamscale-tga-project-select', 'baseline-tga-hint'];
-
-        const displayAttribute = this.separateTgaServerCheckbox.is(':checked') ? 'block' : 'none';
-        for (const elementId of elementIds) {
-            document.getElementById(elementId).style.display = displayAttribute;
-        }
     }
 
     /**
@@ -226,112 +180,15 @@ export class Configuration {
     }
 
     /**
-     * The separate-server option is enabled but no TGA server URL is configured in the project settings. Unlike an
-     * unreachable server, this does not produce an error banner on its own, so one is shown in the dropdown's
-     * message area here.
+     * Loads the project lists of the Teamscale servers into the project dropdowns. Loading the TGA projects handles
+     * its failures itself, so that they disable only the TGA dropdown and do not reject the whole chain (which would
+     * hide the entire configuration form). See TS-46229.
      */
-    private handleMissingTgaServerConfig() {
-        this.tgaProjectsLoaded = false;
-        this.tsTgaProjectDropdown.showErrorBannerWithContact('No Teamscale server for Test Gap Analysis is configured '
-            + 'for this Azure DevOps project. Please configure one in the project settings or deactivate the separate '
-            + 'server option.');
-        this.tsTgaProjectDropdown.disable(
-            'No Teamscale server for Test Gap Analysis is configured for this Azure DevOps project.');
-    }
-
-    /**
-     * Populating the TGA project dropdown failed (e.g. the configured separate Teamscale server is unreachable).
-     * The corresponding error banner is already shown in the dropdown's message area by
-     * {@link fillDropdownWithProjects}.
-     */
-    private handleTgaDropdownFailure() {
-        this.tgaProjectsLoaded = false;
-        this.tsTgaProjectDropdown.disable('The projects of the separate Teamscale server for Test Gap Analysis could '
-            + 'not be loaded. The configured project is kept.');
-    }
-
-    /**
-     * The widget only uses a separate Teamscale server for the Test Gap badge when BOTH the widget-level option and the
-     * project-level option are enabled. Returns the effective (AND-combined) value.
-     */
-    private usesSeparateTgaServer(): boolean {
-        return this.separateTgaServerCheckbox.is(':checked') && this.projectUsesSeparateTgaServer;
-    }
-
-    /**
-     * Disables the widget-level "use separate Teamscale server" checkbox (with an explanatory tooltip) when the project
-     * does not have a separate Teamscale server for Test Gap Analysis configured. This keeps the two settings in sync
-     * and prevents the widget from talking to a server the project has disabled (see TS-46229).
-     */
-    private applyProjectLevelTgaGating() {
-        if (this.projectUsesSeparateTgaServer) {
-            return;
-        }
-        const tooltip = 'The project does not have a separate Teamscale server for Test Gap Analysis configured.';
-        this.separateTgaServerCheckbox.prop('checked', false);
-        this.separateTgaServerCheckbox.prop('disabled', true);
-        this.separateTgaServerCheckbox.attr('title', tooltip);
-        // Grey out the surrounding label so the disabled option is clearly distinguishable from the enabled ones.
-        this.separateTgaServerCheckbox.closest('label').addClass('disabled-option');
-        const configContainer = document.getElementById('config-container-separate-tga-server');
-        if (configContainer) {
-            configContainer.title = tooltip;
-        }
-        this.zipTgaConfiguration();
-    }
-
     private async fillDropdownsWithProjects() {
-        const fills: Array<PromiseLike<any>> = [this.fillTqeDropdownWithProjects()];
-        if (this.usesSeparateTgaServer()) {
-            // Isolate the TGA fetch: a failure here disables only the TGA dropdown and must not reject the whole chain
-            // (which would hide the entire configuration form). See TS-46229.
-            fills.push(this.fillTgaDropdownWithProjects().catch(() => this.handleTgaDropdownFailure()));
-        }
-        return Promise.all(fills);
-    }
-
-    /**
-     * Loads a list of accessible projects from the Teamscale server and appends them to the TQE dropdown menu.
-     */
-    private async fillTqeDropdownWithProjects() {
-        return this.fillDropdownWithProjects(this.teamscaleClient, this.tsProjectDropdown, 'teamscaleProject',
-            'loading the list of Teamscale projects');
-    }
-
-    /**
-     * Loads a list of accessible projects from the Teamscale server and appends them to the TGA dropdown menu.
-     */
-    private async fillTgaDropdownWithProjects() {
-        let tgaUrl: string;
-        if (this.projectSettings) {
-            tgaUrl = await this.projectSettings.get(ExtensionSetting.TGA_TEAMSCALE_URL);
-            if (UiUtils.isEmptyOrWhitespace(tgaUrl)){
-                return this.handleMissingTgaServerConfig();
-            }
-            this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
-        }
-        await this.fillDropdownWithProjects(this.tgaTeamscaleClient, this.tsTgaProjectDropdown, 'tgaTeamscaleProject',
-            'loading the list of Teamscale projects for Test Gap Analysis');
-        this.tgaProjectsLoaded = true;
-    }
-
-    /**
-     * Loads a list of accessible projects from the Teamscale server and appends them to the dropdown menu. On failure,
-     * an error banner is shown in the dropdown's message area.
-     */
-    private async fillDropdownWithProjects(teamscaleClient: TeamscaleClient, dropdown: DropdownWithMessageArea,
-                                           settingsKey: string, action: string) {
-        let projects: string[];
-        try {
-            projects = await teamscaleClient.retrieveTeamscaleProjects();
-        } catch (error) {
-            dropdown.handleCommunicationError(error, teamscaleClient.url, null, action);
-            return Promise.reject(error);
-        }
-
-        const savedValue = this.widgetSettings && this.widgetSettings[settingsKey];
-        const valueToSelect = savedValue && projects.indexOf(savedValue) !== -1 ? savedValue : projects[0];
-        dropdown.replaceOptions(projects.map(project => ({value: project, text: project})), valueToSelect);
+        return Promise.all([
+            this.tsProjectDropdown.loadProjects(this.teamscaleClient, 'loading the list of Teamscale projects'),
+            this.tgaConfiguration.loadProjects(),
+        ]);
     }
 
     /**
@@ -387,13 +244,11 @@ export class Configuration {
      * name is set in the Azure DevOps project settings.
      */
     private async loadAndCheckConfiguration() {
-        const azureProjectName = VSS.getWebContext().project.name;
-        this.projectSettings = new ProjectSettings(Scope.ProjectCollection, azureProjectName);
         this.organizationSettings = new Settings(Scope.ProjectCollection);
 
         this.emailContact = await this.organizationSettings.get(ExtensionSetting.EMAIL_CONTACT);
         await this.initializeNotificationUtils();
-        return Promise.all([this.initializeTeamscaleClient()]);
+        return this.initializeTeamscaleClient();
     }
 
     /**
@@ -408,19 +263,6 @@ export class Configuration {
         }
 
         this.teamscaleClient = new TeamscaleClient(url);
-        this.tgaTeamscaleClient = this.teamscaleClient;
-
-        this.projectUsesSeparateTgaServer = UiUtils.convertToBoolean(
-            await this.projectSettings.get(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER));
-
-        if (!this.usesSeparateTgaServer()) {
-            return Promise.resolve();
-        }
-
-        const tgaUrl = await this.projectSettings.get(ExtensionSetting.TGA_TEAMSCALE_URL);
-        if (!UiUtils.isEmptyOrWhitespace(tgaUrl)) {
-            this.tgaTeamscaleClient = new TeamscaleClient(tgaUrl);
-        }
     }
 
     /**
@@ -430,9 +272,11 @@ export class Configuration {
     private async initializeNotificationUtils() {
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
             null, this.emailContact, false);
-        for (const dropdown of [this.tsProjectDropdown, this.tsTgaProjectDropdown, this.tsBaselineDropdown]) {
+        for (const dropdown of [this.tsProjectDropdown, this.tsBaselineDropdown]) {
             dropdown.initializeNotifications(this.controlService, this.notificationService, this.emailContact);
         }
+        this.tgaConfiguration.initializeNotifications(this.controlService, this.notificationService,
+            this.emailContact);
     }
 
     /**
@@ -459,27 +303,25 @@ export class Configuration {
      */
     private getAndUpdateCustomSettings(): ITeamscaleWidgetSettings {
         const teamscaleProject: string = this.getDropdownValue(this.tsProjectDropdown);
-        const tgaTeamscaleProject: string = this.getDropdownValue(this.tsTgaProjectDropdown);
         const baselineDays: number = Number(this.baselineDaysInput.value);
         let startFixedDate: number;
         if (this.datepicker.datepicker('getDate')) {
             startFixedDate = this.datepicker.datepicker('getDate').getTime();
         }
         const tsBaseline: string = this.getDropdownValue(this.tsBaselineDropdown);
-        const showTestGapBadge: boolean = document.getElementById('show-test-gap').checked;
-        const useSeparateTgaServer: boolean = document.getElementById('separate-tga-server').checked;
+        const tgaSettings = this.tgaConfiguration.contributeSettings();
 
         const activeTimeChooser: string = $('.ui-tabs-active').attr('aria-controls');
 
         this.widgetSettings = {
             teamscaleProject,
-            tgaTeamscaleProject,
-            useSeparateTgaServer,
+            tgaTeamscaleProject: tgaSettings.tgaTeamscaleProject,
+            useSeparateTgaServer: tgaSettings.useSeparateTgaServer,
             activeTimeChooser,
             startFixedDate,
             baselineDays,
             tsBaseline,
-            showTestGapBadge
+            showTestGapBadge: tgaSettings.showTestGapBadge
         } as ITeamscaleWidgetSettings;
         return this.widgetSettings;
     }

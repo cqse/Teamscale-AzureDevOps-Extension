@@ -181,10 +181,20 @@ export class Configuration {
             active: activeTabIndex,
         });
         document.getElementById('show-test-gap').addEventListener('change', () => this.zipTgaConfiguration());
-        document.getElementById('separate-tga-server').addEventListener('change', () => this.zipTgaConfiguration());
+        document.getElementById('separate-tga-server').addEventListener('change', () => {
+            this.zipTgaConfiguration();
+            // Lazily load the TGA project list when the user enables the separate server option. The initial load
+            // for a widget that was stored with the option enabled happens in fillDropdownsWithProjects() instead.
+            if (this.separateTgaServerCheckbox.is(':checked') && !this.tgaProjectsLoaded) {
+                this.fillTgaDropdownWithProjects().catch(() => this.handleTgaDropdownFailure());
+            }
+        });
     }
 
-    private async zipTgaConfiguration() {
+    /**
+     * Shows or hides the TGA related parts of the form to match the checkbox states.
+     */
+    private zipTgaConfiguration() {
         const separateTgaServerConfigContainer = document.getElementById('config-container-separate-tga-server');
         if (this.testGapCheckbox.is(':checked')) {
             separateTgaServerConfigContainer.style.display = 'block';
@@ -195,15 +205,7 @@ export class Configuration {
 
         const elementIds: string[] = ['config-container-teamscale-tga-project-select', 'baseline-tga-hint'];
 
-        let displayAttribute = 'none';
-        if (this.separateTgaServerCheckbox.is(':checked')) {
-            displayAttribute = 'block';
-
-            if (!this.tgaProjectsLoaded) {
-                this.fillTgaDropdownWithProjects().catch(() => this.handleTgaDropdownFailure());
-            }
-        }
-
+        const displayAttribute = this.separateTgaServerCheckbox.is(':checked') ? 'block' : 'none';
         for (const elementId of elementIds) {
             document.getElementById(elementId).style.display = displayAttribute;
         }

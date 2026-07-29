@@ -85,11 +85,10 @@ export class TeamscaleWidget {
 
         return this.loadAndCheckConfiguration()
             .then(() => this.loadAndRenderBadges())
-            .then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
-                () => this.widgetHelpers.WidgetStatusHelper.Failure('Could not load configuration.'))
+            .then(() => this.widgetHelpers.WidgetStatusHelper.Success())
             // All possible errors should not lead to an unresolved promise, since we want to use our
             // error handling and messages and not a generic Azure DevOps error
-            .catch(e => this.widgetHelpers.WidgetStatusHelper.Failure(e));
+            .catch(reason => this.handleErrorLoadingWidget(reason));
     }
 
     /**
@@ -98,6 +97,47 @@ export class TeamscaleWidget {
     public reload(widgetSettings) {
         TeamscaleWidget.tabulaRasa();
         return this.load(widgetSettings);
+    }
+
+    /**
+     * Handles a failure while loading the widget and returns the status to report to ADOS.
+     *
+     * An Error means a genuine error rather than a problem the user can fix.
+     * Everything else is reported as a success on purpose, because otherwise ADOS replaces the whole widget
+     * with a generic "Widget failed to load" tile, which would discard the specific error banner the extension has
+     * already placed in the widget.
+     */
+    private handleErrorLoadingWidget(reason: any) {
+        if (reason instanceof Error) {
+            return this.widgetHelpers.WidgetStatusHelper.Failure(`Could not load the Teamscale widget: ${reason}`);
+        }
+        this.showFallbackBannerIfSilent(reason);
+        return this.widgetHelpers.WidgetStatusHelper.Success();
+    }
+
+    /**
+     * Shows a generic error banner if the failure did not produce a message of its own, so that the widget never stays
+     * silent and empty.
+     */
+    private showFallbackBannerIfSilent(reason: any) {
+        if (this.notificationUtils.hasDisplayedMessage()) {
+            return;
+        }
+        this.notificationUtils.showErrorBanner('Could not load the Teamscale widget'
+            + TeamscaleWidget.describeReason(reason) + '. ' + this.notificationUtils.generateContactText());
+    }
+
+    /**
+     * Renders the given rejection reason as a ` (<detail>)` suffix for the fallback message. Returns an empty string if
+     * the reason carries no usable information.
+     */
+    private static describeReason(reason: any): string {
+        const detail = reason instanceof Error ? reason.message : reason;
+        if (typeof detail !== 'string' || UiUtils.isEmptyOrWhitespace(detail)) {
+            return '';
+        }
+        // Banners are rendered as HTML, so the reason has to be escaped.
+        return ` (${$('<div/>').text(detail).html()})`;
     }
 
     /**
@@ -259,8 +299,9 @@ export class TeamscaleWidget {
     private async initializeNotificationUtils() {
         const callbackOnLoginClose = () => {
             TeamscaleWidget.tabulaRasa();
-            this.loadAndRenderBadges().then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
-                () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
+            // ADOS ignores the status returned here, so a banner is the only way to report a problem. Reporting a
+            // failure instead would leave the widget blank and silent, as tabulaRasa() just emptied it.
+            this.loadAndRenderBadges().catch(reason => this.showFallbackBannerIfSilent(reason));
         };
 
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,

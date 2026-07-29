@@ -130,6 +130,16 @@ export default class NotificationUtils {
     }
 
     /**
+     * Returns whether a message is currently displayed. Deliberately derived from the banner container instead of from
+     * instance state, so the answer stays correct when the caller replaces its NotificationUtils instance while loading
+     * (as the dashboard widget does) or empties the container to re-render.
+     */
+    public hasDisplayedMessage(): boolean {
+        const notificationContainer = $('#message-div');
+        return notificationContainer.length > 0 && !UiUtils.isEmptyOrWhitespace(notificationContainer.html());
+    }
+
+    /**
      * Adds an info or error banner.
      * @return True, if banner was added. False, otherwise.
      */

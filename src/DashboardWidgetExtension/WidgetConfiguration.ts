@@ -249,8 +249,7 @@ export class Configuration {
      * project-level option are enabled. Returns the effective (AND-combined) value.
      */
     private usesSeparateTgaServer(): boolean {
-        return this.widgetSettings != null && this.widgetSettings.useSeparateTgaServer
-            && this.projectUsesSeparateTgaServer;
+        return this.separateTgaServerCheckbox.is(':checked') && this.projectUsesSeparateTgaServer;
     }
 
     /**

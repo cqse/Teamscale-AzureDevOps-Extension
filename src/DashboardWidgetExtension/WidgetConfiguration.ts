@@ -395,17 +395,29 @@ export class Configuration {
     }
 
     /**
+     * Returns the value of the given dropdown, or an empty string if it is missing or disabled. Disabled
+     * dropdowns hold a placeholder message (e.g. an error text or "No baseline configured") as their value, which must
+     * never be persisted as an actual setting.
+     */
+    private getSelectableValue(select: any): string {
+        if (!select || select.isDisabled) {
+            return '';
+        }
+        return select.getValue();
+    }
+
+    /**
      * Read the current configuration as specified in the configuration form. Stores it as class member and returns it.
      */
     private getAndUpdateCustomSettings(): ITeamscaleWidgetSettings {
-        const teamscaleProject: string = this.tsProjectSelect ? this.tsProjectSelect.getValue() : '';
-        const tgaTeamscaleProject: string = this.tsTgaProjectSelect ? this.tsTgaProjectSelect.getValue() : '';
+        const teamscaleProject: string = this.getSelectableValue(this.tsProjectSelect);
+        const tgaTeamscaleProject: string = this.getSelectableValue(this.tsTgaProjectSelect);
         const baselineDays: number = Number(this.baselineDaysInput.value);
         let startFixedDate: number;
         if (this.datepicker.datepicker('getDate')) {
             startFixedDate = this.datepicker.datepicker('getDate').getTime();
         }
-        const tsBaseline: string = this.tsBaselineSelect ? this.tsBaselineSelect.getValue() : '';
+        const tsBaseline: string = this.getSelectableValue(this.tsBaselineSelect);
         const showTestGapBadge: boolean = document.getElementById('show-test-gap').checked;
         const useSeparateTgaServer: boolean = document.getElementById('separate-tga-server').checked;
 

@@ -173,12 +173,20 @@ export class TeamscaleWidget {
                 tgaTeamscaleProject = this.currentSettings.tgaTeamscaleProject;
             }
 
-            try {
-                tgaBadge = await this.tgaTeamscaleClient.retrieveTestGapDeltaBadge(tgaTeamscaleProject, startTimestamp);
-                tgaBadge = '<div id="tga-badge">' + tgaBadge + '</div>';
-            } catch (error) {
-                this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.tgaTeamscaleClient.url,
-                    this.currentSettings.tgaTeamscaleProject, 'loading Test Gap Badge');
+            if (UiUtils.isEmptyOrWhitespace(tgaTeamscaleProject)) {
+                // Requesting the badge would hit /api/projects//... and fail with an error that cannot even name the
+                // missing project. Point the user at the configuration instead. See TS-46229.
+                this.notificationUtils.showInfoBanner('No Teamscale project is configured for the Test Gap badge. '
+                    + 'Please select one in the widget configuration.');
+            } else {
+                try {
+                    tgaBadge = await this.tgaTeamscaleClient.retrieveTestGapDeltaBadge(tgaTeamscaleProject,
+                        startTimestamp);
+                    tgaBadge = '<div id="tga-badge">' + tgaBadge + '</div>';
+                } catch (error) {
+                    this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.tgaTeamscaleClient.url,
+                        tgaTeamscaleProject, 'loading Test Gap Badge');
+                }
             }
         }
 

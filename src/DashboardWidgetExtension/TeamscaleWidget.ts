@@ -12,10 +12,14 @@ import TeamscaleClient from '../TeamscaleClient';
 import NotificationUtils from '../Utils/NotificationUtils';
 import UiUtils = require('../Utils/UiUtils');
 import {ExtensionSetting} from "../Settings/ExtensionSetting";
+import {removeLegacyPlaceholders} from '../Settings/WidgetSettingsCleaner';
 
 export class TeamscaleWidget {
     private teamscaleClient: TeamscaleClient = null;
     private tgaTeamscaleClient: TeamscaleClient = null;
+    /** Effective flag: use a separate Teamscale server for the Test Gap badge only if BOTH the widget-level and the
+     * project-level option are enabled. */
+    private useSeparateTgaServer: boolean = false;
     private notificationUtils: NotificationUtils = null;
     private emailContact: string = '';
     private projectSettings: ProjectSettings = null;
@@ -82,11 +86,10 @@ export class TeamscaleWidget {
 
         return this.loadAndCheckConfiguration()
             .then(() => this.loadAndRenderBadges())
-            .then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
-                () => this.widgetHelpers.WidgetStatusHelper.Failure('Could not load configuration.'))
+            .then(() => this.widgetHelpers.WidgetStatusHelper.Success())
             // All possible errors should not lead to an unresolved promise, since we want to use our
             // error handling and messages and not a generic Azure DevOps error
-            .catch(e => this.widgetHelpers.WidgetStatusHelper.Failure(e));
+            .catch(reason => this.handleErrorLoadingWidget(reason));
     }
 
     /**
@@ -95,6 +98,47 @@ export class TeamscaleWidget {
     public reload(widgetSettings) {
         TeamscaleWidget.tabulaRasa();
         return this.load(widgetSettings);
+    }
+
+    /**
+     * Handles a failure while loading the widget and returns the status to report to ADOS.
+     *
+     * An Error means a genuine error rather than a problem the user can fix.
+     * Everything else is reported as a success on purpose, because otherwise ADOS replaces the whole widget
+     * with a generic "Widget failed to load" tile, which would discard the specific error banner the extension has
+     * already placed in the widget.
+     */
+    private handleErrorLoadingWidget(reason: any) {
+        if (reason instanceof Error) {
+            return this.widgetHelpers.WidgetStatusHelper.Failure(`Could not load the Teamscale widget: ${reason}`);
+        }
+        this.showFallbackBannerIfSilent(reason);
+        return this.widgetHelpers.WidgetStatusHelper.Success();
+    }
+
+    /**
+     * Shows a generic error banner if the failure did not produce a message of its own, so that the widget never stays
+     * silent and empty.
+     */
+    private showFallbackBannerIfSilent(reason: any) {
+        if (this.notificationUtils.hasDisplayedMessage()) {
+            return;
+        }
+        this.notificationUtils.showErrorBanner('Could not load the Teamscale widget'
+            + TeamscaleWidget.describeReason(reason) + '. ' + this.notificationUtils.generateContactText());
+    }
+
+    /**
+     * Renders the given rejection reason as a ` (<detail>)` suffix for the fallback message. Returns an empty string if
+     * the reason carries no usable information.
+     */
+    private static describeReason(reason: any): string {
+        const detail = reason instanceof Error ? reason.message : reason;
+        if (typeof detail !== 'string' || UiUtils.isEmptyOrWhitespace(detail)) {
+            return '';
+        }
+        // Banners are rendered as HTML, so the reason has to be escaped.
+        return ` (${$('<div/>').text(detail).html()})`;
     }
 
     /**
@@ -115,7 +159,7 @@ export class TeamscaleWidget {
                 break;
             }
             case this.timePickerTsBaseline: {
-                if (this.currentSettings.tsBaseline.length < 1 || this.currentSettings.tsBaseline.startsWith('No baseline configured')) {
+                if (UiUtils.isEmptyOrWhitespace(this.currentSettings.tsBaseline)) {
                     return 'Error in baseline configuration using a TS baseline: baseline name not set.';
                 }
                 break;
@@ -166,16 +210,24 @@ export class TeamscaleWidget {
 
         if (this.currentSettings.showTestGapBadge === true) {
             let tgaTeamscaleProject = this.currentSettings.teamscaleProject;
-            if (this.currentSettings.useSeparateTgaServer === true) {
+            if (this.useSeparateTgaServer) {
                 tgaTeamscaleProject = this.currentSettings.tgaTeamscaleProject;
             }
 
-            try {
-                tgaBadge = await this.tgaTeamscaleClient.retrieveTestGapDeltaBadge(tgaTeamscaleProject, startTimestamp);
-                tgaBadge = '<div id="tga-badge">' + tgaBadge + '</div>';
-            } catch (error) {
-                this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.tgaTeamscaleClient.url,
-                    this.currentSettings.tgaTeamscaleProject, 'loading Test Gap Badge');
+            if (UiUtils.isEmptyOrWhitespace(tgaTeamscaleProject)) {
+                // Requesting the badge would hit /api/projects//... and fail with an error that cannot even name the
+                // missing project. Point the user at the configuration instead. See TS-46229.
+                this.notificationUtils.showInfoBanner('No Teamscale project is configured for the Test Gap badge. '
+                    + 'Please select one in the widget configuration.');
+            } else {
+                try {
+                    tgaBadge = await this.tgaTeamscaleClient.retrieveTestGapDeltaBadge(tgaTeamscaleProject,
+                        startTimestamp);
+                    tgaBadge = '<div id="tga-badge">' + tgaBadge + '</div>';
+                } catch (error) {
+                    this.notificationUtils.handleErrorInTeamscaleCommunication(error, this.tgaTeamscaleClient.url,
+                        tgaTeamscaleProject, 'loading Test Gap Badge');
+                }
             }
         }
 
@@ -224,7 +276,11 @@ export class TeamscaleWidget {
 
         this.teamscaleClient = new TeamscaleClient(url);
 
-        if (!this.currentSettings.useSeparateTgaServer) {
+        const projectUsesSeparateTgaServer = UiUtils.convertToBoolean(
+            await this.projectSettings.get(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER));
+        this.useSeparateTgaServer = this.currentSettings.useSeparateTgaServer && projectUsesSeparateTgaServer;
+
+        if (!this.useSeparateTgaServer) {
             this.tgaTeamscaleClient = this.teamscaleClient;
             return;
         }
@@ -244,8 +300,9 @@ export class TeamscaleWidget {
     private async initializeNotificationUtils() {
         const callbackOnLoginClose = () => {
             TeamscaleWidget.tabulaRasa();
-            this.loadAndRenderBadges().then(() => this.widgetHelpers.WidgetStatusHelper.Success(),
-                () => this.widgetHelpers.WidgetStatusHelper.Failure('Loading Teamscale badges failed.'));
+            // ADOS ignores the status returned here, so a banner is the only way to report a problem. Reporting a
+            // failure instead would leave the widget blank and silent, as tabulaRasa() just emptied it.
+            this.loadAndRenderBadges().catch(reason => this.showFallbackBannerIfSilent(reason));
         };
 
         this.notificationUtils = new NotificationUtils(this.controlService, this.notificationService,
@@ -256,7 +313,8 @@ export class TeamscaleWidget {
      * Parses JSON-stringified widget settings to a field member.
      */
     private parseSettings(widgetSettings) {
-        this.currentSettings = JSON.parse(widgetSettings.customSettings.data) as ITeamscaleWidgetSettings;
+        this.currentSettings = removeLegacyPlaceholders(
+            JSON.parse(widgetSettings.customSettings.data) as ITeamscaleWidgetSettings);
     }
 
     /**

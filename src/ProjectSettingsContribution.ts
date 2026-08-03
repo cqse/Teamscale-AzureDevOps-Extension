@@ -154,16 +154,21 @@ function saveDefaultServerSettings() {
 
 function saveTgaServerSettings() {
     const serverName = 'Test Gap Server';
-    saveServerUrl(ExtensionSetting.TGA_TEAMSCALE_URL.key, TGA_TEAMSCALE_URL_INPUT.value, serverName);
-    saveProjectNames(ExtensionSetting.TGA_TEAMSCALE_PROJECTS.key, TGA_TEAMSCALE_PROJECT_INPUT.value, serverName);
-    saveServerEnablement(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER.key, USE_SEPARATE_TEST_GAP_SERVER_INPUT.checked, serverName);
+    const enabled = USE_SEPARATE_TEST_GAP_SERVER_INPUT.checked;
+    // Only persist the URL and projects when the separate server is enabled. When disabled, save empty values so the
+    // stored settings are cleared instead of silently kept and consulted elsewhere (see TS-46229).
+    saveServerUrl(ExtensionSetting.TGA_TEAMSCALE_URL.key, enabled ? TGA_TEAMSCALE_URL_INPUT.value : '', serverName);
+    saveProjectNames(ExtensionSetting.TGA_TEAMSCALE_PROJECTS.key, enabled ? TGA_TEAMSCALE_PROJECT_INPUT.value : '', serverName);
+    saveServerEnablement(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER.key, enabled, serverName);
 }
 
 function saveTsaServerSettings() {
     const serverName = 'Test Smell Server';
-    saveServerUrl(ExtensionSetting.TSA_TEAMSCALE_URL.key, TSA_TEAMSCALE_URL_INPUT.value, serverName);
-    saveProjectNames( ExtensionSetting.TSA_TEAMSCALE_PROJECTS.key, TSA_TEAMSCALE_PROJECT_INPUT.value, serverName);
-    saveServerEnablement(ExtensionSetting.USE_SEPARATE_TEST_SMELL_SERVER.key, USE_SEPARATE_TEST_SMELL_SERVER_INPUT.checked, serverName);
+    const enabled = USE_SEPARATE_TEST_SMELL_SERVER_INPUT.checked;
+    // Only persist the URL and projects when the separate server is enabled (see TS-46229).
+    saveServerUrl(ExtensionSetting.TSA_TEAMSCALE_URL.key, enabled ? TSA_TEAMSCALE_URL_INPUT.value : '', serverName);
+    saveProjectNames(ExtensionSetting.TSA_TEAMSCALE_PROJECTS.key, enabled ? TSA_TEAMSCALE_PROJECT_INPUT.value : '', serverName);
+    saveServerEnablement(ExtensionSetting.USE_SEPARATE_TEST_SMELL_SERVER.key, enabled, serverName);
 }
 
 function saveServerUrl(serverUrlKey: string, teamscaleUrlFormInput: string, readableServerName: string) {

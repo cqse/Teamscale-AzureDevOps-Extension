@@ -4,10 +4,11 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
-# Next Release
+# 1.5.7
 - [fix] dashboard widget: a single unreachable server or failed dropdown (project, TGA project, or baseline) collapsed the entire widget configuration form
 - [fix] dashboard widget: a separate test gap server could be used even if it was disabled in the project settings
 - [fix] dashboard widget: an error message could be stored as the configured TGA project or baseline name, leading to badge requests that could not succeed; such values stored by earlier versions are now ignored
+- [fix] updated third party dependencies to recent versions
 
 # 1.5.6
 - [fix] dashboard widget: test gap badge showed wrong percentage

@@ -4,6 +4,9 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
+# 1.5.8
+- [fix] updated third party dependencies to recent versions
+
 # 1.5.7
 - [fix] dashboard widget: a single unreachable server or failed dropdown (project, TGA project, or baseline) collapsed the entire widget configuration form
 - [fix] dashboard widget: a separate test gap server could be used even if it was disabled in the project settings

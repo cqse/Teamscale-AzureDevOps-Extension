@@ -4,7 +4,7 @@
   "description": "Teamscale integration into Azure DevOps",
   "main": "index.js",
   "scripts": {
-    "replace": "echo fixes https://github.com/Microsoft/vss-web-extension-sdk/issues/112; gsed -i '/^\\s*nodeType: number;$/d' node_modules/vss-web-extension-sdk/typings/vss.d.ts",
+    "replace": "echo fixes https://github.com/Microsoft/vss-web-extension-sdk/issues/112; sed -i '/^\\s*nodeType: number;$/d' node_modules/vss-web-extension-sdk/typings/vss.d.ts",
     "compileTypeScript": "npx tsc && cd reportUploadTask && npm run compile",
     "restore": "npm ci && cd reportUploadTask && npm run restore",
     "build": "npm run restore && npm run replace && npm run compileTypeScript",
@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "shelljs": "^0.10.0",
-    "tfx-cli": "^0.23.4",
+    "tfx-cli": "^0.24.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {

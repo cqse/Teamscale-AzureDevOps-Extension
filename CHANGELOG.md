@@ -4,6 +4,9 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
+# 1.5.9
+- [fix] updated third party dependencies to recent versions
+
 # 1.5.8
 - [fix] updated third party dependencies to recent versions
 

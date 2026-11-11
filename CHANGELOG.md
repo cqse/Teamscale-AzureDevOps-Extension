@@ -4,6 +4,12 @@ We use [semantic versioning](http://semver.org/):
 - MINOR version when you add functionality in a backwards-compatible manner, and
 - PATCH version when you make backwards compatible bug fixes.
 
+# Next Release
+- [fix] work item integration: the hint for work items without enabled badges explains the badges, links to the project settings and says how to hide the section
+- [fix] work item integration: a project that used only a separate test gap or test smell server was reported as not configured
+- [fix] work item integration: the section could keep loading forever after an unexpected error
+- [fix] work item integration: if the badges still require a login after the login dialog was closed, the extension hints at blocked third-party cookies
+
 # 1.5.9
 - [fix] updated third party dependencies to recent versions
 

@@ -18,6 +18,8 @@ export default class NotificationUtils {
     private readonly useDialogInsteadOfNewWindow: boolean;
     /** Selector of the container this instance places its banners in. */
     private readonly messageContainer: string;
+    /** Whether the user has closed the Teamscale login dialog at least once. */
+    private hasClosedLoginDialog: boolean = false;
     private controlService: any;
     private notificationService: any;
 
@@ -47,7 +49,10 @@ export default class NotificationUtils {
                 width: 600,
                 height: 720,
                 buttons: null,
-                close: this.callbackOnLoginClose,
+                close: () => {
+                    this.hasClosedLoginDialog = true;
+                    this.callbackOnLoginClose();
+                },
                 urlReplacementObject: { server: encodeURIComponent(serverUrl)}
             };
 
@@ -111,7 +116,15 @@ export default class NotificationUtils {
      */
     public showNotLoggedInMessage(serverUrl: string) {
         if (this.useDialogInsteadOfNewWindow) {
-            const message: string = `Please log into <a class="login-link" data-ts-url="${encodeURIComponent(serverUrl)}"> Teamscale</a> (${$('<div/>').text(serverUrl).html()})`;
+            const escapedServerUrl: string = $('<div/>').text(serverUrl).html();
+            let message: string = `Please log into <a class="login-link" data-ts-url="${encodeURIComponent(serverUrl)}"> Teamscale</a> (${escapedServerUrl})`;
+            if (this.hasClosedLoginDialog) {
+                // The badge requests are cross-site, so a browser that blocks third-party cookies drops the session
+                // cookie of the login and the requests stay unauthenticated.
+                message += '. If you have logged in and still see this message, your browser blocks the Teamscale'
+                    + ' session cookie inside Azure DevOps. Please allow third-party cookies for '
+                    + `${escapedServerUrl} in your browser, or ask your IT department to allow them.`;
+            }
             if (this.showInfoBanner(message)) {
                 // Do not add the listener twice. The lookup is scoped to this instance's container, so a login message
                 // for the same server in another message area does not get a second listener attached.

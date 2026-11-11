@@ -86,11 +86,7 @@ VSS.require(['TFS/WorkItemTracking/Services', 'VSS/Controls', 'VSS/Controls/Noti
             };
             /* tslint:enable:no-empty */
         });
-        loadAndCheckConfiguration().then(() => loadBadges(), e => {
-            if (e) {
-                endLoadingWithInfoMessage(e);
-            }
-        });
+        loadAndCheckConfiguration().then(() => loadBadges()).catch(endLoadingWithInfoMessage);
     });
 
 /**
@@ -117,7 +113,7 @@ function initializeNotificationUtils() {
     const callbackOnLoginClose = () => {
         $('#tga-badge').empty();
         $('#message-div').empty();
-        resolveProjectNames().then(() => loadBadges());
+        resolveProjectNames().then(() => loadBadges()).catch(endLoadingWithInfoMessage);
     };
 
     notificationUtils = new NotificationUtils(controlService, notificationService, callbackOnLoginClose, emailContact,
@@ -130,8 +126,11 @@ function initializeNotificationUtils() {
 async function loadBadges() {
     if (!showTestGapBadge && !showFindingsBadge && !showTestSmellBadge) {
         if(!minimizeWarnings){
-            notificationUtils.showInfoBanner('Please activate at least one Badge for this work item type in the' +
-                ' Project settings (Extensions → Teamscale).');
+            notificationUtils.showInfoBanner('No Teamscale badge is enabled for this work item type. The badges show'
+                + ' the test gaps, findings churn and test smells of a work item. A project administrator can enable'
+                + ` them in the <a href="${getProjectSettingsUrl()}" target="_top">Teamscale project settings</a>.`
+                + ' An organization administrator can hide this section in the layout of each work item type in the'
+                + ' process settings of the organization.');
         }
         UiUtils.resizeHost();
         VSS.notifyLoadSucceeded();
@@ -210,13 +209,13 @@ async function initializeTeamscaleClients() {
     showTestGapBadge = await isBadgeEnabledForWorkItem(ExtensionSetting.SHOW_TEST_GAP_BADGE, ExtensionSetting.TEST_GAP_BADGE_TYPES);
     showTestSmellBadge = await isBadgeEnabledForWorkItem(ExtensionSetting.SHOW_TEST_SMELL_BADGE, ExtensionSetting.TEST_SMELL_BADGE_TYPES);
 
+    useExtraTgaConfiguration = UiUtils.convertToBoolean(await projectSettings.get(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER));
+    useExtraTsaConfiguration = UiUtils.convertToBoolean(await projectSettings.get(ExtensionSetting.USE_SEPARATE_TEST_SMELL_SERVER));
     const url = await projectSettings.get(ExtensionSetting.TEAMSCALE_URL);
     if (UiUtils.isEmptyOrWhitespace(url) && (showFindingsBadge || (!useExtraTgaConfiguration && showTestGapBadge) || (!useExtraTsaConfiguration && showTestSmellBadge))) {
         throw new Error('Teamscale is not configured for this project. ' + notificationUtils.generateContactText());
     }
     teamscaleClient = new TeamscaleClient(url);
-    useExtraTgaConfiguration = UiUtils.convertToBoolean(await projectSettings.get(ExtensionSetting.USE_SEPARATE_TEST_GAP_SERVER));
-    useExtraTsaConfiguration = UiUtils.convertToBoolean(await projectSettings.get(ExtensionSetting.USE_SEPARATE_TEST_SMELL_SERVER));
 
     if (!showTestGapBadge && !showTestSmellBadge) {
         return;
@@ -347,9 +346,27 @@ async function resolveIssueIdAndType() {
 }
 
 /**
- * Displays the given message as info text.
+ * Displays the message of the given error as info text and ends the loading state of the work item form.
+ * The loading state also ends when the error occurs before the notification utils exist.
  */
-function endLoadingWithInfoMessage(message: string) {
-    notificationUtils.showInfoBanner(message);
+function endLoadingWithInfoMessage(error: any) {
+    if (notificationUtils && error) {
+        let message = error;
+        if (error instanceof Error) {
+            message = error.message;
+        }
+        notificationUtils.showInfoBanner(message);
+    }
+    UiUtils.resizeHost();
     VSS.notifyLoadSucceeded();
+}
+
+/**
+ * Returns the URL of the Teamscale hub in the settings of the current Azure DevOps project.
+ */
+function getProjectSettingsUrl(): string {
+    const webContext = VSS.getWebContext();
+    const extensionContext = VSS.getExtensionContext();
+    return `${webContext.collection.uri}${encodeURIComponent(webContext.project.name)}/_settings/`
+        + `${extensionContext.publisherId}.${extensionContext.extensionId}.project-settings`;
 }

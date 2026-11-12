@@ -5,10 +5,9 @@ We use [semantic versioning](http://semver.org/):
 - PATCH version when you make backwards compatible bug fixes.
 
 # Next Release
-- [fix] work item integration: the hint for work items without enabled badges explains the badges, links to the project settings and says how to hide the section
+- [fix] work item integration: the hint for work items without enabled badges did not explain the badges or how to hide the section, and the organization option for this hint had an unclear label
 - [fix] work item integration: a project that used only a separate test gap or test smell server was reported as not configured
-- [fix] work item integration: the section could keep loading forever after an unexpected error
-- [fix] work item integration: if the badges still require a login after the login dialog was closed, the extension hints at blocked third-party cookies
+- [fix] work item integration: if the browser blocked third-party cookies, the section kept asking for a login without saying why
 
 # 1.5.9
 - [fix] updated third party dependencies to recent versions

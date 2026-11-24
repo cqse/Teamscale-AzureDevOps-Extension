@@ -11,8 +11,11 @@ export class Settings {
     /** @see Scope.**/
     protected readonly scope: Scope;
 
-    /** The already configured settings saved in Azure DevOps. */
-    private configuredVssSettings: Map<string, string>;
+    /**
+     * The already configured settings saved in Azure DevOps. The promise is shared by all reads, so reads that start
+     * while the settings are still loading wait for them instead of seeing an incomplete map.
+     */
+    private configuredVssSettings: Promise<Map<string, string>>;
 
     constructor(scope: Scope) {
         this.scope = scope;
@@ -33,20 +36,24 @@ export class Settings {
      *  the setting's default value is returned.
      */
     public async get(setting: ExtensionSetting): Promise<string> {
-        await this.loadConfiguredSettingsIfNeeded();
-        if(this.configuredVssSettings.has(setting.key)){
-            return this.configuredVssSettings.get(setting.key);
+        const configuredVssSettings = await this.loadConfiguredSettingsIfNeeded();
+        if(configuredVssSettings.has(setting.key)){
+            return configuredVssSettings.get(setting.key);
         }
         return setting.defaultValue;
     }
 
-    /** Loads all the configured settings saved in VSS, unless they have been already loaded. */
-    private async loadConfiguredSettingsIfNeeded(): Promise<void> {
-        if(this.configuredVssSettings) {
-            return;
+    /** Returns all the configured settings saved in VSS and loads them, unless they have been already loaded. */
+    private loadConfiguredSettingsIfNeeded(): Promise<Map<string, string>> {
+        if(!this.configuredVssSettings) {
+            this.configuredVssSettings = this.loadConfiguredSettings();
         }
+        return this.configuredVssSettings;
+    }
 
-        this.configuredVssSettings = new Map();
+    /** Loads all the configured settings saved in VSS. */
+    private async loadConfiguredSettings(): Promise<Map<string, string>> {
+        const configuredVssSettings = new Map<string, string>();
         const dataService: ExtensionDataService = await VSS.getService(VSS.ServiceIds.ExtensionData);
         // In Azure DevOps, settings are stored internally as documents in a special collection called '$settings'.
         // So we fetch all documents of this collection to retrieve all the already configured settings.
@@ -55,11 +62,12 @@ export class Settings {
         const collections = await dataService.queryCollections([{collectionName: '$settings', scopeType: this.scope, scopeValue, documents: []}])
         if(collections.length === 0 || collections[0].documents == null) {
             // No settings stored yet
-            return;
+            return configuredVssSettings;
         }
 
-        collections[0].documents.map(setting => {
-            this.configuredVssSettings.set(setting.id, setting.value)
+        collections[0].documents.forEach(setting => {
+            configuredVssSettings.set(setting.id, setting.value);
         });
+        return configuredVssSettings;
     }
 }
